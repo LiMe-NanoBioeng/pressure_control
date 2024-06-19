@@ -13,11 +13,7 @@ ser = serial.Serial('COM8', 9600, timeout=1)
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
-        #global FolderName1
-        #global FileName1
-        #global VoltageFile
-    
-            
+           
         FolderName1=FolderName1+"/"+str(datetime.datetime.today().strftime("%Y%m%d"))
         os.makedirs(FolderName1,exist_ok=True)
         

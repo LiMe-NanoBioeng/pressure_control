@@ -72,7 +72,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # ui.voltage3=0
         
         ui.save=False
-        ui.valve_1=[True,True,True,True,True,True,True,True,True,True]
+        ui.valve_1=[False,False,False,False,False,False,False,False,False,False]
+        for icnt in range(len(ui.valve_1)):
+            NI.ArduinoDO(icnt,ui.valve_1[icnt])
         ui.Filename=' '
         ui.Foldername='C:/Users/Microfluidics-team'
         ui.value=0
@@ -81,11 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_figure(self):
             
         x,y,c=NI.ArduinoAI(ui.x,ui.y,ui.c)
-        
-        # c_1v = c[1]*0.004882
-        # c_2v = c[2]*0.0048822
-        # c_3v = c[3]*0.0048822
-        #print(c_1v,c_2v)
+
         c[1]=0.1208*c[1]-23.75
 #        c[2]=0.1208*c[2]-23.75
 #        c[3]=0.1208*c[3]-23.75
@@ -99,9 +97,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 # ui.count = 0で新規file open 
                 ui.Ti = np.append(ui.Ti,c[0]-x[1])
                 ui.CA1 = np.append(ui.CA1,c[1])
- #               ui.CA2 = np.append(ui.CA2,c[2])
- #               ui.CA3 = np.append(ui.CA3,c[3])
-          
                 ui.graphwidget.figure.clear()
                 ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131)
                 ui.graphwidget.axes.clear()
@@ -110,19 +105,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
                 ui.graphwidget.draw()
  
-  #              ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132)       
-                # ui.graphwidget.axes.clear()
-                # ui.graphwidget.x  = ui.Ti
-                # ui.graphwidget.y  = ui.CA2
-                # ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
-                # ui.graphwidget.draw()
-                
-                # ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(133)       
-                # ui.graphwidget.axes.clear()
-                # ui.graphwidget.x  = ui.Ti
-                # ui.graphwidget.y  = ui.CA3
-                # ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
-                # ui.graphwidget.draw()               
 
                 file = open(ui.Filename, 'a')
 
