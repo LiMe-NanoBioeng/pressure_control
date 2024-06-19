@@ -9,15 +9,14 @@ Update: 2020-11-05, kaneko
 
 import time, datetime, os, serial
 
-ser = serial.Serial('COM9', 9600, timeout=1)
+ser = serial.Serial('COM8', 9600, timeout=1)
 
 class AI():  
-    def DefFile(): # Making Folder for saving outputs
-        global FolderName1
-        global FileName1
-        global VoltageFile
+    def DefFile(FolderName1): # Making Folder for saving outputs
+        #global FolderName1
+        #global FileName1
+        #global VoltageFile
     
-        FolderName1='C:/Users/lab'
             
         FolderName1=FolderName1+"/"+str(datetime.datetime.today().strftime("%Y%m%d"))
         os.makedirs(FolderName1,exist_ok=True)
@@ -36,7 +35,7 @@ class AI():
         c = []
 
         # Read analog input of AN4-5
-        ser.write(b'AI1:4')
+        ser.write(b'AI6')
         
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
@@ -51,9 +50,9 @@ class AI():
         c.append(time.time())
         c.extend(decoded_bytes.split(","))
 
-        if len(c) == 2:
+        if c[1] == '':  # if faied in obtaining data
             c[1] = 0
-            c.extend([0,0])
+#            c.extend([0,0])
             
         for i in range(len(c)): # range(X):Xはチャンネル数
             #print(c)
@@ -64,55 +63,38 @@ class AI():
     # Control Valve    
     def ArduinoDO(channel,flag):
         #ser.flushInput() 
-        if flag==True:
+        if flag:
             Dout = 'DO' + str(channel) + 'H\n'   
-            ser.write(b'DO1H')
         else:
             Dout = 'DO' + str(channel) + 'L\n'
         ser.write(Dout.encode('utf-8'))
-        #ser.close()
-
-    # Control Valve_2           
-    # def ArduinoDO_2(flag):
-    #     #ser.flushInput()
-    #     if flag==True:   
-    #         ser.write(b'DO2H')
-    #     else:
-    #         ser.write(b'DO2L')
-    #     #ser.close()
-    # # Control Valve_2           
-    # def ArduinoDO_3(flag):
-    #     #ser.flushInput()
-    #     print(flag)
-    #     if flag==True:   
-    #         ser.write(b'DO3H')
-    #     else:
-    #         ser.write(b'DO3L')
+        #print(str(channel))
             
     def ArduinoDP(ch,pulsewidth,duty,number):
         command = str.encode("DP:"+str(ch)+":"+str(int(pulsewidth))+":"+str(duty)+":"+str(number)+"\n")
         ser.write(command)
         
-    def ArduinoAO(flag,values):
+    def ArduinoAO(channel,flag,values):
         #ser = serial.Serial('COM3',9600,timeout=1)
         #ser.flushInput()
-        AO6out = 'AO6v' + str(values[0]*50) + '\n'
-        AO9out = 'AO9v' + str(values[1]*50) + '\n'
-        AO10out = 'AO10v' + str(values[2]*50) + '\n'
-        AO11out = 'AO11v' + str(values[3]*50) + '\n'
+#        AO9out = 'AO9v' + str(values[1]*50) + '\n'
+#        AO10out = 'AO10v' + str(values[2]*50) + '\n'
+#        AO11out = 'AO11v' + str(values[3]*50) + '\n'
         if flag == True:
+            AO6out = 'AO'+str(channel)+'v'+ str(values*50) + '\n'
         #import serial
-            ser.write(AO6out.encode('utf-8'))
-            ser.write(AO9out.encode('utf-8'))
-            ser.write(AO10out.encode('utf-8'))
-            ser.write(AO11out.encode('utf-8'))
+#            ser.write(AO9out.encode('utf-8'))
+#            ser.write(AO10out.encode('utf-8'))
+#            ser.write(AO11out.encode('utf-8'))
         else:
-            ser.write(b'AO6v0\n')
-            ser.write(b'AO9v0\n')
-            ser.write(b'AO10v0\n')
-            ser.write(b'AO11v0\n')
+            AO6out = 'AO'+str(channel)+'v'+'0\n'
+#            ser.write(b'AO6v0\n')
+#            ser.write(b'AO9v0\n')
+#            ser.write(b'AO10v0\n')
+#            ser.write(b'AO11v0\n')
         #print('AO6v1000')
         #ser.close()
+        ser.write(AO6out.encode('utf-8'))
         
     def NIDAQAI(x,y):
         import nidaqmx

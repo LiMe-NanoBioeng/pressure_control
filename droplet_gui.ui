@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1245</width>
+    <width>732</width>
     <height>690</height>
    </rect>
   </property>
@@ -42,16 +42,6 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLCDNumber" name="valveLcd_2">
-    <property name="geometry">
-     <rect>
-      <x>540</x>
-      <y>480</y>
-      <width>120</width>
-      <height>50</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QPushButton" name="valveButton_1">
     <property name="geometry">
      <rect>
@@ -70,46 +60,10 @@
      <string>Valve1</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="valveButton_2">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>480</y>
-      <width>90</width>
-      <height>50</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Valve2</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
       <x>330</x>
-      <y>510</y>
-      <width>41</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>16</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>kPa</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>670</x>
       <y>510</y>
       <width>41</width>
       <height>20</height>
@@ -137,19 +91,6 @@
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QSlider" name="horizontalSlider_2">
-    <property name="geometry">
-     <rect>
-      <x>430</x>
-      <y>430</y>
-      <width>231</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
    <widget class="QLCDNumber" name="lcdnumber_1">
     <property name="geometry">
      <rect>
@@ -160,84 +101,14 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLCDNumber" name="lcdNumber_2">
+   <widget class="QComboBox" name="comboBox">
     <property name="geometry">
      <rect>
-      <x>430</x>
+      <x>170</x>
       <y>400</y>
-      <width>64</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="value" stdset="0">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="intValue" stdset="0">
-     <number>0</number>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="valveButton_3">
-    <property name="geometry">
-     <rect>
-      <x>770</x>
-      <y>480</y>
-      <width>101</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Valve3</string>
-    </property>
-   </widget>
-   <widget class="QLCDNumber" name="lcdNumber_3">
-    <property name="geometry">
-     <rect>
-      <x>770</x>
-      <y>400</y>
-      <width>64</width>
-      <height>23</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QSlider" name="horizontalSlider_3">
-    <property name="geometry">
-     <rect>
-      <x>770</x>
-      <y>430</y>
-      <width>221</width>
+      <width>141</width>
       <height>22</height>
      </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QLCDNumber" name="valveLcd_3">
-    <property name="geometry">
-     <rect>
-      <x>880</x>
-      <y>480</y>
-      <width>120</width>
-      <height>50</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>1010</x>
-      <y>510</y>
-      <width>41</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>16</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>kPa</string>
     </property>
    </widget>
   </widget>
@@ -246,7 +117,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1245</width>
+     <width>732</width>
      <height>21</height>
     </rect>
    </property>
@@ -259,7 +130,7 @@
    <sender>recordButton</sender>
    <signal>clicked()</signal>
    <receiver>Droplet_formation</receiver>
-   <slot>slot1()</slot>
+   <slot>recordIO()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>95</x>
@@ -275,7 +146,7 @@
    <sender>valveButton_1</sender>
    <signal>clicked()</signal>
    <receiver>Droplet_formation</receiver>
-   <slot>slot2()</slot>
+   <slot>ValveOC()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>101</x>
@@ -284,38 +155,6 @@
     <hint type="destinationlabel">
      <x>313</x>
      <y>525</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>valveButton_2</sender>
-   <signal>clicked()</signal>
-   <receiver>Droplet_formation</receiver>
-   <slot>slot3()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>507</x>
-     <y>501</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>610</x>
-     <y>399</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_2</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>Droplet_formation</receiver>
-   <slot>s2value_changed()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>483</x>
-     <y>459</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>471</x>
-     <y>437</y>
     </hint>
    </hints>
   </connection>
@@ -336,46 +175,31 @@
    </hints>
   </connection>
   <connection>
-   <sender>horizontalSlider_3</sender>
-   <signal>valueChanged(int)</signal>
+   <sender>comboBox</sender>
+   <signal>currentIndexChanged(int)</signal>
    <receiver>Droplet_formation</receiver>
-   <slot>s3value_changed()</slot>
+   <slot>valve_number_changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>862</x>
-     <y>460</y>
+     <x>294</x>
+     <y>430</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1041</x>
-     <y>386</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>valveButton_3</sender>
-   <signal>clicked()</signal>
-   <receiver>Droplet_formation</receiver>
-   <slot>slot4()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>804</x>
-     <y>522</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>942</x>
-     <y>606</y>
+     <x>318</x>
+     <y>347</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <slots>
-  <slot>slot1()</slot>
-  <slot>slot2()</slot>
+  <slot>recordIO()</slot>
+  <slot>ValveOC()</slot>
   <slot>svalue_changed()</slot>
   <slot>slot3()</slot>
   <slot>slot4()</slot>
   <slot>slot5()</slot>
   <slot>s2value_changed()</slot>
   <slot>s3value_changed()</slot>
+  <slot>valve_number_changed()</slot>
  </slots>
 </ui>
