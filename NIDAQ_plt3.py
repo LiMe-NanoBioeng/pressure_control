@@ -24,6 +24,7 @@ class AI():
 
     def ArduinoAI(x,y,c):        
         # Initialize c[]
+        ser.flushInput()
         c = []
         # Read analog input of AN4-5
         ser.write(b'AI6')
@@ -53,13 +54,16 @@ class AI():
     
     # Control Valve    
     def ArduinoDO(channel,flag):
-        #ser.flushInput() 
+        #
+        ser.flushInput()
         if flag:
             Dout = 'DO' + str(channel) + 'H\n'   
         else:
             Dout = 'DO' + str(channel) + 'L\n'
         ser.write(Dout.encode('utf-8'))
-            
+        ser_bytes = ser.readline().decode("utf-8")
+        return(ser_bytes.strip())
+
     def ArduinoDP(ch,pulsewidth,duty,number):
         command = str.encode("DP:"+str(ch)+":"+str(int(pulsewidth))+":"+str(duty)+":"+str(number)+"\n")
         ser.write(command)

@@ -127,7 +127,8 @@ class MainWindow(QtWidgets.QMainWindow):
     # ValveBotton_1
     def ValveOC(self):
         ui.valve_1[ui.selected_valve_index_index] = not ui.valve_1[ui.selected_valve_index_index]
-        NI.ArduinoDO(ui.selected_valve_index_index,ui.valve_1[ui.selected_valve_index_index])
+        s=NI.ArduinoDO(ui.selected_valve_index_index,ui.valve_1[ui.selected_valve_index_index])
+        
         
     def svalue_changed(self):
         ui.voltage1[ui.selected_valve_index_index]=ui.horizontalSlider.value()
