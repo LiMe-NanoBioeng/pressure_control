@@ -21,15 +21,10 @@ class AI():
                      today().strftime("%Y%m%d_%H%M%S"))+'_exp'
         FileName1=FolderName1+"/"+FileName+str(1+len([x for x in os.listdir(FolderName1) if x.endswith(".csv")])).zfill(4)
         return(FileName1)
-        
 
-    def ArduinoAI(x,y,c):
-        #ser.flushInput()
-        #ser.open()
-        
+    def ArduinoAI(x,y,c):        
         # Initialize c[]
         c = []
-
         # Read analog input of AN4-5
         ser.write(b'AI6')
         
@@ -48,13 +43,13 @@ class AI():
 
         if c[1] == '':  # if faied in obtaining data
             c[1] = 0
-#            c.extend([0,0])
-            
+            result= False
+        else:
+            result=True    
         for i in range(len(c)): # range(X):Xはチャンネル数
-            #print(c)
             c[i] = float(c[i]) # listをfloat形式に変換
  
-        return(x,y,c)
+        return(x,y,c,result)
     
     # Control Valve    
     def ArduinoDO(channel,flag):
@@ -64,32 +59,17 @@ class AI():
         else:
             Dout = 'DO' + str(channel) + 'L\n'
         ser.write(Dout.encode('utf-8'))
-        #print(str(channel))
             
     def ArduinoDP(ch,pulsewidth,duty,number):
         command = str.encode("DP:"+str(ch)+":"+str(int(pulsewidth))+":"+str(duty)+":"+str(number)+"\n")
         ser.write(command)
         
     def ArduinoAO(channel,flag,values):
-        #ser = serial.Serial('COM3',9600,timeout=1)
-        #ser.flushInput()
-#        AO9out = 'AO9v' + str(values[1]*50) + '\n'
-#        AO10out = 'AO10v' + str(values[2]*50) + '\n'
-#        AO11out = 'AO11v' + str(values[3]*50) + '\n'
+
         if flag == True:
             AO6out = 'AO'+str(channel)+'v'+ str(values*50) + '\n'
-        #import serial
-#            ser.write(AO9out.encode('utf-8'))
-#            ser.write(AO10out.encode('utf-8'))
-#            ser.write(AO11out.encode('utf-8'))
         else:
             AO6out = 'AO'+str(channel)+'v'+'0\n'
-#            ser.write(b'AO6v0\n')
-#            ser.write(b'AO9v0\n')
-#            ser.write(b'AO10v0\n')
-#            ser.write(b'AO11v0\n')
-        #print('AO6v1000')
-        #ser.close()
         ser.write(AO6out.encode('utf-8'))
         
     def NIDAQAI(x,y):
@@ -117,10 +97,7 @@ class AI():
                                              terminal_config=nidaqmx.constants.TerminalConfiguration.RSE)
 
             read_task.timing.cfg_samp_clk_timing(1e4, active_edge=Edge.RISING,samps_per_chan=100)
-            read_task.triggers.start_trigger.cfg_dig_edge_start_trig(trigger_source="/Dev2/PFI0")
-            #read_task.timing.delay_from_samp_clk_delay=0
-            #s=nidaqmx.stream_readers.AnalogMultiChannelReader()
-            
+            read_task.triggers.start_trigger.cfg_dig_edge_start_trig(trigger_source="/Dev2/PFI0")           
             reader=AnalogMultiChannelReader(read_task.in_stream)
             reader.read_many_sample(data, number_of_samples_per_channel=100,timeout=10)
             # print(data)
@@ -138,5 +115,4 @@ class AI():
             task.do_channels.add_do_chan("Dev1/port1/line7",
                                          line_grouping=LineGrouping.CHAN_PER_LINE)
             task.write(True,auto_start=True)
-#           time.sleep(1)
             task.write(False,auto_start=True)

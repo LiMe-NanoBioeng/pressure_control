@@ -40,6 +40,7 @@ class Ui_Droplet_formation(object):
         self.label.setObjectName("label")
         self.horizontalSlider = QtWidgets.QSlider(self.centralwidget)
         self.horizontalSlider.setGeometry(QtCore.QRect(90, 430, 231, 22))
+        self.horizontalSlider.setMaximum(64)
         self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
         self.horizontalSlider.setObjectName("horizontalSlider")
         self.lcdnumber_1 = QtWidgets.QLCDNumber(self.centralwidget)

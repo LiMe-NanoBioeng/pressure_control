@@ -55,11 +55,6 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
                  xlim=None, ylim=None, xscale='linear', yscale='linear',
                  width=12, height=3, dpi=100)
-        #initial graphs
-#        ui.graphwidget.figure.clear()
-#        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131, title = 'Valve1', xlabel='Time', ylabel='Pressure, kPa')  
-#        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132, title = 'Valve2', xlabel='Time', ylabel='Pressure, kPa')  
-#        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(133, title = 'Valve3', xlabel='Time', ylabel='Pressure, kPa')
         
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
@@ -67,10 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.x=[]
         ui.y=[]
         ui.c=[]
-        ui.voltage1=[0,0,0,0,0,0,0,0,0,0]
-        # ui.voltage2=0
-        # ui.voltage3=0
-        
+        ui.voltage1=[0,0,0,0,0,0,0,0,0,0]        
         ui.save=False
         ui.valve_1=[False,False,False,False,False,False,False,False,False,False]
         for icnt in range(len(ui.valve_1)):
@@ -79,72 +71,53 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.Foldername='C:/Users/Microfluidics-team'
         ui.value=0
         
-
     def update_figure(self):
-            
-        x,y,c=NI.ArduinoAI(ui.x,ui.y,ui.c)
-
-        c[1]=0.1208*c[1]-23.75
-#        c[2]=0.1208*c[2]-23.75
-#        c[3]=0.1208*c[3]-23.75
-#        print(c)
-
-
-        if ui.save == True:
-            
-            # add Hiroyuki
-            if ui.count != 0:
-                # ui.count = 0で新規file open 
-                ui.Ti = np.append(ui.Ti,c[0]-x[1])
-                ui.CA1 = np.append(ui.CA1,c[1])
-                ui.graphwidget.figure.clear()
-                ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131)
-                ui.graphwidget.axes.clear()
-                ui.graphwidget.x  = ui.Ti
-                ui.graphwidget.y  = ui.CA1          
-                ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
-                ui.graphwidget.draw()
- 
-
-                file = open(ui.Filename, 'a')
-
+        x,y,c,r=NI.ArduinoAI(ui.x,ui.y,ui.c)
+        if r :
+            c[1]=0.1208*c[1]-23.75
+            if ui.save == True:
+                # add Hiroyuki
+                if ui.count != 0:
+                    # ui.count = 0で新規file open 
+                    ui.Ti = np.append(ui.Ti,c[0]-x[1])
+                    ui.CA1 = np.append(ui.CA1,c[1])
+                    ui.graphwidget.figure.clear()
+                    ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131)
+                    ui.graphwidget.axes.clear()
+                    ui.graphwidget.x  = ui.Ti
+                    ui.graphwidget.y  = ui.CA1          
+                    ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
+                    ui.graphwidget.draw()
+                    file = open(ui.Filename, 'a')
+                else:
+                    ui.Ti = c[0]-x[1]
+                    ui.CA1  = c[1]
+                    file = open(ui.Filename, 'w')
+                    
+                ui.count = ui.count + 1
+                c[0] = c[0]-x[1]  #時間変換
+                #
+                #  record Display Time by Hiroyuki
+    
+                c[0]=round(c[0],6)
+                for i in c:
+                    jp = (str(i))
+                    file.write(jp)
+                    file.write(',') # コンマ
+                file.write('\n')  # 改行コード
+                file.close()
+    
+                ui.c=[]
+                
             else:
-                ui.Ti = c[0]-x[1]
-                ui.CA1  = c[1]
-#                ui.CA2  = c[2]
-#                ui.CA3  = c[3]
-                
-                file = open(ui.Filename, 'w')
-
-                
-            ui.count = ui.count + 1
-            c[0] = c[0]-x[1]  #時間変換
-            #
-            #  record Display Time by Hiroyuki
-
-            c[0]=round(c[0],6)
-            for i in c:
-                jp = (str(i))
-                file.write(jp)
-                file.write(',') # コンマ
-            file.write('\n')  # 改行コード
-            file.close()
-
-            ui.c=[]
+                ui.count = 0 # add Hiroyuki
             
-        else:
-            ui.count = 0 # add Hiroyuki
+            # counter Display
+            ui.valveLcd_1.display(c[1])
         
-
-        # counter Display
-        #NI.ArduinoAO(ui.valve)
-        ui.valveLcd_1.display(c[1])
-        # ui.valveLcd_2.display(c[2])
-        # ui.valveLcd_3.display(c[3])
 
     def valve_number_changed(self,index):
         ui.selected_valve_index_index=index
-#        print(index)
     # Recordbutton    
     def recordIO(self):
         ui.save = not ui.save
@@ -153,11 +126,8 @@ class MainWindow(QtWidgets.QMainWindow):
     
     # ValveBotton_1
     def ValveOC(self):
-        #print(ui.selected_valve_index_index)
         ui.valve_1[ui.selected_valve_index_index] = not ui.valve_1[ui.selected_valve_index_index]
         NI.ArduinoDO(ui.selected_valve_index_index,ui.valve_1[ui.selected_valve_index_index])
-        #print(ui.valve_1[ui.selected_valve_index_index])
-        NI.ArduinoAO(11,False, ui.voltage1[ui.selected_valve_index_index])
         
     def svalue_changed(self):
         ui.voltage1[ui.selected_valve_index_index]=ui.horizontalSlider.value()
