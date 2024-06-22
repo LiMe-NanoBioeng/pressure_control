@@ -8,6 +8,7 @@ import time
 from PyQt5 import QtWidgets, QtCore, QtGui
 from droplet_gui import Ui_Droplet_formation
 from matplotlibwidget import MatplotlibWidget
+from MXsII import MXsIIt as MXsII
 
 
 class wavefunc():
@@ -118,7 +119,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def valve_number_changed(self,index):
         ui.selected_valve_index_index=index
-    # Recordbutton    
+        message = 'P0' + str(ui.selected_valve_index_index+1) + '\r'
+        MXsII.FTWrite(message) 
+        # Recordbutton    
     def recordIO(self):
         ui.save = not ui.save
         if ui.save == True:
@@ -128,12 +131,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def ValveOC(self):
         ui.valve_1[ui.selected_valve_index_index] = not ui.valve_1[ui.selected_valve_index_index]
         s=NI.ArduinoDO(ui.selected_valve_index_index,ui.valve_1[ui.selected_valve_index_index])
-        
+       
         
     def svalue_changed(self):
         ui.voltage1[ui.selected_valve_index_index]=ui.horizontalSlider.value()
         ui.lcdnumber_1.display(ui.horizontalSlider.value())
         NI.ArduinoAO(11,True, ui.voltage1[ui.selected_valve_index_index])
+
         
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
