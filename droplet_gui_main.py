@@ -119,7 +119,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def valve_number_changed(self,index):
         ui.selected_valve_index_index=index
-        message = 'P0' + str(ui.selected_valve_index_index+1) + '\r'
+        valvenum=str(hex(ui.selected_valve_index_index+1).upper())
+        message = 'P0' + valvenum[-1] + '\r'
+        print(message)
         MXsII.FTWrite(message) 
         # Recordbutton    
     def recordIO(self):
