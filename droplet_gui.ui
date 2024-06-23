@@ -114,6 +114,42 @@
      </rect>
     </property>
    </widget>
+   <widget class="QTableWidget" name="tableWidget">
+    <property name="geometry">
+     <rect>
+      <x>385</x>
+      <y>440</y>
+      <width>321</width>
+      <height>171</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="SequenceRun">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>400</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Sequence Run</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="lcdTimer">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>400</y>
+      <width>41</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="digitCount">
+     <number>2</number>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -124,8 +160,20 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionload_sequence_file"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionload_sequence_file">
+   <property name="text">
+    <string>load sequence file</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
@@ -193,16 +241,47 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>menubar</sender>
+   <signal>triggered(QAction*)</signal>
+   <receiver>Droplet_formation</receiver>
+   <slot>openSeqFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>25</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>113</x>
+     <y>97</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>SequenceRun</sender>
+   <signal>clicked()</signal>
+   <receiver>Droplet_formation</receiver>
+   <slot>RunSequence()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>457</x>
+     <y>434</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>581</x>
+     <y>411</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>recordIO()</slot>
   <slot>ValveOC()</slot>
   <slot>svalue_changed()</slot>
-  <slot>slot3()</slot>
-  <slot>slot4()</slot>
-  <slot>slot5()</slot>
   <slot>s2value_changed()</slot>
   <slot>s3value_changed()</slot>
   <slot>valve_number_changed()</slot>
+  <slot>openSeqFile()</slot>
+  <slot>RunSequence()</slot>
  </slots>
 </ui>

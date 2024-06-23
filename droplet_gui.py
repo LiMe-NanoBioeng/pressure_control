@@ -49,20 +49,40 @@ class Ui_Droplet_formation(object):
         self.comboBox = QtWidgets.QComboBox(self.centralwidget)
         self.comboBox.setGeometry(QtCore.QRect(170, 400, 141, 22))
         self.comboBox.setObjectName("comboBox")
+        self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
+        self.tableWidget.setGeometry(QtCore.QRect(385, 440, 321, 171))
+        self.tableWidget.setObjectName("tableWidget")
+        self.tableWidget.setColumnCount(0)
+        self.tableWidget.setRowCount(0)
+        self.SequenceRun = QtWidgets.QPushButton(self.centralwidget)
+        self.SequenceRun.setGeometry(QtCore.QRect(380, 400, 111, 31))
+        self.SequenceRun.setObjectName("SequenceRun")
+        self.lcdTimer = QtWidgets.QLCDNumber(self.centralwidget)
+        self.lcdTimer.setGeometry(QtCore.QRect(500, 400, 41, 31))
+        self.lcdTimer.setDigitCount(2)
+        self.lcdTimer.setObjectName("lcdTimer")
         Droplet_formation.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(Droplet_formation)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 732, 21))
         self.menubar.setObjectName("menubar")
+        self.menuFile = QtWidgets.QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
         Droplet_formation.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(Droplet_formation)
         self.statusbar.setObjectName("statusbar")
         Droplet_formation.setStatusBar(self.statusbar)
+        self.actionload_sequence_file = QtWidgets.QAction(Droplet_formation)
+        self.actionload_sequence_file.setObjectName("actionload_sequence_file")
+        self.menuFile.addAction(self.actionload_sequence_file)
+        self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(Droplet_formation)
         self.recordButton.clicked.connect(Droplet_formation.recordIO) # type: ignore
         self.valveButton_1.clicked.connect(Droplet_formation.ValveOC) # type: ignore
         self.horizontalSlider.valueChanged['int'].connect(Droplet_formation.svalue_changed) # type: ignore
         self.comboBox.currentIndexChanged['int'].connect(Droplet_formation.valve_number_changed) # type: ignore
+        self.menubar.triggered['QAction*'].connect(Droplet_formation.openSeqFile) # type: ignore
+        self.SequenceRun.clicked.connect(Droplet_formation.RunSequence) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Droplet_formation)
 
     def retranslateUi(self, Droplet_formation):
@@ -71,3 +91,6 @@ class Ui_Droplet_formation(object):
         self.recordButton.setText(_translate("Droplet_formation", "Record"))
         self.valveButton_1.setText(_translate("Droplet_formation", "Valve1"))
         self.label.setText(_translate("Droplet_formation", "kPa"))
+        self.SequenceRun.setText(_translate("Droplet_formation", "Sequence Run"))
+        self.menuFile.setTitle(_translate("Droplet_formation", "File"))
+        self.actionload_sequence_file.setText(_translate("Droplet_formation", "load sequence file"))

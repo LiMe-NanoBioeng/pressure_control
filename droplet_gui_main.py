@@ -4,6 +4,8 @@ import sys
 
 import numpy as np
 from NIDAQ_plt3 import AI as NI
+import tkinter.filedialog, os
+
 import time
 from PyQt5 import QtWidgets, QtCore, QtGui
 from droplet_gui import Ui_Droplet_formation
@@ -48,9 +50,13 @@ class wavefunc():
         
 class MainWindow(QtWidgets.QMainWindow):    
     def __init__(self, parent=None):
-        global ui
+        global ui  
         super(MainWindow, self).__init__(parent=parent)
         ui = Ui_Droplet_formation()
+        ui.x=[]
+        ui.y=[]
+        ui.c=[]
+        ui.voltage1=[0,0,0,0,0,0,0,0,0,0]    
         ui.setupUi(self)
         ui.comboBox.addItems(['1','2','3','4','5','6','7','8','9','10'])
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
@@ -59,11 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
-        timer.start(50)
-        ui.x=[]
-        ui.y=[]
-        ui.c=[]
-        ui.voltage1=[0,0,0,0,0,0,0,0,0,0]        
+        timer.start(50)  
         ui.save=False
         ui.valve_1=[False,False,False,False,False,False,False,False,False,False]
         for icnt in range(len(ui.valve_1)):
@@ -71,6 +73,10 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.Filename=' '
         ui.Foldername='C:/Users/Microfluidics-team'
         ui.value=0
+        ui.residualtime=0
+        ui.start=time.time()
+        ui.duration=0
+        ui.RunSequenceFlag=False
         
     def update_figure(self):
         x,y,c,r=NI.ArduinoAI(ui.x,ui.y,ui.c)
@@ -115,13 +121,62 @@ class MainWindow(QtWidgets.QMainWindow):
             
             # counter Display
             ui.valveLcd_1.display(c[1])
+            # ui.residualtime=ui.duration-(time.time()-ui.start)
+            # if ui.residualtime >0 :
+            #     
+                
+
+
+    def RunSequence(self):
+        def open_single_valve(index,duration):
+            
+            for i in range(len(ui.valve_1)):
+                if i != index-1:
+                    ui.valve_1[i]=False
+                else:
+                    ui.valve_1[i]=True
+                NI.ArduinoDO(i,ui.valve_1[i])    
+            ui.start=time.time()
+            ui.duration=duration
+            time.sleep(duration)   
+            ui.valve_1[index-1] = not ui.valve_1[index-1]
+            NI.ArduinoDO(index-1,ui.valve_1[index-1])
+            
+        number_of_commands= ui.tableWidget.rowCount()
+        for command in range(number_of_commands):
+            text=ui.tableWidget.item(command,0).text()
+            message=text.split(',')
+            MXsII.FTWrite(message[0]+ '\r')
+            time.sleep(1)
+            valve=message[0]
+            pressure=message[1]
+            ui.voltage1[int(valve[-1],16)-1]=pressure
+            NI.ArduinoAO(11,True, ui.voltage1[int(valve[-1],16)-1])
+            duration = int(message[2].rstrip())
+            ui.lcdTimer.display(command+1)
+            open_single_valve(int(valve[-1],16),duration)
+           
+
+    def openSeqFile(self):
+        fTyp = [("SequenceFile", "*.txt")]
+        iDir = os.path.abspath(os.path.dirname(__file__))
+        file_name = tkinter.filedialog.askopenfilename(filetypes=fTyp, initialdir=iDir)
+        f=open(file_name,'r')
         
+        #ui.tableWidget.setRowCount(0)
+        ui.tableWidget.setColumnCount(1)
+        rowPosition=0
+        for x in f:
+            ui.tableWidget.insertRow(rowPosition)
+            ui.tableWidget.setItem(rowPosition, 0, QtWidgets.QTableWidgetItem(x))
+            rowPosition+=1
+
 
     def valve_number_changed(self,index):
         ui.selected_valve_index_index=index
         valvenum=str(hex(ui.selected_valve_index_index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
-        print(message)
+        ui.lcdnumber_1.display(ui.voltage1[ui.selected_valve_index_index])
         MXsII.FTWrite(message) 
         # Recordbutton    
     def recordIO(self):
@@ -133,7 +188,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def ValveOC(self):
         ui.valve_1[ui.selected_valve_index_index] = not ui.valve_1[ui.selected_valve_index_index]
         s=NI.ArduinoDO(ui.selected_valve_index_index,ui.valve_1[ui.selected_valve_index_index])
-       
+        
         
     def svalue_changed(self):
         ui.voltage1[ui.selected_valve_index_index]=ui.horizontalSlider.value()
