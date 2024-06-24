@@ -77,8 +77,21 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.start=time.time()
         ui.duration=0
         ui.RunSequenceFlag=False
+        ui.number_of_commands=0
+        ui.command=1
         
     def update_figure(self):
+        def open_single_valve(index,duration):
+            
+            for i in range(len(ui.valve_1)):
+                if i != index-1:
+                    ui.valve_1[i]=False
+                else:
+                    ui.valve_1[i]=True
+                NI.ArduinoDO(i,ui.valve_1[i])    
+            ui.start=time.time()
+            ui.duration=duration
+            
         x,y,c,r=NI.ArduinoAI(ui.x,ui.y,ui.c)
         if r :
             c[1]=0.1208*c[1]-23.75
@@ -121,40 +134,41 @@ class MainWindow(QtWidgets.QMainWindow):
             
             # counter Display
             ui.valveLcd_1.display(c[1])
-            # ui.residualtime=ui.duration-(time.time()-ui.start)
-            # if ui.residualtime >0 :
+            if ui.number_of_commands-ui.command>0:
+                ui.residualtime=ui.duration-(time.time()-ui.start)
+                if ui.residualtime >0 :
+                    ui.lcdTimer.display(ui.residualtime)
+                else:
+                    text=ui.tableWidget.item(ui.command,0).text()
+                    message=text.split(',')
+                    MXsII.FTWrite(message[0]+ '\r')
+                    valve=message[0]
+                    pressure=message[1]
+                    ui.voltage1[int(valve[-1],16)-1]=pressure
+                    NI.ArduinoAO(11,True, ui.voltage1[int(valve[-1],16)-1])
+                    duration = int(message[2].rstrip())
+                    open_single_valve(int(valve[-1],16),duration)
+                    ui.command+=1
+            else:
+                ui.residualtime=ui.duration-(time.time()-ui.start)
+                if ui.residualtime >0 :
+                    ui.lcdTimer.display(ui.residualtime)
+                elif ui.number_of_commands !=0 :
+                    for i in range(len(ui.valve_1)):
+                        ui.valve_1[i]=False
+                        NI.ArduinoDO(i,ui.valve_1[i])
+                    ui.number_of_commands=0
+                    
             #     
-                
+
+            
+                 
 
 
     def RunSequence(self):
-        def open_single_valve(index,duration):
-            
-            for i in range(len(ui.valve_1)):
-                if i != index-1:
-                    ui.valve_1[i]=False
-                else:
-                    ui.valve_1[i]=True
-                NI.ArduinoDO(i,ui.valve_1[i])    
-            ui.start=time.time()
-            ui.duration=duration
-            time.sleep(duration)   
-            ui.valve_1[index-1] = not ui.valve_1[index-1]
-            NI.ArduinoDO(index-1,ui.valve_1[index-1])
-            
-        number_of_commands= ui.tableWidget.rowCount()
-        for command in range(number_of_commands):
-            text=ui.tableWidget.item(command,0).text()
-            message=text.split(',')
-            MXsII.FTWrite(message[0]+ '\r')
-            time.sleep(1)
-            valve=message[0]
-            pressure=message[1]
-            ui.voltage1[int(valve[-1],16)-1]=pressure
-            NI.ArduinoAO(11,True, ui.voltage1[int(valve[-1],16)-1])
-            duration = int(message[2].rstrip())
-            ui.lcdTimer.display(command+1)
-            open_single_valve(int(valve[-1],16),duration)
+        ui.command=0
+        ui.number_of_commands= ui.tableWidget.rowCount()
+
            
 
     def openSeqFile(self):
