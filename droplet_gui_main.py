@@ -56,6 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.x=[]
         ui.y=[]
         ui.c=[]
+        ui.f=[]
         ui.voltage1=[0,0,0,0,0,0,0,0,0,0]    
         ui.setupUi(self)
         ui.comboBox.addItems(['1','2','3','4','5','6','7','8','9','10'])
@@ -65,7 +66,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
-        timer.start(50)  
+        timer.start()  
         ui.save=False
         ui.valve_1=[False,False,False,False,False,False,False,False,False,False]
         for icnt in range(len(ui.valve_1)):
@@ -79,17 +80,17 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.RunSequenceFlag=False
         ui.number_of_commands=0
         ui.command=1
-        
+    def open_single_valve(index,duration):
+        for i in range(len(ui.valve_1)):
+            if i != index-1:
+                ui.valve_1[i]=False
+            else:
+                ui.valve_1[i]=True
+            NI.ArduinoDO(i,ui.valve_1[i])    
+        ui.start=time.time()
+        ui.duration=duration        
     def update_figure(self):
-        def open_single_valve(index,duration):
-            for i in range(len(ui.valve_1)):
-                if i != index-1:
-                    ui.valve_1[i]=False
-                else:
-                    ui.valve_1[i]=True
-                NI.ArduinoDO(i,ui.valve_1[i])    
-            ui.start=time.time()
-            ui.duration=duration
+
         f=NI.ArduinoI2C()
         x,y,c,r=NI.ArduinoAI(ui.x,ui.y,ui.c)
         if r :
@@ -100,6 +101,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     # ui.count = 0で新規file open 
                     ui.Ti = np.append(ui.Ti,c[0]-x[1])
                     ui.CA1 = np.append(ui.CA1,c[1])
+                    ui.f=np.append(ui.f,f)
                     ui.graphwidget.figure.clear()
                     ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131)
                     ui.graphwidget.axes.clear()
@@ -107,10 +109,18 @@ class MainWindow(QtWidgets.QMainWindow):
                     ui.graphwidget.y  = ui.CA1          
                     ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
                     ui.graphwidget.draw()
+
+                    ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132)
+                    ui.graphwidget.axes.clear()
+                    ui.graphwidget.x  = ui.Ti
+                    ui.graphwidget.y  = ui.f        
+                    ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
+                    ui.graphwidget.draw()
                     file = open(ui.Filename, 'a')
                 else:
                     ui.Ti = c[0]-x[1]
                     ui.CA1  = c[1]
+                    ui.f=f
                     file = open(ui.Filename, 'w')
                     
                 ui.count = ui.count + 1
@@ -123,7 +133,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     jp = (str(i))
                     file.write(jp)
                     file.write(',') # コンマ
-                file.write(f)
+                file.write(str(f))
                 file.write('\n')  # 改行コード
                 file.close()
     
@@ -131,9 +141,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 
             else:
                 ui.count = 0 # add Hiroyuki
-            
+                ui.valveLcd_1.display(c[1])
+                ui.flowrate.display(f)
             # counter Display
-            ui.valveLcd_1.display(c[1])
+            # 
             if ui.number_of_commands-ui.command>0:
                 ui.residualtime=ui.duration-(time.time()-ui.start)
                 if ui.residualtime >0 :
@@ -147,7 +158,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     ui.voltage1[int(valve[-1],16)-1]=pressure
                     NI.ArduinoAO(11,True, ui.voltage1[int(valve[-1],16)-1])
                     duration = int(message[2].rstrip())
-                    open_single_valve(int(valve[-1],16),duration)
+                    self.open_single_valve(int(valve[-1],16),duration)
                     ui.command+=1
             else:
                 ui.residualtime=ui.duration-(time.time()-ui.start)

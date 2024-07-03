@@ -24,8 +24,9 @@ class AI():
     def ArduinoI2C():
         ser.flushInput()
         ser.write(b'II')
+        time.sleep(0.1)
         ser_bytes = ser.readline().decode("utf-8")
-        return(ser_bytes)
+        return(float(ser_bytes))
 
     def ArduinoAI(x,y,c):        
         # Initialize c[]

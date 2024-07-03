@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>732</width>
+    <width>961</width>
     <height>690</height>
    </rect>
   </property>
@@ -98,7 +98,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>400</y>
+      <y>370</y>
       <width>64</width>
       <height>23</height>
      </rect>
@@ -108,7 +108,7 @@
     <property name="geometry">
      <rect>
       <x>170</x>
-      <y>400</y>
+      <y>370</y>
       <width>141</width>
       <height>22</height>
      </rect>
@@ -150,13 +150,23 @@
      <number>2</number>
     </property>
    </widget>
+   <widget class="QLCDNumber" name="flowrate">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>400</y>
+      <width>64</width>
+      <height>23</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>732</width>
+     <width>961</width>
      <height>21</height>
     </rect>
    </property>
