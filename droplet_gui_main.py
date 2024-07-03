@@ -82,7 +82,6 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def update_figure(self):
         def open_single_valve(index,duration):
-            
             for i in range(len(ui.valve_1)):
                 if i != index-1:
                     ui.valve_1[i]=False
@@ -91,7 +90,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 NI.ArduinoDO(i,ui.valve_1[i])    
             ui.start=time.time()
             ui.duration=duration
-            
+        f=NI.ArduinoI2C()
         x,y,c,r=NI.ArduinoAI(ui.x,ui.y,ui.c)
         if r :
             c[1]=0.1208*c[1]-23.75
@@ -124,6 +123,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     jp = (str(i))
                     file.write(jp)
                     file.write(',') # コンマ
+                file.write(f)
                 file.write('\n')  # 改行コード
                 file.close()
     

@@ -9,7 +9,7 @@ Update: 2020-11-05, kaneko
 
 import time, datetime, os, serial
 
-ser = serial.Serial('COM8', 9600, timeout=1)
+ser = serial.Serial('COM11', 9600, timeout=1)
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -21,6 +21,11 @@ class AI():
                      today().strftime("%Y%m%d_%H%M%S"))+'_exp'
         FileName1=FolderName1+"/"+FileName+str(1+len([x for x in os.listdir(FolderName1) if x.endswith(".csv")])).zfill(4)
         return(FileName1)
+    def ArduinoI2C():
+        ser.flushInput()
+        ser.write(b'II')
+        ser_bytes = ser.readline().decode("utf-8")
+        return(ser_bytes)
 
     def ArduinoAI(x,y,c):        
         # Initialize c[]
