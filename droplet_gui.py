@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Droplet_formation(object):
     def setupUi(self, Droplet_formation):
         Droplet_formation.setObjectName("Droplet_formation")
-        Droplet_formation.resize(961, 690)
+        Droplet_formation.resize(1369, 690)
         self.centralwidget = QtWidgets.QWidget(Droplet_formation)
         self.centralwidget.setObjectName("centralwidget")
         self.recordButton = QtWidgets.QPushButton(self.centralwidget)
@@ -40,7 +40,7 @@ class Ui_Droplet_formation(object):
         self.label.setObjectName("label")
         self.horizontalSlider = QtWidgets.QSlider(self.centralwidget)
         self.horizontalSlider.setGeometry(QtCore.QRect(90, 430, 231, 22))
-        self.horizontalSlider.setMaximum(64)
+        self.horizontalSlider.setMaximum(5000)
         self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
         self.horizontalSlider.setObjectName("horizontalSlider")
         self.lcdnumber_1 = QtWidgets.QLCDNumber(self.centralwidget)
@@ -66,7 +66,7 @@ class Ui_Droplet_formation(object):
         self.flowrate.setObjectName("flowrate")
         Droplet_formation.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(Droplet_formation)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 961, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1369, 21))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")

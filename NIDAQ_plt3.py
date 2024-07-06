@@ -28,7 +28,7 @@ class AI():
         ser_bytes = ser.readline().decode("utf-8")
         return(float(ser_bytes))
 
-    def ArduinoAI(x,y,c):        
+    def ArduinoAI():        
         # Initialize c[]
         ser.flushInput()
         c = []
@@ -41,22 +41,22 @@ class AI():
         decoded_bytes = ser_bytes.strip()
         
         # x and y are sequential data from the begining
-        x.append(time.time())
-        y.extend(decoded_bytes.split(","))
+#        x.append(time.time())
+#        y.extend(decoded_bytes.split(","))
 
         # c is a temporal data
-        c.append(time.time())
-        c.extend(decoded_bytes.split(","))
+        t = time.time()
+        c=decoded_bytes.split(",")
 
-        if c[1] == '':  # if faied in obtaining data
-            c[1] = 0
+        if c[0] == '':  # if faied in obtaining data
+            c[0] = 0
             result= False
         else:
             result=True    
         for i in range(len(c)): # range(X):Xはチャンネル数
             c[i] = float(c[i]) # listをfloat形式に変換
  
-        return(x,y,c,result)
+        return(t,c,result)
     
     # Control Valve    
     def ArduinoDO(channel,flag):
@@ -76,8 +76,9 @@ class AI():
         
     def ArduinoAO(channel,flag,values):
 
+        ser.flushInput()
         if flag == True:
-            AO6out = 'AO'+str(channel)+'v'+ str(values*50) + '\n'
+            AO6out = 'AO'+str(channel)+'v'+ str(values) + '\n'
         else:
             AO6out = 'AO'+str(channel)+'v'+'0\n'
         ser.write(AO6out.encode('utf-8'))

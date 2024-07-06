@@ -11,6 +11,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from droplet_gui import Ui_Droplet_formation
 from matplotlibwidget import MatplotlibWidget
 from MXsII import MXsIIt as MXsII
+# from simple_pid import PID
 
 
 class wavefunc():
@@ -53,8 +54,8 @@ class MainWindow(QtWidgets.QMainWindow):
         global ui  
         super(MainWindow, self).__init__(parent=parent)
         ui = Ui_Droplet_formation()
-        ui.x=[]
-        ui.y=[]
+        ui.t=[]
+        ui.dt=[]
         ui.c=[]
         ui.f=[]
         ui.voltage1=[0,0,0,0,0,0,0,0,0,0]    
@@ -69,8 +70,11 @@ class MainWindow(QtWidgets.QMainWindow):
         timer.start()  
         ui.save=False
         ui.valve_1=[False,False,False,False,False,False,False,False,False,False]
-        for icnt in range(len(ui.valve_1)):
-            NI.ArduinoDO(icnt,ui.valve_1[icnt])
+        # for icnt in range(len(ui.valve_1)):
+        #     NI.ArduinoDO(icnt,ui.valve_1[icnt])
+        self.open_single_valve(-1, 0)
+        NI.ArduinoAO(11,False, 0)
+        
         ui.Filename=' '
         ui.Foldername='C:/Users/Microfluidics-team'
         ui.value=0
@@ -80,7 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.RunSequenceFlag=False
         ui.number_of_commands=0
         ui.command=1
-    def open_single_valve(index,duration):
+    def open_single_valve(self,index,duration):
         for i in range(len(ui.valve_1)):
             if i != index-1:
                 ui.valve_1[i]=False
@@ -88,87 +92,172 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.valve_1[i]=True
             NI.ArduinoDO(i,ui.valve_1[i])    
         ui.start=time.time()
-        ui.duration=duration        
+        ui.duration=duration
+    def PID(self,Kp, Ki, Kd, setpoint, integral,dt):
+        # global time, integral, time_prev, e_prev
+        max_val=500
+        # Value of offset - when the error is equal zero
+        offset = 0
+        measurement = np.median([ui.f[-3],ui.f[-2],ui.f[-1]])
+        pre_measurement = np.median([ui.f[-4],ui.f[-3],ui.f[-2]])
+                                
+        # PID calculations
+        e = float(setpoint - measurement)
+        e_prev=float(setpoint-pre_measurement)
+        
+        P = max(min(Kp*e,max_val),-max_val)
+        integral = integral + max(min(Ki*e*dt,max_val),-max_val)
+        D = max(min(Kd*(e - e_prev)/dt,max_val),-max_val)
+
+        # calculate manipulated variable - MV 
+        MV = offset + P + integral + D
+        #print(str(setpoint) + "," + str(int(MV)) + "," + str(integral))
+        MV=max(min(MV,64*50),0)
+        # update stored data for next iteration
+    #    e_prev = e
+    #    time_prev = time
+        return(MV,e)
+    def SequenceControlTime(self):
+        Kp=1.2
+        Ki=0.03
+        Kd=0.3
+        elapsed_time = time.time()-ui.start
+        ui.residualtime=ui.duration-elapsed_time
+        ui.lcdTimer.display(ui.residualtime)
+        #ui.residualtime=ui.duration-(time.time()-ui.start)
+        MV=0
+        e=0
+        if ui.number_of_commands-ui.command>0:
+            #commands during the sequence
+            ui.lcdTimer.display(ui.residualtime)
+            if ui.residualtime >0 :
+                # ui.command proceeds when the seq proceeds.
+                # thus, we refer the valve number and values at ui.command -1 
+                valve, valve_num,pressure,duration = self.read_seq_commands(ui.command-1)                
+                
+                MV,e = self.PID(Kp,Ki,Kd,pressure,
+                                ui.voltage1[valve_num-1],
+                                ui.dt[-1]-ui.dt[-2])
+                MV=int(MV)
+                ui.voltage1[valve_num-1]=MV
+                NI.ArduinoAO(11,True,MV)
+            else:
+                # proceeds when the ui.residual time is less than 0 (wh\en negative)
+                valve, valve_num,pressure,duration = self.read_seq_commands(ui.command)
+                ui.voltage1[valve_num-1]=pressure # register pressure value
+                NI.ArduinoAO(11,False, 0)
+                self.open_single_valve(-1, 0)
+                #
+                # send commands when switch the sequence
+                MXsII.FTWrite(str(valve)+ '\r') # switch the valve
+                time.sleep(1)
+                # send pressure value
+                #NI.ArduinoAO(11,True,pressure)
+                self.open_single_valve(valve_num,duration)
+                # proceedsd ui.command
+                ui.command+=1
+        else:
+            #commands at the end of the sequence (when ui.number_of_commands-ui.command==0)
+            if ui.residualtime >0 :
+                valve, valve_num,pressure,duration = self.read_seq_commands(ui.command-1)
+                MV,e = self.PID(Kp,Ki,Kd,pressure,
+                                ui.voltage1[valve_num-1],
+                                ui.dt[-1]-ui.dt[-2]) 
+                MV=int(MV)     
+                ui.voltage1[valve_num-1]=MV
+                NI.ArduinoAO(11,True,MV)
+            elif ui.number_of_commands !=0 :
+                #commands at the end of the last sequence
+                for i in range(len(ui.valve_1)):
+                    ui.valve_1[i]=False
+                    NI.ArduinoDO(i,ui.valve_1[i])
+                ui.number_of_commands=0
+                time.sleep(1)
+                   
+        # print(str(MV)+"," + str(ui.f[-1])+ "," + str(e))
+
+    def read_seq_commands(self, command):
+        text=ui.tableWidget.item(command,0).text()
+        message=text.split(',')
+        valve=message[0] # valve number
+        pressure=float(message[1]) # pressure value
+        duration = int(message[2].rstrip())
+        valve_num=int(valve[-1],16)
+        return(valve, valve_num,pressure,duration)
+    def draw_graph(self):
+        ui.graphwidget.figure.clear()
+        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131)
+        ui.graphwidget.axes.clear()
+        ui.graphwidget.x  = ui.dt
+        ui.graphwidget.y  = ui.CA1          
+        ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
+        ui.graphwidget.draw()
+
+        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132)
+        ui.graphwidget.axes.clear()
+        ui.graphwidget.x  = ui.dt
+        ui.graphwidget.y  = ui.f        
+        ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
+        ui.graphwidget.draw()
+        
+        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(133)
+        ui.graphwidget.axes.clear()
+        ui.graphwidget.x  = ui.dt
+        ui.graphwidget.y  = ui.q
+        ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
+        ui.graphwidget.draw()        
     def update_figure(self):
 
         f=NI.ArduinoI2C()
-        x,y,c,r=NI.ArduinoAI(ui.x,ui.y,ui.c)
+        f=float(f)/32767*1000
+        time,c,r=NI.ArduinoAI()
         if r :
-            c[1]=0.1208*c[1]-23.75
+            c[0]=0.1208*c[0]-23.75
             if ui.save == True:
                 # add Hiroyuki
                 if ui.count != 0:
                     # ui.count = 0で新規file open 
-                    ui.Ti = np.append(ui.Ti,c[0]-x[1])
-                    ui.CA1 = np.append(ui.CA1,c[1])
+                    #ui.t = np.append(ui.t,time)
+                    ui.dt= np.append(ui.dt,time-ui.t)
+                    ui.CA1 = np.append(ui.CA1,c[0])
                     ui.f=np.append(ui.f,f)
-                    ui.graphwidget.figure.clear()
-                    ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131)
-                    ui.graphwidget.axes.clear()
-                    ui.graphwidget.x  = ui.Ti
-                    ui.graphwidget.y  = ui.CA1          
-                    ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
-                    ui.graphwidget.draw()
+                    if ui.count !=1: # compute integrated flow quantity at t > 1 
+                        q=ui.q[-1]+f*(ui.dt[-1]-ui.dt[-2])/60
+                    else: # compute integrated flow quantity at t=1
+                        q=f*(ui.dt[-1])/60
+                    ui.q=np.append(ui.q,q)                    
+                    c=np.append(np.append(np.append(round(ui.dt[-1],6),c),float(f)),float(q))
+                    self.draw_graph()
 
-                    ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132)
-                    ui.graphwidget.axes.clear()
-                    ui.graphwidget.x  = ui.Ti
-                    ui.graphwidget.y  = ui.f        
-                    ui.graphwidget.axes.plot(ui.graphwidget.x,ui.graphwidget.y)
-                    ui.graphwidget.draw()
                     file = open(ui.Filename, 'a')
                 else:
-                    ui.Ti = c[0]-x[1]
-                    ui.CA1  = c[1]
+                    ui.t=time # initial time
+                    ui.dt = time-ui.t
+                    ui.CA1  = c[0]
                     ui.f=f
+                    ui.q=0
                     file = open(ui.Filename, 'w')
-                    
+                    c=np.append(np.append(np.append(round(ui.dt,6),c),float(f)),float(ui.q))
+                
                 ui.count = ui.count + 1
-                c[0] = c[0]-x[1]  #時間変換
-                #
-                #  record Display Time by Hiroyuki
-    
-                c[0]=round(c[0],6)
+                
+
                 for i in c:
                     jp = (str(i))
                     file.write(jp)
                     file.write(',') # コンマ
-                file.write(str(f))
                 file.write('\n')  # 改行コード
                 file.close()
     
-                ui.c=[]
                 
             else:
                 ui.count = 0 # add Hiroyuki
-                ui.valveLcd_1.display(c[1])
+                ui.valveLcd_1.display(c[0])
                 ui.flowrate.display(f)
             # counter Display
             # 
-            if ui.number_of_commands-ui.command>0:
-                ui.residualtime=ui.duration-(time.time()-ui.start)
-                if ui.residualtime >0 :
-                    ui.lcdTimer.display(ui.residualtime)
-                else:
-                    text=ui.tableWidget.item(ui.command,0).text()
-                    message=text.split(',')
-                    MXsII.FTWrite(message[0]+ '\r')
-                    valve=message[0]
-                    pressure=message[1]
-                    ui.voltage1[int(valve[-1],16)-1]=pressure
-                    NI.ArduinoAO(11,True, ui.voltage1[int(valve[-1],16)-1])
-                    duration = int(message[2].rstrip())
-                    self.open_single_valve(int(valve[-1],16),duration)
-                    ui.command+=1
-            else:
-                ui.residualtime=ui.duration-(time.time()-ui.start)
-                if ui.residualtime >0 :
-                    ui.lcdTimer.display(ui.residualtime)
-                elif ui.number_of_commands !=0 :
-                    for i in range(len(ui.valve_1)):
-                        ui.valve_1[i]=False
-                        NI.ArduinoDO(i,ui.valve_1[i])
-                    ui.number_of_commands=0
+            if ui.number_of_commands != 0:
+                self.SequenceControlTime()
                     
             #     
 

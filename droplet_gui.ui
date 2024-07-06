@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>961</width>
+    <width>1369</width>
     <height>690</height>
    </rect>
   </property>
@@ -88,7 +88,7 @@
      </rect>
     </property>
     <property name="maximum">
-     <number>64</number>
+     <number>5000</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -166,7 +166,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>961</width>
+     <width>1369</width>
      <height>21</height>
     </rect>
    </property>
