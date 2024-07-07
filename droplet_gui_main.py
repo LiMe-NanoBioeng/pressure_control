@@ -118,9 +118,9 @@ class MainWindow(QtWidgets.QMainWindow):
     #    time_prev = time
         return(MV,e)
     def SequenceControlTime(self):
-        Kp=1.2
-        Ki=0.03
-        Kd=0.3
+        Kp=0.1
+        Ki=0.001
+        Kd=0.001
         elapsed_time = time.time()-ui.start
         ui.residualtime=ui.duration-elapsed_time
         ui.lcdTimer.display(ui.residualtime)
@@ -129,7 +129,7 @@ class MainWindow(QtWidgets.QMainWindow):
         e=0
         if ui.number_of_commands-ui.command>0:
             #commands during the sequence
-            ui.lcdTimer.display(ui.residualtime)
+            #ui.lcdTimer.display(ui.residualtime)
             if ui.residualtime >0 :
                 # ui.command proceeds when the seq proceeds.
                 # thus, we refer the valve number and values at ui.command -1 
@@ -156,6 +156,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.open_single_valve(valve_num,duration)
                 # proceedsd ui.command
                 ui.command+=1
+                ui.lcdSeqNumber.display(ui.command)
         else:
             #commands at the end of the sequence (when ui.number_of_commands-ui.command==0)
             if ui.residualtime >0 :
@@ -172,6 +173,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     ui.valve_1[i]=False
                     NI.ArduinoDO(i,ui.valve_1[i])
                 ui.number_of_commands=0
+                ui.save = not ui.save # stop saving and displaying
+                ui.lcdSeqNumber.display(ui.number_of_commands)
                 time.sleep(1)
                    
         # print(str(MV)+"," + str(ui.f[-1])+ "," + str(e))
@@ -213,6 +216,7 @@ class MainWindow(QtWidgets.QMainWindow):
         time,c,r=NI.ArduinoAI()
         if r :
             c[0]=0.1208*c[0]-23.75
+            ui.valveLcd_1.display(c[0])
             if ui.save == True:
                 # add Hiroyuki
                 if ui.count != 0:
@@ -252,11 +256,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 
             else:
                 ui.count = 0 # add Hiroyuki
-                ui.valveLcd_1.display(c[0])
-                ui.flowrate.display(f)
+            ui.flowrate.display(f)
             # counter Display
             # 
-            if ui.number_of_commands != 0:
+            if ui.number_of_commands != 0 and len(ui.f)>4:
                 self.SequenceControlTime()
                     
             #     
@@ -297,6 +300,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.save = not ui.save
         if ui.save == True:
             ui.Filename = NI.DefFile(ui.Foldername)
+            ui.recordButton.testAttribute
     
     # ValveBotton_1
     def ValveOC(self):

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1369</width>
+    <width>1181</width>
     <height>690</height>
    </rect>
   </property>
@@ -35,8 +35,8 @@
    <widget class="QLCDNumber" name="valveLcd_1">
     <property name="geometry">
      <rect>
-      <x>200</x>
-      <y>480</y>
+      <x>150</x>
+      <y>360</y>
       <width>120</width>
       <height>50</height>
      </rect>
@@ -63,8 +63,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>510</y>
+      <x>290</x>
+      <y>380</y>
       <width>41</width>
       <height>20</height>
      </rect>
@@ -81,8 +81,8 @@
    <widget class="QSlider" name="horizontalSlider">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>430</y>
+      <x>130</x>
+      <y>450</y>
       <width>231</width>
       <height>22</height>
      </rect>
@@ -97,8 +97,8 @@
    <widget class="QLCDNumber" name="lcdnumber_1">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>370</y>
+      <x>50</x>
+      <y>450</y>
       <width>64</width>
       <height>23</height>
      </rect>
@@ -107,8 +107,8 @@
    <widget class="QComboBox" name="comboBox">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>370</y>
+      <x>200</x>
+      <y>490</y>
       <width>141</width>
       <height>22</height>
      </rect>
@@ -117,18 +117,18 @@
    <widget class="QTableWidget" name="tableWidget">
     <property name="geometry">
      <rect>
-      <x>385</x>
-      <y>440</y>
+      <x>390</x>
+      <y>480</y>
       <width>321</width>
-      <height>171</height>
+      <height>131</height>
      </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="SequenceRun">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>400</y>
+      <x>410</x>
+      <y>440</y>
       <width>111</width>
       <height>31</height>
      </rect>
@@ -140,9 +140,32 @@
    <widget class="QLCDNumber" name="lcdTimer">
     <property name="geometry">
      <rect>
-      <x>500</x>
-      <y>400</y>
-      <width>41</width>
+      <x>600</x>
+      <y>440</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="digitCount">
+     <number>4</number>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="flowrate">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>360</y>
+      <width>121</width>
+      <height>51</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="lcdSeqNumber">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>440</y>
+      <width>31</width>
       <height>31</height>
      </rect>
     </property>
@@ -150,14 +173,22 @@
      <number>2</number>
     </property>
    </widget>
-   <widget class="QLCDNumber" name="flowrate">
+   <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>400</y>
-      <width>64</width>
-      <height>23</height>
+      <x>630</x>
+      <y>380</y>
+      <width>81</width>
+      <height>21</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>uL/min</string>
     </property>
    </widget>
   </widget>
@@ -166,7 +197,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1369</width>
+     <width>1181</width>
      <height>21</height>
     </rect>
    </property>
