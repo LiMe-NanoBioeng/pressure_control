@@ -135,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def SequenceControlTime(self):
         Kp = 0.3
         Ki = 0.001
-        Kd = 0.01
+        Kd = 0.001
         elapsed_time = time.time()-ui.start
         residualvol=ui.volume-(ui.q[-1]-ui.qstart)
         ui.residualtime = ui.duration-elapsed_time
@@ -253,7 +253,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_figure(self):
 
         f = NI.ArduinoI2C()
-        f = float(f)/29 #check the scale factor for the LD16
+        f = float(f) #check the scale factor for the LD16
         time, c, r = NI.ArduinoAI()
         if r:
             c[0] = 0.1208*c[0]-23.75
