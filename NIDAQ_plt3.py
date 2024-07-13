@@ -27,6 +27,7 @@ class AI():
         ser.write(b'II')
         time.sleep(0.1)
         ser_bytes = ser.readline().decode("utf-8")
+        ser_bytes=ser_bytes.rstrip()
         return(float(ser_bytes))
 
     def ArduinoAI():        

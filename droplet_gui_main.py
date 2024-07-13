@@ -253,7 +253,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_figure(self):
 
         f = NI.ArduinoI2C()
-        f = float(f)/32767*1000
+        f = float(f)/29 #check the scale factor for the LD16
         time, c, r = NI.ArduinoAI()
         if r:
             c[0] = 0.1208*c[0]-23.75
@@ -267,7 +267,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     ui.CA1 = np.append(ui.CA1, c[0])
                     ui.f = np.append(ui.f, f)
                     if ui.count != 1:  # compute integrated flow quantity at t > 1
-                        q = ui.q[-1]+f*(ui.dt[-1]-ui.dt[-2])/60
+                        q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
                     else:  # compute integrated flow quantity at t=1
                         q = f*(ui.dt[-1])/60
                     ui.q = np.append(ui.q, q)
