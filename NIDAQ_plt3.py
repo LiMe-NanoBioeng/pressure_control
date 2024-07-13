@@ -23,6 +23,7 @@ class AI():
         return(FileName1)
     def ArduinoI2C():
         ser.flushInput()
+        time.sleep(0.1)
         ser.write(b'II')
         time.sleep(0.1)
         ser_bytes = ser.readline().decode("utf-8")

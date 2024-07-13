@@ -87,6 +87,9 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.value = 0
         ui.residualtime = 0
         ui.start = time.time()
+        ui.mode=""
+        ui.qstart=0
+        ui.volume=0
         ui.duration = 0
         ui.RunSequenceFlag = False
         ui.number_of_commands = 0
@@ -132,32 +135,48 @@ class MainWindow(QtWidgets.QMainWindow):
     def SequenceControlTime(self):
         Kp = 0.3
         Ki = 0.001
-        Kd = 0.001
+        Kd = 0.01
         elapsed_time = time.time()-ui.start
+        residualvol=ui.volume-(ui.q[-1]-ui.qstart)
         ui.residualtime = ui.duration-elapsed_time
-        ui.lcdTimer.display(ui.residualtime)
+        
         # ui.residualtime=ui.duration-(time.time()-ui.start)
         MV = 0
         e = 0
+        # swtich modes between volume and time terminations
+        if ui.mode=="s": # time based
+            residual=ui.residualtime
+            ui.unit.setText("s")
+        elif ui.mode=="u": #volume based
+            residual=residualvol
+            ui.unit.setText("ul")
+        else: #initial
+            residual=-1
+        ui.lcdTimer.display(residual)
+        
         if ui.number_of_commands-ui.command > 0:
             # commands during the sequence
             # ui.lcdTimer.display(ui.residualtime)
-            if ui.residualtime > 0:
+            
+            if residual > 0:
                 # ui.command proceeds when the seq proceeds.
                 # thus, we refer the valve number and values at ui.command -1
-                valve, valve_num, pressure, duration = self.read_seq_commands(
-                    ui.command-1)
-
-                MV, e = self.PID(Kp, Ki, Kd, pressure,
-                                 ui.voltage1[valve_num-1],
+                MV, e = self.PID(Kp, Ki, Kd, ui.current_pressure,
+                                 ui.voltage1[ui.current_valve_num-1],
                                  ui.dt[-1]-ui.dt[-2])
                 MV = int(MV)
-                ui.voltage1[valve_num-1] = MV
+                ui.voltage1[ui.current_valve_num-1] = MV
                 NI.ArduinoAO(11, True, MV)
             else:
                 # proceeds when the ui.residual time is less than 0 (wh\en negative)
-                valve, valve_num, pressure, duration = self.read_seq_commands(
+                valve, valve_num, pressure, duration,volume = self.read_seq_commands(
                     ui.command)
+                ui.current_valve=valve
+                ui.current_valve_num=valve_num
+                ui.current_pressure=pressure
+                ui.duration = duration
+                ui.volume=volume
+                # ui.current_duration=duration
                 ui.voltage1[valve_num-1] = pressure  # register pressure value
                 NI.ArduinoAO(11, False, 0)
                 self.open_single_valve(-1)
@@ -170,42 +189,43 @@ class MainWindow(QtWidgets.QMainWindow):
                 if pressure >0:
                     self.open_single_valve(valve_num)
                 ui.start = time.time()
-                ui.duration = duration
+                ui.qstart=ui.q[-1]
                 # proceedsd ui.command
                 ui.command += 1
                 ui.lcdSeqNumber.display(ui.command)
         else:
             # commands at the end of the sequence (when ui.number_of_commands-ui.command==0)
-            if ui.residualtime > 0:
-                valve, valve_num, pressure, duration = self.read_seq_commands(
-                    ui.command-1)
-                MV, e = self.PID(Kp, Ki, Kd, pressure,
-                                 ui.voltage1[valve_num-1],
+            if residual > 0:
+                MV, e = self.PID(Kp, Ki, Kd, ui.current_pressure,
+                                 ui.voltage1[ui.current_valve_num-1],
                                  ui.dt[-1]-ui.dt[-2])
                 MV = int(MV)
-                ui.voltage1[valve_num-1] = MV
+                ui.voltage1[ui.current_valve_num-1] = MV
                 NI.ArduinoAO(11, True, MV)
             elif ui.number_of_commands != 0:
                 # # commands at the end of the last sequence
-                # for i in range(len(ui.valve_1)):
-                #     ui.valve_1[i] = False
-                #     NI.ArduinoDO(i, ui.valve_1[i])
                 self.open_single_valve(-1)
                 ui.number_of_commands = 0
                 ui.save = not ui.save  # stop saving and displaying
                 ui.lcdSeqNumber.display(ui.number_of_commands)
                 time.sleep(1)
 
-        # print(str(MV)+"," + str(ui.f[-1])+ "," + str(e))
-
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()
         message = text.split(',')
         valve = message[0]  # valve number
         pressure = float(message[1])  # pressure value
-        duration = int(message[2].rstrip())
+        text = message[2].rstrip()
+        if text[-1] =="s":
+            duration=int(text[:-1])
+            volume=0
+        elif text[-1]=="u":
+            volume=int(text[:-1])
+            duration=0
+                
         valve_num = int(valve[-1], 16)
-        return (valve, valve_num, pressure, duration)
+        ui.mode=text[-1]
+        return (valve, valve_num, pressure, duration,volume)
 
     def draw_graph(self):
         ui.graphwidget.figure.clear()
