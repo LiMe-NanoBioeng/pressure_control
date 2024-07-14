@@ -12,46 +12,6 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from droplet_gui import Ui_Droplet_formation
 from matplotlibwidget import MatplotlibWidget
 from MXsII import MXsIIt as MXsII
-# from simple_pid import PID
-
-
-class wavefunc():
-    def wf1974(exposure, laser, dt):
-        import visa
-#        float exposure
-#        float width1; float width2
-        rm = visa.ResourceManager()
-        # wv = rm.get_instrument("USB0::0x0D4A::0x000E::9137840::INSTR")
-        wv = rm.get_instrument("USB0::0x0D4A::0x000D::9148960::INSTR")
-        # print(wv.query('*IDN?'))
-        wv.write(':SOURce1:VOLTage:LEVel:IMMediate:AMPLitude 5.0; OFFSet 2.5')
-        # wv.write(':SOURce2:VOLTage:LEVel:IMMediate:AMPLitude 5.0; OFFSet 2.5')
-        numofpulse = 100
-        numofpulse = str(numofpulse)
-        wv.write(':SOURce1:BURSt:TRIGger:NCYCles ' +
-                 numofpulse)  # number of cycles output onw
-        # wv.write(':SOURce2:BURSt:TRIGger:NCYCles '+ numofpulse)#number of cycles output two
-        wv.write(':SOURce1:FUNCtion:SHAPe PULSe')
-        # wv.write(':SOURce2:FUNCtion:SHAPe PULSe')
-        wv.write(':TRIGger1:BURSt:SOURce EXT')
-        # wv.write(':TRIGger2:BURSt:SOURce EXT')
-        width1 = exposure-0.002
-        width2 = dt-laser
-        delay = exposure-dt+laser/2
-        # control the pulse period of output1
-        wv.write(':SOURce1:PULSe:PERiod '+str(exposure)+'ms')
-        # wv.write(':SOURce2:PULSe:PERiod '+str(dt)+'ms')#control the pulse period of output2
-        # control the pulse width of output one
-        wv.write(':SOURce1:PULSe:WIDTh '+str(width1)+'ms')
-        # wv.write(':SOURce2:PULSe:WIDTh '+str(width2)+'ms')#control the pulse width of output two
-        wv.write(':SOURce1:BURSt:TGATe:OSTop CYCLe')
-        # wv.write(':SOURce2:BURSt:TGATe:OSTop CYCLe')
-        # wv.write(':SOURce2:BURSt:SLEVel 100PCT')
-        # wv.write(':SOURce2:PHAse:ADJust -180DEG')
-        wv.write(':SOURce1:BURSt:TDELay 400ms')
-        # wv.write(':SOURce2:BURSt:TDELay '+str(delay)+'ms')
-        wv.write('OUTPut1:STATe ON')
-        # wv.write('OUTPut2:STATe ON')
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -87,6 +47,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.value = 0
         ui.residualtime = 0
         ui.start = time.time()
+        ui.termination_mode=""
         ui.mode=""
         ui.qstart=0
         ui.volume=0
@@ -133,9 +94,9 @@ class MainWindow(QtWidgets.QMainWindow):
         return (MV, e)
 
     def SequenceControlTime(self):
-        Kp = 0.3
-        Ki = 0.001
-        Kd = 0.001
+        Kp = 0.9
+        Ki = 0.01
+        Kd = 0.01
         elapsed_time = time.time()-ui.start
         residualvol=ui.volume-(ui.q[-1]-ui.qstart)
         ui.residualtime = ui.duration-elapsed_time
@@ -144,10 +105,10 @@ class MainWindow(QtWidgets.QMainWindow):
         MV = 0
         e = 0
         # swtich modes between volume and time terminations
-        if ui.mode=="s": # time based
+        if ui.termination_mode=="s": # time based
             residual=ui.residualtime
             ui.unit.setText("s")
-        elif ui.mode=="u": #volume based
+        elif ui.termination_mode=="u": #volume based
             residual=residualvol
             ui.unit.setText("ul")
         else: #initial
@@ -209,12 +170,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.save = not ui.save  # stop saving and displaying
                 ui.lcdSeqNumber.display(ui.number_of_commands)
                 time.sleep(1)
+        ui.lcdnumber_1.display(ui.voltage1[ui.current_valve_num-1])
 
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()
         message = text.split(',')
         valve = message[0]  # valve number
-        pressure = float(message[1])  # pressure value
+        
+        pressure = float(message[1][:-1])  # pressure value
+        
         text = message[2].rstrip()
         if text[-1] =="s":
             duration=int(text[:-1])
@@ -224,7 +188,8 @@ class MainWindow(QtWidgets.QMainWindow):
             duration=0
                 
         valve_num = int(valve[-1], 16)
-        ui.mode=text[-1]
+        ui.termination_mode=text[-1]
+        ui.mode=str(message[1][-1])
         return (valve, valve_num, pressure, duration,volume)
 
     def draw_graph(self):
@@ -252,9 +217,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_figure(self):
 
-        f = NI.ArduinoI2C()
-        f = float(f) #check the scale factor for the LD16
         time, c, r = NI.ArduinoAI()
+
+        f = NI.ArduinoI2C()
+
+        
         if r:
             c[0] = 0.1208*c[0]-23.75
             ui.valveLcd_1.display(c[0])
@@ -331,6 +298,13 @@ class MainWindow(QtWidgets.QMainWindow):
         valvenum = str(hex(ui.selected_valve_index_index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
         ui.lcdnumber_1.display(ui.voltage1[ui.selected_valve_index_index])
+        ui.horizontalSlider.setValue(ui.voltage1[ui.selected_valve_index_index])
+        if hasattr(ui, 'valve_1'):
+            if ui.valve_1[ui.selected_valve_index_index]==True: 
+                ui.valveButton_1.setText('ON')
+            else: 
+                ui.valveButton_1.setText('OFF')
+            
         MXsII.FTWrite(message)
         # Recordbutton
 
@@ -345,6 +319,10 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.valve_1[ui.selected_valve_index_index] = not ui.valve_1[ui.selected_valve_index_index]
         s = NI.ArduinoDO(ui.selected_valve_index_index,
                          ui.valve_1[ui.selected_valve_index_index])
+        if ui.valve_1[ui.selected_valve_index_index]==True: 
+            ui.valveButton_1.setText('ON')
+        else: 
+            ui.valveButton_1.setText('OFF')
         if any(ui.valve_1):  # open the check valve
             s = NI.ArduinoDO(8, True)
         else:
