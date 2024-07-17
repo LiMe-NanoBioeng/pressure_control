@@ -121,6 +121,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     NI.ArduinoFB(True,11,ui.current_pressure,Kp,Ki,Kd)
                 else:
                     NI.ArduinoFB(False,11,ui.current_pressure,Kp,Ki,Kd)
+                    NI.ArduinoAO(11, False, 0)
                     
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
