@@ -21,9 +21,21 @@ class AI():
                      today().strftime("%Y%m%d_%H%M%S"))+'_exp'
         FileName1=FolderName1+"/"+FileName+str(1+len([x for x in os.listdir(FolderName1) if x.endswith(".csv")])).zfill(4)
         return(FileName1)
+    def ArduinoFBStatus(vNumA):
+        ser.write(b'R')
+        time.sleep(0.1)
+        ser_bytes = ser.readline().decode("utf-8")
+        return(ser_bytes.strip())
+    def ArduinoFB(value,vNumA,setpoint,Kp,Ki,Kd):
+        if value==True:
+            text='FB' + str(vNumA) + ',' + str(setpoint) + ',' + str(Kp) + ',' + str(Ki) + ',' + str(Kd) +'\n'
+            ser.write(text.encode('utf-8'))
+            time.sleep(0.2)
+        else:
+            ser.write(b'B')
     def ArduinoI2C():
         ser.write(b'II')
-        time.sleep(0.01)
+        time.sleep(0.1)
         ser_bytes = ser.readline().decode("utf-8")
         ser_bytes=ser_bytes.rstrip()
         return(float(ser_bytes))
@@ -32,7 +44,7 @@ class AI():
         c = []
         # Read analog input of AN4-5
         ser.write(b'AI6')
-        time.sleep(0.01)
+        time.sleep(0.1)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
         ser_bytes = ser.readline().decode("utf-8")
