@@ -68,31 +68,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             s=NI.ArduinoDO(8, False)
 
-    def PID(self, Kp, Ki, Kd, setpoint, integral, dt):
-        # global time, integral, time_prev, e_prev
-        max_val = 500
-        # Value of offset - when the error is equal zero
-        offset = 0
-        measurement = np.median([ui.f[-3], ui.f[-2], ui.f[-1]])
-        pre_measurement = np.median([ui.f[-4], ui.f[-3], ui.f[-2]])
-
-        # PID calculations
-        e = float(setpoint - measurement)
-        e_prev = float(setpoint-pre_measurement)
-
-        P = max(min(Kp*e, max_val), -max_val)
-        integral = integral + max(min(Ki*e*dt, max_val), -max_val)
-        D = max(min(Kd*(e - e_prev)/dt, max_val), -max_val)
-
-        # calculate manipulated variable - MV
-        MV = offset + P + integral + D
-        # print(str(setpoint) + "," + str(int(MV)) + "," + str(integral))
-        MV = max(min(MV, 64*50), 0)
-        # update stored data for next iteration
-    #    e_prev = e
-    #    time_prev = time
-        return (MV, e)
-
     def SequenceControlTime(self):
         Kp = 0.3
         Ki = 0.001
@@ -101,9 +76,6 @@ class MainWindow(QtWidgets.QMainWindow):
         residualvol=ui.volume-(ui.q[-1]-ui.qstart)
         ui.residualtime = ui.duration-elapsed_time
         
-        # ui.residualtime=ui.duration-(time.time()-ui.start)
-        # MV = 0
-        # e = 0
         # swtich modes between volume and time terminations
         if ui.termination_mode=="s": # time based
             residual=ui.residualtime
@@ -120,16 +92,8 @@ class MainWindow(QtWidgets.QMainWindow):
             # ui.lcdTimer.display(ui.residualtime)
             
             if residual > 0:
-                # ui.command proceeds when the seq proceeds.
-                # thus, we refer the valve number and values at ui.command -1
-                # MV, e = self.PID(Kp, Ki, Kd, ui.current_pressure,
-                #                  ui.voltage1[ui.current_valve_num-1],
-                #                  ui.dt[-1]-ui.dt[-2])
-                # MV = int(MV)
-                # ui.voltage1[ui.current_valve_num-1] = MV
-                # NI.ArduinoAO(11, True, MV)
-                #NI.ArduinoFB(True,11,ui.current_pressure,Kp,Ki,Kd)
                 value=NI.ArduinoFBStatus(11)
+                ui.lcdnumber_1.display(value)
             else:
             #if residual <0:
                 # proceeds when the ui.residual time is less than 0 (wh\en negative)
@@ -161,15 +125,8 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             # commands at the end of the sequence (when ui.number_of_commands-ui.command==0)
             if residual > 0:
-                # MV, e = self.PID(Kp, Ki, Kd, ui.current_pressure,
-                #                  ui.voltage1[ui.current_valve_num-1],
-                #                  ui.dt[-1]-ui.dt[-2])
-                # MV = int(MV)
-                # ui.voltage1[ui.current_valve_num-1] = MV
-                # NI.ArduinoAO(11, True, MV)
-                #NI.ArduinoFB(True,11,ui.current_pressure,Kp,Ki,Kd)
-            #    NI.ArduinoFB(11,ui.current_pressure,Kp,Ki,Kd)
                 value=NI.ArduinoFBStatus(11)
+                ui.lcdnumber_1.display(value)
 
             elif ui.number_of_commands != 0:
             #if ui.number_of_commands !=0 and residual <0 :
@@ -180,7 +137,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.save = not ui.save  # stop saving and displaying
                 ui.lcdSeqNumber.display(ui.number_of_commands)
                 time.sleep(1)
-        ui.lcdnumber_1.display(value)
 
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()

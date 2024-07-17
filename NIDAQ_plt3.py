@@ -44,7 +44,7 @@ class AI():
         c = []
         # Read analog input of AN4-5
         ser.write(b'AI6')
-        time.sleep(0.1)
+        time.sleep(0.2)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
         ser_bytes = ser.readline().decode("utf-8")
