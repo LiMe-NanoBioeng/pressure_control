@@ -40,6 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # for icnt in range(len(ui.valve_1)):
         #     NI.ArduinoDO(icnt,ui.valve_1[icnt])
         self.open_single_valve(-1)
+        NI.ArduinoFB(False,11,0,0,0,0)
         NI.ArduinoAO(11, False, 0)
 
         ui.Filename = ' '
@@ -107,6 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 # ui.current_duration=duration
                 ui.voltage1[valve_num-1] = pressure  # register pressure value
                 NI.ArduinoAO(11, False, 0)
+                
                 self.open_single_valve(-1)
                 #
                 # send commands when switch the sequence
@@ -116,12 +118,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 # NI.ArduinoAO(11,True,pressure)
                 if pressure >0:
                     self.open_single_valve(valve_num)
+                    NI.ArduinoFB(True,11,ui.current_pressure,Kp,Ki,Kd)
+                else:
+                    NI.ArduinoFB(False,11,ui.current_pressure,Kp,Ki,Kd)
+                    
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
                 # proceedsd ui.command
                 ui.command += 1
                 ui.lcdSeqNumber.display(ui.command)
-                NI.ArduinoFB(True,11,ui.current_pressure,Kp,Ki,Kd)
         else:
             # commands at the end of the sequence (when ui.number_of_commands-ui.command==0)
             if residual > 0:
