@@ -40,9 +40,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # for icnt in range(len(ui.valve_1)):
         #     NI.ArduinoDO(icnt,ui.valve_1[icnt])
         self.open_single_valve(-1)
-        NI.ArduinoFB(False,11,0,0,0,0)
-        NI.ArduinoAO(11, False, 0)
-
+        ui.vNumA=11
+        NI.ArduinoFB(False,ui.vNumA,0,0,0,0)
+        NI.ArduinoAO(ui.vNumA, False, 0)
         ui.Filename = ' '
         ui.Foldername = 'C:/Users/Microfluidics-team'
         ui.value = 0
@@ -93,7 +93,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # ui.lcdTimer.display(ui.residualtime)
             
             if residual > 0:
-                value=NI.ArduinoFBStatus(11)
+                value=NI.ArduinoFBStatus(ui.vNumA)
                 ui.lcdnumber_1.display(value)
             else:
             #if residual <0:
@@ -107,7 +107,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.volume=volume
                 # ui.current_duration=duration
                 ui.voltage1[valve_num-1] = pressure  # register pressure value
-                NI.ArduinoAO(11, False, 0)
+                NI.ArduinoAO(ui.vNumA, False, 0)
                 
                 self.open_single_valve(-1)
                 #
@@ -115,13 +115,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 MXsII.FTWrite(str(valve) + '\r')  # switch the valve
                 time.sleep(1)
                 # send pressure value
-                # NI.ArduinoAO(11,True,pressure)
+                # NI.ArduinoAO(ui.vNumA,True,pressure)
                 if pressure >0:
                     self.open_single_valve(valve_num)
-                    NI.ArduinoFB(True,11,ui.current_pressure,Kp,Ki,Kd)
+                    NI.ArduinoFB(True,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
                 else:
-                    NI.ArduinoFB(False,11,ui.current_pressure,Kp,Ki,Kd)
-                    NI.ArduinoAO(11, False, 0)
+                    NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
+                    NI.ArduinoAO(ui.vNumA, False, 0)
                     
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
@@ -131,12 +131,12 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             # commands at the end of the sequence (when ui.number_of_commands-ui.command==0)
             if residual > 0:
-                value=NI.ArduinoFBStatus(11)
+                value=NI.ArduinoFBStatus(ui.vNumA)
                 ui.lcdnumber_1.display(value)
 
             elif ui.number_of_commands != 0:
             #if ui.number_of_commands !=0 and residual <0 :
-                NI.ArduinoFB(False,11,ui.current_pressure,Kp,Ki,Kd)
+                NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
             # # commands at the end of the last sequence
                 self.open_single_valve(-1)
                 ui.number_of_commands = 0
@@ -304,7 +304,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def svalue_changed(self):
         ui.voltage1[ui.selected_valve_index_index] = ui.horizontalSlider.value()
         ui.lcdnumber_1.display(ui.horizontalSlider.value())
-        NI.ArduinoAO(11, True, ui.voltage1[ui.selected_valve_index_index])
+        NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.selected_valve_index_index])
 
 
 if __name__ == "__main__":
