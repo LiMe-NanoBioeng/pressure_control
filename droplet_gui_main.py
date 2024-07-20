@@ -3,7 +3,7 @@
 import sys
 
 import numpy as np
-from NIDAQ_plt3 import AI as NI
+from ArduinoDAQ import AI as NI
 import tkinter.filedialog
 import os
 
