@@ -13,10 +13,16 @@ To prevent a gravitational flow when all the solenoid valves are closed, we inst
 
 ### Communication with PC
 The Arduino micro on the controller can communicate via a serial connection with a PC.
-To read data and send commands upon request from the PC, the Arduino routinely checks the availability of a serial command.
-The Arduino micro opens or closes the solenoid valves using digital I/O.
-It communicates with the flow sensor through I2C, reading two's complement and outputing the scaled flow rate ul/min.
+To output data and control devices upon request, the Arduino micro routinely checks the availability of a serial command.
+The Arduino micro controls the solenoid valves via digital I/O, which is boosted to on/off 24 V with N-type MOS-FET-based switching circuits.
+It controls the electro-pneumatic regulator via 8-bit PWM, converted to 0-5 V output with DAC.
+
+
+and the electro-pneumatic regulator, respectively.
+
+The Arduino micro communicates with the flow sensor through I2C, reading two's complement and outputting the scaled flow rate ul/min to the serial connection upon request.
 https://github.com/Sensirion/arduino-liquid-flow-snippets
+The Arduino micro opens or closes the solenoid valves using digital I/O, which switches on/off of 24V using the N-type FET circuit.
 
 It communicates with the electro-pneumatic regulator through analog out (PWM).
 Our circuit converts the PWM (8 bit) to analog voltages ranging 0-5V through DAC.
