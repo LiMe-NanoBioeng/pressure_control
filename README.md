@@ -25,16 +25,21 @@ Under feedback control, the Arduino micro reads the flow rate and regulates the 
 The Arduino micro switches the control modes among open-loop and feedback upon request via a serial command.
 
 ### Pressure source and tubings
-A miniature diaphragm pump creates the pressure source at about 100 kPa, which is given to the electro-pneumatic regulator through a filter.
+A miniature diaphragm pump creates the pressure source at about 100 kPa, which is then passed through a filter to the electro-pneumatic regulator.
 The electro-pneumatic regulator controls the output pressure refering to the analog output from DAC.
 The pressurized gas is distributed to a designated sample tube via open/close solenoid valves.
 The pressurized gas increases the pressure in the sample tube and pushes out the solution to the peek tube inserted down to the tube bottom.
-The pump, regulator and solenoid valves are connected with tubes made of urethane.
-We changed the the outer diameter (OD) of the tube from phi 6 to phi 5 using a fitting between the pump and the regulator.
-The regulator and the manifold of the solenoid valves are connected a tube of phi 5.
-The individual outlet from the manifold are connected with phi 3 tube.
-The phi 3 tubes are converted to PTFE tubes with fittings.
-We used rubber lids with two through holes that can fit a PTFE tube for pressurization and a PEEK tube for sample outlet.
+The pump, regulator, and manifold of solenoid valves are connected with tubes made of urethane.
+We changed the outer diameter (OD) of tubes from phi 6 to phi 5 using a fitting between the pump and the regulator.
+The regulator and the manifold of the solenoid valves are connected through a tube of phi 5.
+The individual outlet from the manifold is connected with a phi 3 tube.
+The phi three tubes are converted to PTFE tubes with fittings.
+We installed rubber lids with two through holes that can fit a PTFE tube for pressurization and a peek tube for a sample outlet to a 1.5 mm sample tube.
+To minimize the pressure drop in the tubing, we connect the sample tube and the selector valve using a peek tube with an inner diameter (ID) of phi 0.5.
+We then used a peek tube with phi X OD and phi 0.5 for the outlet from the selector valve.
+We installed the flow sensor between the microfluidic device and the selector valve.
+To fit the peek tube with phi X OD to 1/16" connectors, we used XXX.
+We used 1/16" peek tube at the end of the phi X OD peek tube to fit the tubing to the 1-mm hole punched in the PDMS.
 
 ### Electric circuit
 The devices drives
