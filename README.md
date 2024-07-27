@@ -53,16 +53,16 @@ The electro-pneumatic regulator controls the output pressure by referring to the
 The pressurized gas is distributed to a designated sample tube via open/close solenoid valves.
 The pressurized gas increases the pressure in the sample tube and pushes out the solution to the peek tube inserted down to the tube bottom.
 The pump, regulator, and manifold (SMC, SS073B01-10C) of solenoid valves are connected with tubes made of urethane.
-We changed the outer diameter (OD) of tubes from phi 6 mm OD to phi 4 mm OD using a fitting (MPG6-4) between the pump and the regulator.
-The regulator and the solenoid valve manifold are connected through a syringe filter (sartorius, Minisart RC4) and a tube of phi 4 mm OD.
-The individual outlet from the manifold is connected with a phi 3 mm OD tube via a fitting (Koganei, BF3BU-M3).
-The phi 3 mm OD tubes are converted to 26G PTFE tubes with fittings.
-We cap sample tubes (1.5 mL tubes) with rubber lids having two through holes that can fit a PTFE tube for pressurization and a peek tube for a sample outlet.
-To minimize the pressure drop in the tubing, we connect the sample tube and the selector valve using a peek tube with an inner diameter (ID) of phi 0.5 mm.
-We then used a peek tube with phi X OD and phi 0.5 for the outlet from the selector valve.
+We changed the outer diameter (OD) of tubes from 6 mm to 4 mm using a fitting (MPG6-4) between the pump and the regulator.
+The regulator and the solenoid valve manifold are connected through a syringe filter (sartorius, Minisart RC4) and a tube of 4 mm OD.
+The individual outlet from the manifold is connected with a 3 mm OD tube via a fitting (Koganei, BF3BU-M3).
+The phi 3 mm OD tubes are converted to 26G PTFE tubes (Chukyo Co Ltd	TUF-100) with fittings.
+We cap sample tubes (1.5 mL tubes) with rubber lids (AsOne, 1-9662-06) having two through holes that can fit a PTFE tube for pressurization and a peek tube for a sample outlet.
+To minimize the pressure drop in the tubing, we connect the sample tube and the selector valve using a peek tube with 0.5 mm ID.
+We then used a peek tube (Institute of Microchemical Technology Co Ltd, ICP-30P) with 0.5 mm OD and 0.3 mm ID for the outlet from the selector valve.
+To fit the peek tube with phi 0.5 mm OD to 1/16" connectors, we used 1/16-to-0.5 mm adapter sleeves (Institute of Microchemical Technology Co Ltd, ICT-16S).
 We installed the flow sensor between the microfluidic device and the selector valve.
-To fit the peek tube with phi X OD to 1/16" connectors, we used XXX.
-We used 1/16" peek tube at the end of the phi X OD peek tube to fit the tubing to the 1-mm hole punched in the PDMS.
+We used 1/16" peek tube at the end of the 0.5 mm OD peek tube to fit the tubing to the 1-mm hole punched in the PDMS.
 We installed the latching solenoid valve in a tube extending from the outlet of the microfluidic system.
 
 
