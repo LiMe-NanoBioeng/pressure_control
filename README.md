@@ -1,6 +1,43 @@
 
 # An automated microfluidic controller for a constant flow rate by a PID feedback control.
 
+The microfluidic flow control
+A syringe pump controls flow by forwarding the plunger at a constant speed
+It gives a constant flow rate, and the pressure depends on the flow resistance of the system.
+The syringe pump is beneficial when injecting liquid with a defined volume.
+Such fluid control is beneficial for expensive reagents. Limited amount of reagents.
+
+Pressure-based fluidic system 
+Constant pressure
+
+
+
+Comparison to syringe pump: constant flow rate, but not constant pressure control
+Injecting various solutions needs many syringes, syringe pumps
+Temperature control before injection
+Loading solution in a syringe and injecting it to the device: washing syringe: large volume
+
+
+
+Comparison to pressure constant fluidic system: 
+Easy in injecting multiple solutions with low contamination
+Low dead volume
+
+
+the flow rate depends on the properties of solution, viscosity
+Flow resistance of microfluidics
+The initial calibration
+
+
+
+The control of flow rate is possible with the constant pressure controlling by taking the relation between pressure drop and flow rate.
+The calibration varies when using different channel geometry. Different viscosity.
+
+Fully integrated design no pressure source: experiments in a remote place, no pressure source environment
+we demonstrate the operation of the system in a cold room w/o a pressure source.
+
+
+Stop the flow when the samples are injected
 
 ## System Overview
 The controller works on a GUI-based Python code communicated with a PC through an Arduino micro.
