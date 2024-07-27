@@ -48,17 +48,17 @@ The electro-pneumatic regulator controlled via 0-5 V DC voltage from Arduino mic
 
 
 ### Pressure source and tubings
-A miniature diaphragm pump creates the pressure source at about 100 kPa, which is then passed through a filter to the electro-pneumatic regulator.
-The electro-pneumatic regulator controls the output pressure refering to the analog output from DAC.
+A miniature diaphragm pump creates the pressure source at about 100 kPa, which is then passed through a filter () to the electro-pneumatic regulator.
+The electro-pneumatic regulator controls the output pressure by referring to the analog output from the DAC.
 The pressurized gas is distributed to a designated sample tube via open/close solenoid valves.
 The pressurized gas increases the pressure in the sample tube and pushes out the solution to the peek tube inserted down to the tube bottom.
 The pump, regulator, and manifold of solenoid valves are connected with tubes made of urethane.
 We changed the outer diameter (OD) of tubes from phi 6 mm to phi 5 mm using a fitting between the pump and the regulator.
-The regulator and the manifold of the solenoid valves are connected through a tube of phi 5.
+The regulator and the manifold of the solenoid valves are connected through a tube of phi 5 mm.
 The individual outlet from the manifold is connected with a phi 3 mm tube.
 The phi 3 mm tubes are converted to PTFE tubes with fittings.
-We installed rubber lids with two through holes that can fit a PTFE tube for pressurization and a peek tube for a sample outlet to a 1.5 mm sample tube.
-To minimize the pressure drop in the tubing, we connect the sample tube and the selector valve using a peek tube with an inner diameter (ID) of phi 0.5.
+We cap sample tubes (1.5 mL tubes) with rubber lids having two through holes that can fit a PTFE tube for pressurization and a peek tube for a sample outlet.
+To minimize the pressure drop in the tubing, we connect the sample tube and the selector valve using a peek tube with an inner diameter (ID) of phi 0.5 mm.
 We then used a peek tube with phi X OD and phi 0.5 for the outlet from the selector valve.
 We installed the flow sensor between the microfluidic device and the selector valve.
 To fit the peek tube with phi X OD to 1/16" connectors, we used XXX.
