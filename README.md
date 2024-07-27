@@ -5,7 +5,7 @@
 ## System Overview
 The controller works on a GUI-based Python code communicated with a PC through an Arduino micro.
 It provides a constant flow rate or pressure to a microfluidic system by regulating the pressure with an electro-pneumatic regulator (SMC, ITV0010-2CS) and pressurizing a sample tube containing a solution.
-To switch among different solutions, it uses ten on/off solenoid valves connected to respective sample tubes and a selector valve (IDEX Health & Science, MXX778-605), which selects a solution coming from one of ten sample tubes and lets it flow into the outlet tube.
+To switch among different solutions, it uses ten on/off solenoid valves connected to respective sample tubes and a selector valve (IDEX Health & Science, MXX778-605), which selects a solution coming from one of ten sample tubes and lets the solution flow into the outlet tube.
 The system monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube and the microfluidic system.
 We installed a potentiometer at the analog output given to the electro-pneumatic regulator to stabilize the proportional-integral-derivative (PID) feedback control for a low constant flow rate. 
 The potentiometer effectively modulates the maximum voltage of the analog output (originally, 0-5 V) from the Arduino micro. The manual modulation enables using the full 8-bit resolution when regulating at low pressure (e.g., 1 kPa).
