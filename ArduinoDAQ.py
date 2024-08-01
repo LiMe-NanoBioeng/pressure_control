@@ -43,7 +43,7 @@ class AI():
     def ArduinoAI():        
         c = []
         # Read analog input of AN4-5
-        ser.write(b'AI6,8')
+        ser.write(b'AI6,7')
         time.sleep(0.2)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
