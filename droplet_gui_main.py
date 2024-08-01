@@ -169,7 +169,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131)
         ui.graphwidget.axes.clear()
         ui.graphwidget.x = ui.dt
-        ui.graphwidget.y = ui.CA1
+        ui.graphwidget.y = np.transpose(ui.CA1)
         ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
 
@@ -197,6 +197,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         if r:
             c[0] = 0.1208*c[0]-23.75
+            c[1] = 0.1208*c[1]-23.75
             ui.valveLcd_1.display(c[0])
             if ui.save == True:
                 # add Hiroyuki
@@ -204,7 +205,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     # ui.count = 0で新規file open
                     # ui.t = np.append(ui.t,time)
                     ui.dt = np.append(ui.dt, time-ui.t)
-                    ui.CA1 = np.append(ui.CA1, c[0])
+                    # ui.CA1 = np.append(ui.CA1, c)
+                    ui.CA1 = np.c_[ui.CA1,c]
                     ui.f = np.append(ui.f, f)
                     if ui.count != 1:  # compute integrated flow quantity at t > 1
                         q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
@@ -219,7 +221,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 else:
                     ui.t = time  # initial time
                     ui.dt = time-ui.t
-                    ui.CA1 = c[0]
+                    ui.CA1 = c
                     ui.f = f
                     ui.q = 0
                     file = open(ui.Filename, 'w')

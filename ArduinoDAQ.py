@@ -9,7 +9,7 @@ Update: 2020-11-05, kaneko
 
 import time, datetime, os, serial
 
-ser = serial.Serial('COM11', 9600, timeout=1)
+ser = serial.Serial('COM12', 9600, timeout=1)
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -43,7 +43,7 @@ class AI():
     def ArduinoAI():        
         c = []
         # Read analog input of AN4-5
-        ser.write(b'AI6')
+        ser.write(b'AI6,8')
         time.sleep(0.2)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
