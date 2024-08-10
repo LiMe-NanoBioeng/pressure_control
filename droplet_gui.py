@@ -80,6 +80,9 @@ class Ui_Droplet_formation(object):
         font.setPointSize(15)
         self.unit.setFont(font)
         self.unit.setObjectName("unit")
+        self.pulseButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pulseButton.setGeometry(QtCore.QRect(760, 440, 101, 31))
+        self.pulseButton.setObjectName("pulseButton")
         Droplet_formation.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(Droplet_formation)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1181, 21))
@@ -102,6 +105,7 @@ class Ui_Droplet_formation(object):
         self.comboBox.currentIndexChanged['int'].connect(Droplet_formation.valve_number_changed) # type: ignore
         self.menubar.triggered['QAction*'].connect(Droplet_formation.openSeqFile) # type: ignore
         self.SequenceRun.clicked.connect(Droplet_formation.RunSequence) # type: ignore
+        self.pulseButton.clicked.connect(Droplet_formation.DigitalPulse) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Droplet_formation)
 
     def retranslateUi(self, Droplet_formation):
@@ -113,5 +117,6 @@ class Ui_Droplet_formation(object):
         self.SequenceRun.setText(_translate("Droplet_formation", "Sequence Run"))
         self.label_2.setText(_translate("Droplet_formation", "uL/min"))
         self.unit.setText(_translate("Droplet_formation", "s"))
+        self.pulseButton.setText(_translate("Droplet_formation", "pulse"))
         self.menuFile.setTitle(_translate("Droplet_formation", "File"))
         self.actionload_sequence_file.setText(_translate("Droplet_formation", "load sequence file"))

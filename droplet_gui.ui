@@ -209,6 +209,19 @@
      <string>s</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="pulseButton">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>440</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>pulse</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -276,7 +289,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>189</x>
-     <y>468</y>
+     <y>489</y>
     </hint>
     <hint type="destinationlabel">
      <x>133</x>
@@ -292,7 +305,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>294</x>
-     <y>430</y>
+     <y>511</y>
     </hint>
     <hint type="destinationlabel">
      <x>318</x>
@@ -324,11 +337,27 @@
    <hints>
     <hint type="sourcelabel">
      <x>457</x>
-     <y>434</y>
+     <y>461</y>
     </hint>
     <hint type="destinationlabel">
      <x>581</x>
      <y>411</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pulseButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Droplet_formation</receiver>
+   <slot>DigitalPulse()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>840</x>
+     <y>475</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>959</x>
+     <y>478</y>
     </hint>
    </hints>
   </connection>
@@ -342,5 +371,6 @@
   <slot>valve_number_changed()</slot>
   <slot>openSeqFile()</slot>
   <slot>RunSequence()</slot>
+  <slot>DigitalPulse()</slot>
  </slots>
 </ui>

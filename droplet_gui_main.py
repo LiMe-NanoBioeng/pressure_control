@@ -70,9 +70,9 @@ class MainWindow(QtWidgets.QMainWindow):
             s=NI.ArduinoDO(8, False)
 
     def SequenceControlTime(self):
-        Kp = 0.3
+        Kp = 0.1
         Ki = 0.001
-        Kd = 0.001
+        Kd = 0.1
         elapsed_time = time.time()-ui.start
         residualvol=ui.volume-(ui.q[-1]-ui.qstart)
         ui.residualtime = ui.duration-elapsed_time
@@ -143,7 +143,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.save = not ui.save  # stop saving and displaying
                 ui.lcdSeqNumber.display(ui.number_of_commands)
                 time.sleep(1)
-
+    def DigitalPulse(self):
+        NI.ArduinoDigitalPulse(0,1,1,0.1)
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()
         message = text.split(',')

@@ -9,7 +9,7 @@ Update: 2020-11-05, kaneko
 
 import time, datetime, os, serial
 
-ser = serial.Serial('COM12', 9600, timeout=1)
+ser = serial.Serial('COM11', 9600, timeout=1)
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -36,7 +36,7 @@ class AI():
     def ArduinoI2C():
         ser.write(b'II')
         time.sleep(0.1)
-        ser_bytes = ser.readline().decode("utf-8")
+        ser_bytes = ser.readline().decode('utf-8')
         ser_bytes=ser_bytes.rstrip()
         return(float(ser_bytes))
 
@@ -47,7 +47,7 @@ class AI():
         time.sleep(0.2)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
-        ser_bytes = ser.readline().decode("utf-8")
+        ser_bytes = ser.readline().decode('utf-8')
         decoded_bytes = ser_bytes.strip()
         
         # x and y are sequential data from the begining
@@ -74,13 +74,16 @@ class AI():
         else:
             Dout = 'DO' + str(channel) + 'L\n'
         ser.write(Dout.encode('utf-8'))
-        ser_bytes = ser.readline().decode("utf-8")
+        ser_bytes = ser.readline().decode('utf-8')
         return(ser_bytes.strip())
 
     def ArduinoDP(ch,pulsewidth,duty,number):
-        command = str.encode("DP:"+str(ch)+":"+str(int(pulsewidth))+":"+str(duty)+":"+str(number)+"\n")
-        ser.write(command)
-        
+        text = 'DP'+str(ch)+':'+str(int(pulsewidth))+':'+str(duty)+':'+str(number)+'\n'
+        ser.write(text.encode('utf-8'))
+    def ArduinoDigitalPulse(ch1,ch2,delay,width):
+        text = 'PP'+str(ch1)+':'+str(ch2)+','+str(int(delay))+','+str(width)+'\n'
+        ser.write(text.encode('utf-8'))
+        # time.sleep(delay+width)
     def ArduinoAO(channel,flag,values):
         if flag == True:
             AO6out = 'AO'+str(channel)+'v'+ str(values) + '\n'
