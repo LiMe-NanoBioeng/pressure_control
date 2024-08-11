@@ -1,13 +1,17 @@
-
 # An automated microfluidic controller for a constant flow rate by a PID feedback control.
 ### Hardware in context
 The microfluidic flow control
-A syringe pump controls flow by forwarding the plunger at a constant speed
-It gives a constant flow rate, and the pressure depends on the flow resistance of the system.
-The syringe pump is beneficial when injecting liquid with a defined volume.
-Such fluid control is beneficial for expensive reagents. Limited amount of reagents.
+A syringe pump gives a constant flow rate by forwarding the plunger at a constant speed.
+With a syringe pump, the pressure given to a microfluidic system is dependent on the system's flow resistance.
+Thus, a syringe pump is advantageous when injecting solutions at high pressure (>100 kPa).
+The syringe pump is also beneficial when injecting liquid with a defined volume.
+Thus, it is preferable for expensive reagents and precious samples.
 
-Pressure-based fluidic system 
+Pressure-based fluidic system
+pressurized gas is given to a sample tube
+
+uses a sample tube and pressurize
+
 Constant pressure
 
 
