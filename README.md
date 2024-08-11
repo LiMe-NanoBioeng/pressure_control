@@ -1,45 +1,37 @@
 # An automated microfluidic controller for a constant flow rate by a PID feedback control.
+## Abstract
+an open source that controls 10-channel fluidics and imaging via pycro-manager
+We employ an off-the-shelf pressure regulator and selection valve to balance cost and reliability.
+Our fluidic system controls a pneumatic pump, a pressure regulator, and 10 individually addressable on/off valves with an Arduino micro.
+We also offer a Python program that integrates the fluidics control, off-the-shelf switching valve, and imaging via pyro-manager, which makes the system available to broad users.
+We demonstrate…
+We envision that this open source will be
+
 ### Hardware in context
-The microfluidic flow control
+Microfluidic systems require fluidic controls.
+Pneumatic flow control is 
+
 A syringe pump gives a constant flow rate by forwarding the plunger at a constant speed.
-With a syringe pump, the pressure given to a microfluidic system is dependent on the system's flow resistance.
-Thus, a syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa).
-The syringe pump is also beneficial when injecting liquid with a defined volume, e.g., expensive reagents and precious samples.
-Before the drive, the system primes the syringe and tubings by loading a solution.
-
-Pressure-based fluidic system
-pressurized gas is given to a sample tube
-
-uses a sample tube and pressurize
-
-Constant pressure
-
-
-
-Comparison to syringe pump: constant flow rate, but not constant pressure control
-Injecting various solutions needs many syringes, syringe pumps
-Temperature control before injection
-Loading solution in a syringe and injecting it to the device: washing syringe: large volume
+The pressure output of a syringe pump is dependent on the microfluidic system's flow resistance.
+The syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa).
+In contrast, a pressure-based fluidic system provides a constant flow by pressuring the solution.
+The flow rate becomes dependent on the microfluidic system's flow resistance.
+Thus, a pressure-based fluidic system requires feedback control when injecting solution at a constant flow rate or terminating the flow at a finite injection volume.
+The system typically uses a sample tube or a bottle to store the sample solution.
+This configuration is beneficial for maintaining the temperature of the sample solution before the injection by using dry bathes to cool or heat PCR tubes.
+Unlike syringe pumps, the pressure-based fluidic system can easily be multiplexed by adding sample tubes.
+The system can reduce the dead volume and avoid contamination by using a PCR tube as a sample tube.
+Thus, it is advantageous to adapt the system to multiplexed assays, such as multiplexed fluorescent in situ hybridization, which involves multiple washing and reaction steps.
+Although pressure-based liquid handling systems are commercially available for multiplexed assays, they are expensive and less flexible than open-source systems.
+Further, previously reported systems based on pressure regulation use open-loop control for the flow rate. 
+Thus, to provide a constant flow rate, they require a calibration curve that characterizes the relation between pressure and flow rate for each microfluidic system.
 
 
-
-Comparison to pressure constant fluidic system: 
-Easy in injecting multiple solutions with low contamination
-Low dead volume
-
-
-the flow rate depends on the properties of solution, viscosity
-Flow resistance of microfluidics
-The initial calibration
-
-
-
-The control of flow rate is possible with the constant pressure controlling by taking the relation between pressure drop and flow rate.
-The calibration varies when using different channel geometry. Different viscosity.
+Here we present an open-source microfluidic system that regulates the flow rate using the proportional-integral-derivative (PID) feedback control.
+We demonstrate 
 
 Fully integrated design no pressure source: experiments in a remote place, no pressure source environment
 we demonstrate the operation of the system in a cold room w/o a pressure source.
-
 
 Stop the flow when the samples are injected
 
@@ -58,7 +50,7 @@ We control the Arduino micro via a serial connection using pySerial.
 We provide the program for the Arduino micro as another repository (https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
 To read data from and control devices upon request, the Arduino micro routinely checks a serial command sent from the PC.
 The Arduino micro monitors the pressure via the regulator's analog input, which is 0-5 V, and controls the electro-pneumatic regulator via 8-bit PWM, which is converted to a 0-5 V analog output with a digital-analog converter (DAC).
-We installed a potentiometer at the analog output given to the electro-pneumatic regulator to stabilize the proportional-integral-derivative (PID) feedback control, especially for a low constant flow rate. 
+We installed a potentiometer at the analog output given to the electro-pneumatic regulator to stabilize PID feedback control, especially for a low constant flow rate. 
 The potentiometer effectively modulates the maximum voltage of the analog output (originally, 0-5 V) from the Arduino micro down to a low voltage. Manual modulation enables the use of the full 8-bit resolution when regulating at low pressure (e.g., 1 kPa).
 The Arduino micro controls the solenoid valves via digital I/O, which is boosted to 24 V-on/off with N-type MOS-FET-based switching circuits.
 The selector valve communicates with PC through another USB.
