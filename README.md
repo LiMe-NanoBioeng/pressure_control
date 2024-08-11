@@ -3,9 +3,9 @@
 The microfluidic flow control
 A syringe pump gives a constant flow rate by forwarding the plunger at a constant speed.
 With a syringe pump, the pressure given to a microfluidic system is dependent on the system's flow resistance.
-Thus, a syringe pump is advantageous when injecting solutions at high pressure (>100 kPa).
-The syringe pump is also beneficial when injecting liquid with a defined volume.
-Thus, it is preferable for expensive reagents and precious samples.
+Thus, a syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa).
+The syringe pump is also beneficial when injecting liquid with a defined volume, e.g., expensive reagents and precious samples.
+Before the drive, the system primes the syringe and tubings by loading a solution.
 
 Pressure-based fluidic system
 pressurized gas is given to a sample tube
