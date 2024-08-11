@@ -70,9 +70,9 @@ class MainWindow(QtWidgets.QMainWindow):
             s=NI.ArduinoDO(8, False)
 
     def SequenceControlTime(self):
-        Kp = 0.1
-        Ki = 0.001
-        Kd = 0.1
+        Kp = ui.Kp #0.1
+        Ki = ui.Ki #0.001
+        Kd = ui.Kd #0.1
         elapsed_time = time.time()-ui.start
         residualvol=ui.volume-(ui.q[-1]-ui.qstart)
         ui.residualtime = ui.duration-elapsed_time
@@ -260,9 +260,15 @@ class MainWindow(QtWidgets.QMainWindow):
         f = open(file_name, 'r')
 
         # ui.tableWidget.setRowCount(0)
+        
         ui.tableWidget.setColumnCount(1)
         rowPosition = 0
         ui.tableWidget.setRowCount(0)
+        parameters=(f.readlines(1))
+        parameters=parameters[0].split(',')
+        ui.Kp=float(parameters[0])
+        ui.Ki=float(parameters[1])
+        ui.Kd=float(parameters[2].rstrip())
         for x in f:
             ui.tableWidget.insertRow(rowPosition)
             ui.tableWidget.setItem(
