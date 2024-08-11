@@ -1,6 +1,6 @@
 
 # An automated microfluidic controller for a constant flow rate by a PID feedback control.
-
+### Hardware in context
 The microfluidic flow control
 A syringe pump controls flow by forwarding the plunger at a constant speed
 It gives a constant flow rate, and the pressure depends on the flow resistance of the system.
@@ -39,7 +39,8 @@ we demonstrate the operation of the system in a cold room w/o a pressure source.
 
 Stop the flow when the samples are injected
 
-## System Overview Fig.1
+## Hardware description
+### Overview Fig.1
 The controller works on GUI-based Python code that communicates with devices through an Arduino micro.
 The controller provides a constant flow rate or a constant pressure to a microfluidic system by regulating the pressure with an electro-pneumatic regulator (SMC, ITV0010-2CS) to pressurize a sample solution in a tube.
 To switch among different solutions, it uses ten on/off solenoid valves connected to respective sample tubes and a selector valve (IDEX Health & Science, MXX778-605).
@@ -49,20 +50,23 @@ To prevent a gravitational flow when all the solenoid valves are closed, we inst
 
 
 ### Communication with PC via Arduino micro
-The Arduino micro on the controller can communicate via a serial connection with a PC using pySerial.
+We control the Arduino micro via a serial connection using pySerial.
 We provide the program for the Arduino micro as another repository (https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
 To read data from and control devices upon request, the Arduino micro routinely checks a serial command sent from the PC.
-The Arduino micro operates the devices either under open-loop or feedback controls, respectively, for a constant pressure or constant flow rate.
-Under open-loop control, the controller regulates the pressure at a constant value defined by the analog output from the Arduino micro.
-Under feedback control, the Arduino micro reads the flow rate and regulates the pressure using PID control to achieve the specified flow rate.
-The Arduino micro continues the feedback control until it is interrupted by a serial command from the PC.
-The Arduino micro communicates with the flow sensor through I2C, reading two's complement and outputting the scaled flow rate ul/min.
-We note that the other example Arduino programs for communicating with the flow sensors through I2C are available from Sensirion's GitHub (https://github.com/Sensirion/arduino-liquid-flow-snippets).
 The Arduino micro monitors the pressure via the regulator's analog input, which is 0-5 V, and controls the electro-pneumatic regulator via 8-bit PWM, which is converted to a 0-5 V analog output with a digital-analog converter (DAC).
 We installed a potentiometer at the analog output given to the electro-pneumatic regulator to stabilize the proportional-integral-derivative (PID) feedback control, especially for a low constant flow rate. 
 The potentiometer effectively modulates the maximum voltage of the analog output (originally, 0-5 V) from the Arduino micro down to a low voltage. Manual modulation enables the use of the full 8-bit resolution when regulating at low pressure (e.g., 1 kPa).
 The Arduino micro controls the solenoid valves via digital I/O, which is boosted to 24 V-on/off with N-type MOS-FET-based switching circuits.
 The selector valve communicates with PC through another USB.
+The Arduino micro communicates with the flow sensor through I2C, reading two's complement and outputting the scaled flow rate ul/min.
+We note that the other example Arduino programs for communicating with the flow sensors through I2C are available from Sensirion's GitHub (https://github.com/Sensirion/arduino-liquid-flow-snippets).
+The Arduino micro operates the devices either under open-loop or feedback controls, respectively, for a constant pressure or constant flow rate.
+Under open-loop control, the controller regulates the pressure at a constant value defined by the analog output from the Arduino micro.
+Under feedback control, the Arduino micro reads the flow rate and regulates the pressure using PID control to achieve the specified flow rate.
+The Arduino micro continues the feedback control until it is interrupted by a serial command from the PC.
+
+### Software
+
 
 ### Electric circuit
 The circuit in the controller drives devices at three different voltages 24 V, 9 V and 5 V as summarized in Table 1.
@@ -99,6 +103,32 @@ To fit the peek tube with phi 0.5 mm OD to 1/16" connectors, we used 1/16-to-0.5
 We installed the flow sensor between the microfluidic device and the selector valve.
 We used 1/16" peek tube at the end of the 0.5 mm OD peek tube to fit the tubing to the 1-mm hole punched in the PDMS.
 We installed the latching solenoid valve in a tube extending from the outlet of the microfluidic system.
+
+## Design files summary
+Keisuke Kondo
+
+## Bill of materials summary
+Junichi Murai
+
+## Build instructions
+Keisuke (lead) and Junichi
+
+## Operation instructions
+Misa Mineghisi
+
+## Validation and characterization
+Junichi(lead) and Keisuke
+### closed-loop
+
+### open-loop
+
+### extension to four pressure regulators (other applications)
+#### droplet generator
+Keiji Nozaki
+#### jet
+Mahmoud
+
+
 
 
 
