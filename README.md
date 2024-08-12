@@ -13,12 +13,12 @@ Pneumatic flow control is
 
 A syringe pump gives a constant flow rate by forwarding the plunger at a constant speed.
 The pressure output of a syringe pump is dependent on the microfluidic system's flow resistance.
-The syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa).
+The syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa) and regulating at a constant flow rate.
 In contrast, a pressure-based fluidic system provides a constant flow by pressuring the solution.
 The flow rate becomes dependent on the microfluidic system's flow resistance.
-Thus, a pressure-based fluidic system requires feedback control when injecting solution at a constant flow rate or terminating the flow at a finite injection volume.
-The system typically uses a sample tube or a bottle to store the sample solution.
-This configuration is beneficial for maintaining the temperature of the sample solution before the injection by using dry bathes to cool or heat PCR tubes.
+Thus, a pressure-based fluidic system requires feedback control when regulating the flow at a constant flow rate or terminating the flow at a finite injection volume.
+The pressure-based fluidic system typically uses a sample tube or a bottle to store the sample solution.
+This configuration is beneficial for maintaining the temperature of the sample solution before the injection simply by using dry bathes to cool or heat PCR tubes.
 Unlike syringe pumps, the pressure-based fluidic system can easily be multiplexed by adding sample tubes.
 The system can reduce the dead volume and avoid contamination by using a PCR tube as a sample tube.
 Thus, it is advantageous to adapt the system to multiplexed assays, such as multiplexed fluorescent in situ hybridization, which involves multiple washing and reaction steps.
@@ -27,13 +27,18 @@ Further, previously reported systems based on pressure regulation use open-loop 
 Thus, to provide a constant flow rate, they require a calibration curve that characterizes the relation between pressure and flow rate for each microfluidic system.
 
 
-Here we present an open-source microfluidic system that regulates the flow rate using the proportional-integral-derivative (PID) feedback control.
-We demonstrate 
+Here, we present an open-source microfluidic system that enables regulation of the flow rate using the proportional-integral-derivative (PID) feedback control.
+Our system uses an Arduino micro that fully integrates the PID feedback control. This control involves measuring the flow rate with a flow sensor and controlling the pressure with an electromagnetic regulator to provide a constant flow rate.
+We show the robust fluid exchange with our system demonstrating XX rounds of fluorescent oligo hybridization and stripping.
 
-Fully integrated design no pressure source: experiments in a remote place, no pressure source environment
-we demonstrate the operation of the system in a cold room w/o a pressure source.
+To demonstrate our system's flexibility, we show an extension of our system using open-loop control and demonstrate two different applications: microfluidic droplet generation and pulsed jet formation.
+The extended system controls two electromagnetic regulators to provide different pressures for two phases, oil and aqueous solutions or gas and liquid.
+In the microfluidic droplet generation, we injected oil and aqueous solutions into a hydrophobic microfluidic device, in which aqueous droplets are generated in an oil continuous phase.
+We used agarose gel as the aqueous phase and demonstrated the single-cell encapsulation in agarose gel beads.
+To keep the agarose gel matrix in liquid form before the injection, we maintain the temperature of the agarose gel matrix containing cells in a 1.5 mL tube at 37C.
+In the pulsed jet formation, we integrated our system with a nozzle that generates small droplets using two-phase flows.
+To minimize the amount of aqueous solution used, we here leveraged the solenoid valve to generate a liquid jet for a short period of time.
 
-Stop the flow when the samples are injected
 
 ## Hardware description
 ### Overview Fig.1
