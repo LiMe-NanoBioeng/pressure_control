@@ -36,7 +36,7 @@ We used agarose gel as the aqueous phase and demonstrated the single-cell encaps
 To keep the agarose gel matrix in liquid form before the injection, we maintain the temperature of the agarose gel matrix containing cells in a 1.5 mL tube at 37C.
 In the pulsed jet formation, we integrated our system with a nozzle that generates small droplets using two-phase flows.
 To minimize the amount of aqueous solution used, we here leveraged the solenoid valve to generate a liquid jet for a short period of time.
-
+These demonstrations show the robustness and flexibility of our open-source microfluidic system for various applications.
 
 ## Hardware description
 ### Overview Fig.1
