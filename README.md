@@ -40,14 +40,14 @@ Our system can be extended up to four electro-pneumatic regulators (four analog 
 These demonstrations show the robustness and flexibility of our open-source microfluidic system for various applications.
 
 ## Hardware description
-### Overview Fig.1
+### Overview (Fig.1: Keisuke Kondo)
 The controller provides a constant flow rate or a constant pressure to a microfluidic system by regulating the pressure with an electro-pneumatic regulator (SMC, ITV0010-2CS).
 Switching between different solutions uses ten on/off solenoid valves connected to respective sample tubes and a selector valve (IDEX Health & Science, MXX778-605).
 The selector valve connects a tube out of ten sample tubes to a single outlet tube.
 The system monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube and the microfluidic system.
 To prevent a gravitational flow when all the solenoid valves are closed, we installed a latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) in the PEEK tube downstream of the microfluidic system.
 
-### Software and device control via Arduino micro
+### Software and device control via Arduino micro (Fig: Junichi Murai)
 The controller works on GUI-based Python code that communicates with devices through an Arduino micro via a serial connection using pySerial.
 We provide the program for the Arduino micro as another repository (https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
 To read data from and control devices upon request, the Arduino micro routinely checks a serial command sent from the PC.
@@ -63,7 +63,7 @@ Under feedback control, the Arduino micro reads the flow rate and regulates the 
 The Arduino micro continues the feedback control until it is interrupted by a serial command from the PC.
 The selector valve communicates with the PC through another USB.
 
-### Electric circuit
+### Electric circuit (Fig?: Keisuke Kondo)
 The circuit in the controller drives devices at three different voltages 24 V, 9 V and 5 V as summarized in Table 1.
 Thus, our circuit uses a 24 V AC power supply and regulate the power to 9 V. 
 The devices work at 5 V use output from the Arduino micro.
@@ -81,7 +81,7 @@ FS Flow sensor (Sensirion, LG16-1000D)
 SV the latching solenoid valve (Takasago Electric Inc, FLV-2-N1F)
 DAC
 
-### Pressure source and tubings
+### Pressure source and tubings (Fig?: Junichi Murai)
 A miniature diaphragm pump creates the pressure source at about 100 kPa given to the electro-pneumatic regulator.
 The electro-pneumatic regulator controls the output pressure by referring to the analog output from the DAC.
 The pressurized gas is distributed to a designated sample tube via open/close solenoid valves.
