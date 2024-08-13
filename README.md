@@ -11,31 +11,32 @@ We envision that this open source will be
 In microfluidic systems, flow control is typically achieved by syringe pumps or pressure-based fluidic systems.
 A syringe pump gives a constant flow rate by forwarding the plunger at a constant speed.
 The pressure output of a syringe pump is dependent on the microfluidic system's flow resistance.
-The syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa) and regulating at a constant flow rate.
+The syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa) and regulating at a defined flow rate.
 In contrast, a pressure-based fluidic system provides a constant flow by pneumatically pressuring the solution.
 The flow rate becomes dependent on the microfluidic system's flow resistance.
-Thus, a pressure-based fluidic system requires feedback control when regulating the flow at a constant flow rate or terminating the flow at a finite injection volume.
+Thus, a pressure-based fluidic system requires feedback control when regulating the flow at a defined flow rate or terminating the flow at a finite injection volume.
 The pressure-based fluidic system typically uses a sample tube or a bottle to store the sample solution.
 This configuration is beneficial for maintaining the temperature of the sample solution before the injection simply by using dry bathes to cool or heat sample tubes.
 Unlike syringe pumps, the pressure-based fluidic system can easily be multiplexed by adding sample tubes.
 The system can reduce the dead volume and avoid contamination by using a one-time-use sample tube.
 Thus, it is advantageous to adapt the system to multiplexed assays, such as multiplexed fluorescent in situ hybridization, which involves multiple washing and reaction steps.
-Although pressure-based liquid handling systems are commercially available for multiplexed assays, they are expensive and less flexible than open-source systems.
+Although pressure-based liquid handling systems are commercially available for multiplexed assays, they are relatively expensive and less flexible than open-source systems.
 Previously reported systems based on pressure regulation use open-loop control for the flow rate. 
 Thus, to provide a constant flow rate, the devices require a calibration curve that characterizes the relation between pressure and flow rate for each microfluidic system.
 
 
 Here, we present an open-source microfluidic system that enables regulation of the flow rate using the proportional-integral-derivative (PID) feedback control.
-Our system uses an Arduino micro that fully integrates the PID feedback control. This control involves measuring the flow rate with a flow sensor and controlling the pressure with an electromagnetic regulator to provide a constant flow rate.
+Our system uses an Arduino micro that fully integrates the PID feedback control. This control involves measuring the flow rate with a flow sensor and controlling the pressure with an electro-pneumatic regulator to provide a constant flow rate.
 We show the robust fluid exchange with our system demonstrating XX rounds of fluorescent oligo hybridization and stripping.
 
 To demonstrate our system's flexibility, we show an extension of our system using open-loop control and demonstrate two different applications: microfluidic droplet generation and pulsed jet formation.
-The extended system controls two electromagnetic regulators to provide different pressures for two phases, oil and aqueous solutions or gas and liquid.
+The extended system controls two electro-pneumatic regulators to provide different pressures for two phases, oil and aqueous solutions or gas and liquid.
 In the microfluidic droplet generation, we injected oil and aqueous solutions into a hydrophobic microfluidic device, in which aqueous droplets are generated in an oil continuous phase.
 We used agarose gel as the aqueous phase and demonstrated the single-cell encapsulation in agarose gel beads.
 To keep the agarose gel matrix in liquid form before the injection, we maintain the temperature of the agarose gel matrix containing cells in a 1.5 mL tube at 37C.
 In the pulsed jet formation, we integrated our system with a nozzle that generates small droplets using two-phase flows.
 To minimize the amount of aqueous solution used, we here leveraged the solenoid valve to generate a liquid jet for a short period of time.
+Our system can be extended up to four electro-pneumatic regulators (four analog inputs/outputs), ten solenoid valves (driven at 24V via ten digital pins), one flow meter (I2C), and one latching valve  (driven at 5 V via one digital pin).
 These demonstrations show the robustness and flexibility of our open-source microfluidic system for various applications.
 
 ## Hardware description
@@ -45,24 +46,22 @@ Switching between different solutions uses ten on/off solenoid valves connected 
 The selector valve connects a tube out of ten sample tubes to a single outlet tube.
 The system monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube and the microfluidic system.
 To prevent a gravitational flow when all the solenoid valves are closed, we installed a latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) in the PEEK tube downstream of the microfluidic system.
-Our system can be extended up to four electro-pneumatic regulators (four analog inputs/outputs), ten solenoid valves (driven at 24V via ten digital pins), one flow meter (I2C), and one latching valve  (driven at 5 V via one digital pin).
 
 ### Software and device control via Arduino micro
-The controller works on GUI-based Python code that communicates with devices through an Arduino micro.
-We control the Arduino micro via a serial connection using pySerial.
+The controller works on GUI-based Python code that communicates with devices through an Arduino micro via a serial connection using pySerial.
 We provide the program for the Arduino micro as another repository (https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
 To read data from and control devices upon request, the Arduino micro routinely checks a serial command sent from the PC.
 The Arduino micro monitors the pressure via the regulator's analog input, which is 0-5 V, and controls the electro-pneumatic regulator via 8-bit PWM, which is converted to a 0-5 V analog output with a digital-analog converter (DAC).
 We installed a potentiometer at the analog output given to the electro-pneumatic regulator to stabilize PID feedback control, especially for a low constant flow rate. 
 The potentiometer effectively modulates the maximum voltage of the analog output (originally, 0-5 V) from the Arduino micro down to a low voltage. Manual modulation enables the use of the full 8-bit resolution when regulating at low pressure (e.g., 1 kPa).
 The Arduino micro controls the solenoid valves via digital I/O, which is boosted to 24 V-on/off with N-type MOS-FET-based switching circuits.
-The selector valve communicates with PC through another USB.
 The Arduino micro communicates with the flow sensor through I2C, reading two's complement and outputting the scaled flow rate ul/min.
 We note that the other example Arduino programs for communicating with the flow sensors through I2C are available from Sensirion's GitHub (https://github.com/Sensirion/arduino-liquid-flow-snippets).
 The Arduino micro operates the devices either under open-loop or feedback controls, respectively, for a constant pressure or constant flow rate.
 Under open-loop control, the controller regulates the pressure at a constant value defined by the analog output from the Arduino micro.
 Under feedback control, the Arduino micro reads the flow rate and regulates the pressure using PID control to achieve the specified flow rate.
 The Arduino micro continues the feedback control until it is interrupted by a serial command from the PC.
+The selector valve communicates with the PC through another USB.
 
 ### Electric circuit
 The circuit in the controller drives devices at three different voltages 24 V, 9 V and 5 V as summarized in Table 1.
@@ -113,12 +112,10 @@ Keisuke (lead) and Junichi
 Misa Mineghisi
 
 ## Validation and characterization
-Junichi(lead) and Keisuke
 ### closed-loop
+Junichi(lead) and Keisuke
 
-### open-loop
-
-### extension to four pressure regulators (other applications)
+### open-loop extension to four pressure regulators (other applications)
 #### droplet generator
 Keiji Nozaki
 #### jet
