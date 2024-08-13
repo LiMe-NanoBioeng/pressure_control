@@ -45,7 +45,7 @@ Switching between different solutions uses ten on/off solenoid valves connected 
 The selector valve connects a tube out of ten sample tubes to a single outlet tube.
 The system monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube and the microfluidic system.
 To prevent a gravitational flow when all the solenoid valves are closed, we installed a latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) in the PEEK tube downstream of the microfluidic system.
-Our system can be extended up to four electromagnetic regulators (four analog inputs/outputs), ten solenoid valves (driven at 24V via ten digital pins), one flow meter (I2C), and one latching valve  (driven at 5 V via one digital pin).
+Our system can be extended up to four electro-pneumatic regulators (four analog inputs/outputs), ten solenoid valves (driven at 24V via ten digital pins), one flow meter (I2C), and one latching valve  (driven at 5 V via one digital pin).
 
 ### Software and device control via Arduino micro
 The controller works on GUI-based Python code that communicates with devices through an Arduino micro.
