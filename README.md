@@ -40,15 +40,15 @@ These demonstrations show the robustness and flexibility of our open-source micr
 
 ## Hardware description
 ### Overview Fig.1
-The controller works on GUI-based Python code that communicates with devices through an Arduino micro.
 The controller provides a constant flow rate or a constant pressure to a microfluidic system by regulating the pressure with an electro-pneumatic regulator (SMC, ITV0010-2CS).
-To switch among different solutions, it uses ten on/off solenoid valves connected to respective sample tubes and a selector valve (IDEX Health & Science, MXX778-605).
+Switching between different solutions uses ten on/off solenoid valves connected to respective sample tubes and a selector valve (IDEX Health & Science, MXX778-605).
 The selector valve connects a tube out of ten sample tubes to a single outlet tube.
 The system monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube and the microfluidic system.
 To prevent a gravitational flow when all the solenoid valves are closed, we installed a latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) in the PEEK tube downstream of the microfluidic system.
+Our system can be extended up to four electromagnetic regulators (four analog inputs/outputs), ten solenoid valves (driven at 24V via ten digital pins), one flow meter (I2C), and one latching valve  (driven at 5 V via one digital pin).
 
-
-### Communication with PC via Arduino micro
+### Software and device control via Arduino micro
+The controller works on GUI-based Python code that communicates with devices through an Arduino micro.
 We control the Arduino micro via a serial connection using pySerial.
 We provide the program for the Arduino micro as another repository (https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
 To read data from and control devices upon request, the Arduino micro routinely checks a serial command sent from the PC.
@@ -63,9 +63,6 @@ The Arduino micro operates the devices either under open-loop or feedback contro
 Under open-loop control, the controller regulates the pressure at a constant value defined by the analog output from the Arduino micro.
 Under feedback control, the Arduino micro reads the flow rate and regulates the pressure using PID control to achieve the specified flow rate.
 The Arduino micro continues the feedback control until it is interrupted by a serial command from the PC.
-
-### Software
-
 
 ### Electric circuit
 The circuit in the controller drives devices at three different voltages 24 V, 9 V and 5 V as summarized in Table 1.
