@@ -8,23 +8,21 @@ We demonstrate…
 We envision that this open source will be
 
 ### Hardware in context
-Microfluidic systems require fluidic controls.
-Pneumatic flow control is 
-
+In microfluidic systems, flow control is typically achieved by syringe pumps or pressure-based fluidic systems.
 A syringe pump gives a constant flow rate by forwarding the plunger at a constant speed.
 The pressure output of a syringe pump is dependent on the microfluidic system's flow resistance.
 The syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa) and regulating at a constant flow rate.
-In contrast, a pressure-based fluidic system provides a constant flow by pressuring the solution.
+In contrast, a pressure-based fluidic system provides a constant flow by pneumatically pressuring the solution.
 The flow rate becomes dependent on the microfluidic system's flow resistance.
 Thus, a pressure-based fluidic system requires feedback control when regulating the flow at a constant flow rate or terminating the flow at a finite injection volume.
 The pressure-based fluidic system typically uses a sample tube or a bottle to store the sample solution.
-This configuration is beneficial for maintaining the temperature of the sample solution before the injection simply by using dry bathes to cool or heat PCR tubes.
+This configuration is beneficial for maintaining the temperature of the sample solution before the injection simply by using dry bathes to cool or heat sample tubes.
 Unlike syringe pumps, the pressure-based fluidic system can easily be multiplexed by adding sample tubes.
-The system can reduce the dead volume and avoid contamination by using a PCR tube as a sample tube.
+The system can reduce the dead volume and avoid contamination by using a one-time-use sample tube.
 Thus, it is advantageous to adapt the system to multiplexed assays, such as multiplexed fluorescent in situ hybridization, which involves multiple washing and reaction steps.
 Although pressure-based liquid handling systems are commercially available for multiplexed assays, they are expensive and less flexible than open-source systems.
-Further, previously reported systems based on pressure regulation use open-loop control for the flow rate. 
-Thus, to provide a constant flow rate, they require a calibration curve that characterizes the relation between pressure and flow rate for each microfluidic system.
+Previously reported systems based on pressure regulation use open-loop control for the flow rate. 
+Thus, to provide a constant flow rate, the devices require a calibration curve that characterizes the relation between pressure and flow rate for each microfluidic system.
 
 
 Here, we present an open-source microfluidic system that enables regulation of the flow rate using the proportional-integral-derivative (PID) feedback control.
@@ -43,7 +41,7 @@ To minimize the amount of aqueous solution used, we here leveraged the solenoid 
 ## Hardware description
 ### Overview Fig.1
 The controller works on GUI-based Python code that communicates with devices through an Arduino micro.
-The controller provides a constant flow rate or a constant pressure to a microfluidic system by regulating the pressure with an electro-pneumatic regulator (SMC, ITV0010-2CS) to pressurize a sample solution in a tube.
+The controller provides a constant flow rate or a constant pressure to a microfluidic system by regulating the pressure with an electro-pneumatic regulator (SMC, ITV0010-2CS).
 To switch among different solutions, it uses ten on/off solenoid valves connected to respective sample tubes and a selector valve (IDEX Health & Science, MXX778-605).
 The selector valve connects a tube out of ten sample tubes to a single outlet tube.
 The system monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube and the microfluidic system.
@@ -127,7 +125,7 @@ Junichi(lead) and Keisuke
 #### droplet generator
 Keiji Nozaki
 #### jet
-Mahmoud
+Mahmoud and Kohei Takamuro
 
 
 
