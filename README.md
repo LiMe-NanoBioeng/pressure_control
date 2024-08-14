@@ -65,16 +65,16 @@ The selector valve communicates with the PC through another USB.
 ### Electric circuit (Fig?: Keisuke Kondo)
 The circuit in the controller drives devices at three different voltages 24 V, 9 V and 5 V as summarized in Table 1.
 The circuit thus uses a 24 V for the power supply and regulates 5V from the Arduino micro and 9V with a three-terminal regulator. 
-| Part | Voltage|
-|:---|:---:|
-|a miniature DC diaphragm pump (Denso-sangyo, DSA-2FT-24) | 24V |
-|electro-pneumatic regulator (SMC, ITV0010-2CS) | 24V |
-| solenoid valves (SMC, S070B-5BC) | 24V |
-| Three-terminal regulator (JRC, NJM7809FA) | 24V | 
-|Arduino micro | 9V | 
-|Digital analogue converter (Analogue Devices, LTC2645CMS-L8) | 5V | 
-|FS Flow sensor (Sensirion, LG16-1000D) | 5V | 
-|SV the latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) | 5V | 
+| Abbreviation | Part name | Voltage|
+|:---:|:---|:---:|
+| PMP |a miniature DC diaphragm pump (Denso-sangyo, DSA-2FT-24) | 24V |
+| PREG | electro-pneumatic regulator (SMC, ITV0010-2CS) | 24V |
+| SV | solenoid valves (SMC, S070B-5BC) | 24V |
+| REG | Three-terminal regulator (JRC, NJM7809FA) | 24V | 
+| AM |Arduino micro | 9V | 
+| DAC |Digital analogue converter (Analogue Devices, LTC2645CMS-L8) | 5V | 
+| FS |Flow sensor (Sensirion, LG16-1000D) | 5V | 
+| LSV |SV the latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) | 5V | 
 
 
 ### Pressure source and tubings (Fig?: Junichi Murai)
