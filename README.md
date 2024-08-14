@@ -41,9 +41,9 @@ These demonstrations show the robustness and flexibility of our open-source micr
 ## Hardware description
 ### Overview (Fig.1: Keisuke Kondo)
 Our microfluidic controller provides a constant flow rate or a constant pressure to a microfluidic system by regulating the pressure with an electro-pneumatic regulator (SMC, ITV0010-2CS).
-Switching between different solutions uses ten on/off solenoid valves connected to respective sample tubes and a selector valve (IDEX Health & Science, MXX778-605).
-The selector valve connects a tube out of ten sample tubes to a single outlet tube.
-The controller monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube and the microfluidic system.
+The pressurized gas is distributed to a designated sample tube via open/close solenoid valves and pushes out the solution to the peek tube inserted down to the tube bottom.
+A selector valve (IDEX Health & Science, MXX778-605) connects the tubing out of ten sample tubes to the single outlet tube.
+The controller monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube of the selector valve and the microfluidic system.
 To prevent a gravitational flow when all the solenoid valves are closed, we installed a latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) in the PEEK tube downstream of the microfluidic system.
 
 ### Software and device control via Arduino micro (Fig: Junichi Murai)
@@ -79,13 +79,9 @@ The circuit thus uses a 24 V for the power supply and regulates 5V from the Ardu
 
 ### Pressure source and tubings (Fig?: Junichi Murai)
 A miniature diaphragm pump creates the pressure source at about 100 kPa given to the electro-pneumatic regulator.
-The electro-pneumatic regulator controls the output pressure by referring to the analog output from the DAC.
-The pressurized gas is distributed to a designated sample tube via open/close solenoid valves.
-The pressurized gas increases the pressure in the sample tube and pushes out the solution to the peek tube inserted down to the tube bottom.
-The pump, regulator, and manifold (SMC, SS073B01-10C) of solenoid valves are connected with tubes made of urethane.
-To adapt the pump outlet to the inlet of the electro-pneumatic regulator, we connected ulethane tube of 6 mm of outer diameter (OD) to the pump outlet and converted to 4 mm OD using a fitting (MPG6-4).
-The regulator and the solenoid valve manifold are connected through a syringe filter (sartorius, Minisart RC4) and a ulethane tube of 4 mm OD.
-The outlet of the regulator is connected to 4 mm OD tulethane tube and connected to the manifold with a fitting(?).
+To adapt the pump outlet to the inlet of the electro-pneumatic regulator, we connected urethane tube of 6 mm of outer diameter (OD) to the pump outlet and converted to 4 mm OD using a fitting (MPG6-4).
+The regulator and the solenoid valve manifold are connected through a syringe filter (sartorius, Minisart RC4) and a urethane tube of 4 mm OD.
+The outlet of the regulator is connected to 4 mm OD urethane tube and connected to the manifold with a fitting(?).
 The individual outlet from the manifold is connected with a 3 mm OD tube via a fitting (Koganei, BF3BU-M3).
 The phi 3 mm OD tubes are converted to 26G PTFE tubes (Chukyo Co Ltd	TUF-100) with fittings.
 We cap sample tubes (1.5 mL tubes) with rubber lids (AsOne, 1-9662-06) having two through holes that can fit a PTFE tube for pressurization and a peek tube for a sample outlet.
