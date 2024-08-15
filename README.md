@@ -8,7 +8,7 @@ We demonstrate…
 We envision that this open source will be
 
 ### Hardware in context
-In microfluidic systems, flow control is typically achieved by syringe pumps or pressure-based fluidic systems.
+In microfluidic systems, pressure-driven flow is typicslly given by syringe pumps or pressure-based fluidic systems.
 A syringe pump gives a constant flow rate by forwarding the plunger at a constant speed.
 The pressure output of a syringe pump is dependent on the microfluidic system's flow resistance.
 The syringe pump is advantageous when injecting a solution at a high pressure (>100 kPa) and regulating at a defined flow rate.
