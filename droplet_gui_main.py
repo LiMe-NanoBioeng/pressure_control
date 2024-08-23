@@ -107,12 +107,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.volume=volume
                 # ui.current_duration=duration
                 ui.voltage1[valve_num-1] = pressure  # register pressure value
-                NI.ArduinoAO(ui.vNumA, False, 0)
+               # NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
+                #NI.ArduinoAO(ui.vNumA, False, 0)
                 
+                #close valve
                 self.open_single_valve(-1)
-                #
-                # send commands when switch the sequence
                 MXsII.FTWrite(str(valve) + '\r')  # switch the valve
+                # send commands when switch the sequence
+                NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
+                NI.ArduinoAO(ui.vNumA, False, 0)
+                #MXsII.FTWrite(str(valve) + '\r')  # switch the valve
                 time.sleep(1)
                 # send pressure value
                 # NI.ArduinoAO(ui.vNumA,True,pressure)
@@ -137,6 +141,9 @@ class MainWindow(QtWidgets.QMainWindow):
             elif ui.number_of_commands != 0:
             #if ui.number_of_commands !=0 and residual <0 :
                 NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
+                NI.ArduinoAO(ui.vNumA, False, 0)
+                value=NI.ArduinoFBStatus(ui.vNumA)
+                ui.lcdnumber_1.display(value)
             # # commands at the end of the last sequence
                 self.open_single_valve(-1)
                 ui.number_of_commands = 0
