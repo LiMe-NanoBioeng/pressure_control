@@ -192,7 +192,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def DigitalPulse(self):
         a = ui.valveindex1
         b = ui.valveindex2
-        NI.ArduinoDigitalPulse(a,b,1,0.1)
+        width = ui.plainTextEdit.toPlainText()
+        #print(width)
+        c = float(width)
+        NI.ArduinoDigitalPulse(a,b,1,c)
         #NI.ArduinoDigitalPulse(0,1,1,0.1)
         # valve numberが　ひとつめとふたつ目に入るようにする
     
