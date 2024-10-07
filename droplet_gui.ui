@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1181</width>
-    <height>690</height>
+    <width>1349</width>
+    <height>804</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="recordButton">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>560</y>
+      <x>390</x>
+      <y>650</y>
       <width>90</width>
       <height>50</height>
      </rect>
@@ -127,10 +127,10 @@
    <widget class="QPushButton" name="SequenceRun">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>440</y>
+      <x>490</x>
+      <y>650</y>
       <width>111</width>
-      <height>31</height>
+      <height>51</height>
      </rect>
     </property>
     <property name="text">
@@ -140,7 +140,7 @@
    <widget class="QLCDNumber" name="lcdTimer">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>430</x>
       <y>440</y>
       <width>71</width>
       <height>31</height>
@@ -163,7 +163,7 @@
    <widget class="QLCDNumber" name="lcdSeqNumber">
     <property name="geometry">
      <rect>
-      <x>550</x>
+      <x>390</x>
       <y>440</y>
       <width>31</width>
       <height>31</height>
@@ -194,7 +194,7 @@
    <widget class="QLabel" name="unit">
     <property name="geometry">
      <rect>
-      <x>680</x>
+      <x>510</x>
       <y>450</y>
       <width>50</width>
       <height>16</height>
@@ -212,8 +212,8 @@
    <widget class="QPushButton" name="pulseButton">
     <property name="geometry">
      <rect>
-      <x>760</x>
-      <y>440</y>
+      <x>750</x>
+      <y>430</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -222,13 +222,254 @@
      <string>pulse</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="abort">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>570</y>
+      <width>101</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>abort</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="minflowrate">
+    <property name="geometry">
+     <rect>
+      <x>1080</x>
+      <y>570</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="resistance_rate">
+    <property name="geometry">
+     <rect>
+      <x>1160</x>
+      <y>470</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>1180</x>
+      <y>530</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>uL/min</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>1180</x>
+      <y>580</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>uL/min</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="maxflowrate">
+    <property name="geometry">
+     <rect>
+      <x>1080</x>
+      <y>520</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>1030</x>
+      <y>530</y>
+      <width>41</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Max</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>1030</x>
+      <y>580</y>
+      <width>31</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>min</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>1020</x>
+      <y>470</y>
+      <width>131</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>resistance rate</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="tuningbutton">
+    <property name="geometry">
+     <rect>
+      <x>1010</x>
+      <y>430</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>tuning</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="lcdnumber_2">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>630</y>
+      <width>64</width>
+      <height>23</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="valveButton_2">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>660</y>
+      <width>90</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Valve1</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBox_2">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>670</y>
+      <width>141</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>560</y>
+      <width>41</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>kPa</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="valveLcd_2">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>540</y>
+      <width>120</width>
+      <height>50</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QSlider" name="horizontalSlider_2">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>630</y>
+      <width>231</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>5000</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="plainTextEdit">
+    <property name="geometry">
+     <rect>
+      <x>870</x>
+      <y>430</y>
+      <width>104</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="plainText">
+     <string>120</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1181</width>
+     <width>1349</width>
      <height>21</height>
     </rect>
    </property>
@@ -237,13 +478,43 @@
      <string>File</string>
     </property>
     <addaction name="actionload_sequence_file"/>
+    <addaction name="separator"/>
+   </widget>
+   <widget class="QMenu" name="menuMenu">
+    <property name="title">
+     <string>Menu</string>
+    </property>
+    <widget class="QMenu" name="menupressure_number">
+     <property name="title">
+      <string>pressure number</string>
+     </property>
+     <addaction name="actionsingle_2"/>
+     <addaction name="actiondouble_2"/>
+    </widget>
+    <addaction name="menupressure_number"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuMenu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionload_sequence_file">
    <property name="text">
     <string>load sequence file</string>
+   </property>
+  </action>
+  <action name="actiondouble">
+   <property name="text">
+    <string>double</string>
+   </property>
+  </action>
+  <action name="actionsingle_2">
+   <property name="text">
+    <string>single</string>
+   </property>
+  </action>
+  <action name="actiondouble_2">
+   <property name="text">
+    <string>double</string>
    </property>
   </action>
  </widget>
@@ -320,7 +591,7 @@
    <slot>openSeqFile()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>25</x>
+     <x>23</x>
      <y>20</y>
     </hint>
     <hint type="destinationlabel">
@@ -353,7 +624,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>840</x>
-     <y>475</y>
+     <y>521</y>
     </hint>
     <hint type="destinationlabel">
      <x>959</x>
@@ -361,8 +632,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>menubar</sender>
+   <signal>triggered(QAction*)</signal>
+   <receiver>Droplet_formation</receiver>
+   <slot>PressureNumber()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>61</x>
+     <y>11</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>80</x>
+     <y>47</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
+  <signal>signal1()</signal>
   <slot>recordIO()</slot>
   <slot>ValveOC()</slot>
   <slot>svalue_changed()</slot>
@@ -372,5 +660,6 @@
   <slot>openSeqFile()</slot>
   <slot>RunSequence()</slot>
   <slot>DigitalPulse()</slot>
+  <slot>PressureNumber()</slot>
  </slots>
 </ui>

@@ -9,7 +9,7 @@ Update: 2020-11-05, kaneko
 
 import time, datetime, os, serial
 
-ser = serial.Serial('COM11', 9600, timeout=1)
+ser = serial.Serial('COM11', 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient however slow it is... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -30,9 +30,10 @@ class AI():
         if value==True:
             text='FB' + str(vNumA) + ',' + str(setpoint) + ',' + str(Kp) + ',' + str(Ki) + ',' + str(Kd) +'\n'
             ser.write(text.encode('utf-8'))
-            time.sleep(0.2)
+            time.sleep(0.1)
         else:
             ser.write(b'B')
+            time.sleep(0.1)
     def ArduinoI2C():
         ser.write(b'II')
         time.sleep(0.1)
@@ -43,8 +44,9 @@ class AI():
     def ArduinoAI():        
         c = []
         # Read analog input of AN4-5
-        ser.write(b'AI6,7')
-        time.sleep(0.2)
+        # ser.write(b'AI6,7')
+        ser.write(b'AI7,8')
+        time.sleep(0.1)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
         ser_bytes = ser.readline().decode('utf-8')
@@ -57,6 +59,13 @@ class AI():
         # c is a temporal data
         t = time.time()
         c=decoded_bytes.split(",")
+        
+        # potentiometer
+        #ser.write(b'AI11')
+        #time.sleep(0.1)
+        #ser_bytes = ser.readline().decode('utf-8')
+        ##decoded_bytes = ser_bytes.strip()
+        #c.append(ser_bytes)
 
         if c[0] == '':  # if faied in obtaining data
             c[0] = 0
@@ -66,6 +75,23 @@ class AI():
         for i in range(len(c)): # range(X):Xはチャンネル数
             c[i] = float(c[i]) # listをfloat形式に変換
         return(t,c,result)
+        #return(t,c,result)
+    
+    def ArduinoTuning():
+        #potentiometer calcuration
+        ser.write(b'AI8')
+        time.sleep(0.1)
+        ser_bytes = ser.readline().decode('utf-8')
+        r1=ser_bytes
+        ser.write(b'AI11')
+        time.sleep(0.1)
+        ser_bytes = ser.readline().decode('utf-8')
+        r2=ser_bytes
+        potentio=float(r1)/(float(r2)+0.0001)
+        print(r1,r2)
+        print(potentio)
+        return potentio;
+        
     
     # Control Valve    
     def ArduinoDO(channel,flag):
@@ -89,5 +115,7 @@ class AI():
             AO6out = 'AO'+str(channel)+'v'+ str(values) + '\n'
         else:
             AO6out = 'AO'+str(channel)+'v'+'0\n'
+        ser.write(b'B')
+        time.sleep(2)
         ser.write(AO6out.encode('utf-8'))
         
