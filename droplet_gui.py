@@ -173,8 +173,8 @@ class Ui_Droplet_formation(object):
         Droplet_formation.setStatusBar(self.statusbar)
         self.actionload_sequence_file = QtWidgets.QAction(Droplet_formation)
         self.actionload_sequence_file.setObjectName("actionload_sequence_file")
-        self.actiondouble = QtWidgets.QAction(Droplet_formation)
-        self.actiondouble.setObjectName("actiondouble")
+        #self.actiondouble = QtWidgets.QAction(Droplet_formation)
+        #self.actiondouble.setObjectName("actiondouble")
         self.actionsingle_2 = QtWidgets.QAction(Droplet_formation)
         self.actionsingle_2.setObjectName("actionsingle_2")
         self.actiondouble_2 = QtWidgets.QAction(Droplet_formation)
@@ -192,7 +192,9 @@ class Ui_Droplet_formation(object):
         self.valveButton_1.clicked.connect(Droplet_formation.ValveOC) # type: ignore
         self.horizontalSlider.valueChanged['int'].connect(Droplet_formation.svalue_changed) # type: ignore
         self.comboBox.currentIndexChanged['int'].connect(Droplet_formation.valve_number_changed) # type: ignore
-        self.menubar.triggered['QAction*'].connect(Droplet_formation.openSeqFile) # type: ignore
+        self.menuFile.triggered['QAction*'].connect(Droplet_formation.openSeqFile) # type: ignore #change JM
+        self.actionsingle_2.triggered.connect(Droplet_formation.SinglePressure)
+        self.actiondouble_2.triggered.connect(Droplet_formation.DoublePressure)
         self.SequenceRun.clicked.connect(Droplet_formation.RunSequence) # type: ignore
         self.pulseButton.clicked.connect(Droplet_formation.DigitalPulse) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Droplet_formation)
@@ -221,6 +223,6 @@ class Ui_Droplet_formation(object):
         self.menuMenu.setTitle(_translate("Droplet_formation", "Menu"))
         self.menupressure_number.setTitle(_translate("Droplet_formation", "pressure number"))
         self.actionload_sequence_file.setText(_translate("Droplet_formation", "load sequence file"))
-        self.actiondouble.setText(_translate("Droplet_formation", "double"))
+        #self.actiondouble.setText(_translate("Droplet_formation", "double"))
         self.actionsingle_2.setText(_translate("Droplet_formation", "single"))
         self.actiondouble_2.setText(_translate("Droplet_formation", "double"))
