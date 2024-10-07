@@ -190,8 +190,11 @@ class Ui_Droplet_formation(object):
         self.retranslateUi(Droplet_formation)
         self.recordButton.clicked.connect(Droplet_formation.recordIO) # type: ignore
         self.valveButton_1.clicked.connect(Droplet_formation.ValveOC) # type: ignore
+        self.valveButton_2.clicked.connect(Droplet_formation.ValveOC2) # type: ignore
         self.horizontalSlider.valueChanged['int'].connect(Droplet_formation.svalue_changed) # type: ignore
+        self.horizontalSlider_2.valueChanged['int'].connect(Droplet_formation.svalue2_changed) # type: ignore
         self.comboBox.currentIndexChanged['int'].connect(Droplet_formation.valve_number_changed) # type: ignore
+        self.comboBox_2.currentIndexChanged['int'].connect(Droplet_formation.valve_number_changed) # type: ignore
         self.menuFile.triggered['QAction*'].connect(Droplet_formation.openSeqFile) # type: ignore #change JM
         self.actionsingle_2.triggered.connect(Droplet_formation.SinglePressure)
         self.actiondouble_2.triggered.connect(Droplet_formation.DoublePressure)
