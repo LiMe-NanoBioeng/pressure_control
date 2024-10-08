@@ -194,7 +194,7 @@ class Ui_Droplet_formation(object):
         self.horizontalSlider.valueChanged['int'].connect(Droplet_formation.svalue_changed) # type: ignore
         self.horizontalSlider_2.valueChanged['int'].connect(Droplet_formation.svalue2_changed) # type: ignore
         self.comboBox.currentIndexChanged['int'].connect(Droplet_formation.valve_number_changed) # type: ignore
-        self.comboBox_2.currentIndexChanged['int'].connect(Droplet_formation.valve_number_changed) # type: ignore
+        self.comboBox_2.currentIndexChanged['int'].connect(Droplet_formation.valve2_number_changed) # type: ignore
         self.menuFile.triggered['QAction*'].connect(Droplet_formation.openSeqFile) # type: ignore #change JM
         self.actionsingle_2.triggered.connect(Droplet_formation.SinglePressure)
         self.actiondouble_2.triggered.connect(Droplet_formation.DoublePressure)
@@ -221,7 +221,7 @@ class Ui_Droplet_formation(object):
         self.tuningbutton.setText(_translate("Droplet_formation", "tuning"))
         self.valveButton_2.setText(_translate("Droplet_formation", "Valve1"))
         self.label_8.setText(_translate("Droplet_formation", "kPa"))
-        self.plainTextEdit.setPlainText(_translate("Droplet_formation", "120"))
+        self.plainTextEdit.setPlainText(_translate("Droplet_formation", "1"))
         self.menuFile.setTitle(_translate("Droplet_formation", "File"))
         self.menuMenu.setTitle(_translate("Droplet_formation", "Menu"))
         self.menupressure_number.setTitle(_translate("Droplet_formation", "pressure number"))
