@@ -244,21 +244,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def draw_graph(self):
         ui.graphwidget.figure.clear()
-        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131)
+        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131, xlabel = 'Time [s]', ylabel = 'Pressure [kPa]')
         ui.graphwidget.axes.clear()
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = np.transpose(ui.CA1)
         ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
 
-        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132)
+        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132, xlabel = 'Time [s]', ylabel = 'Flow rate [μL/min]')
         ui.graphwidget.axes.clear()
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.f
         ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
 
-        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(133)
+        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(133, xlabel = 'Time [s]', ylabel = 'Pumped volume [μL]')
         ui.graphwidget.axes.clear()
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.q
@@ -393,7 +393,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
     
     def valve_number_changed(self, index):
-        ui.selected_valve_index_index = index
+        ui.selected_valve_index_index = index #selected_valve_index_index をそれぞれのバルブのインデクッスにそろえるとうまく行く？
         ui.valveindex1=index
         print(ui.valveindex1)
         valvenum = str(hex(ui.selected_valve_index_index+1).upper())
@@ -433,10 +433,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # ValveBotton_1
     def ValveOC(self):
-        ui.valve_1[ui.selected_valve_index_index] = not ui.valve_1[ui.selected_valve_index_index]
-        s = NI.ArduinoDO(ui.selected_valve_index_index,
-                         ui.valve_1[ui.selected_valve_index_index])
-        if ui.valve_1[ui.selected_valve_index_index]==True: 
+        # ui.valve_1[ui.selected_valve_index_index] = not ui.valve_1[ui.selected_valve_index_index]
+        # s = NI.ArduinoDO(ui.selected_valve_index_index,
+        #                  ui.valve_1[ui.selected_valve_index_index])
+        # if ui.valve_1[ui.selected_valve_index_index]==True: 
+        ui.valve_1[ui.valveindex1] = not ui.valve_1[ui.valveindex1]
+        s = NI.ArduinoDO(ui.valveindex1,
+                          ui.valve_1[ui.valveindex1])
+        if ui.valve_1[ui.valveindex1]==True: 
             ui.valveButton_1.setText('ON')
         else: 
             ui.valveButton_1.setText('OFF')
@@ -447,17 +451,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # add JM ValveButton_2
     def ValveOC2(self):
-            ui.valve_2[ui.selected_valve_index_index] = not ui.valve_2[ui.selected_valve_index_index]
-            s = NI.ArduinoDO(ui.selected_valve_index_index,
-                             ui.valve_2[ui.selected_valve_index_index])
-            if ui.valve_2[ui.selected_valve_index_index]==True: 
-                ui.valveButton_2.setText('ON')
-            else: 
-                ui.valveButton_2.setText('OFF')
-            if any(ui.valve_2):  # open the check valve
-                s = NI.ArduinoDO(10, True)
-            else:
-                s = NI.ArduinoDO(10, False)
+            # ui.valve_2[ui.selected_valve_index_index] = not ui.valve_2[ui.selected_valve_index_index]
+            # s = NI.ArduinoDO(ui.selected_valve_index_index,
+            #                  ui.valve_2[ui.selected_valve_index_index])
+            # if ui.valve_2[ui.selected_valve_index_index]==True: 
+        ui.valve_2[ui.valveindex2] = not ui.valve_2[ui.valveindex2]
+        s = NI.ArduinoDO(ui.valveindex2,
+                             ui.valve_2[ui.valveindex2])
+        if ui.valve_2[ui.valveindex2]==True: 
+            ui.valveButton_2.setText('ON')
+        else: 
+            ui.valveButton_2.setText('OFF')
+        if any(ui.valve_2):  # open the check valve
+            s = NI.ArduinoDO(10, True)
+        else:
+            s = NI.ArduinoDO(10, False)
                 
     def svalue_changed(self):
         ui.voltage1[ui.selected_valve_index_index] = ui.horizontalSlider.value()
