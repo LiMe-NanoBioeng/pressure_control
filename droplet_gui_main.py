@@ -20,7 +20,7 @@ now=datetime.datetime.now()
 timestamp=now.strftime("%Y%m%d%H%M%S")
 resultfilename="result"+timestamp
 
-operating=0;
+# operating=0;
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         global ui
@@ -38,12 +38,13 @@ class MainWindow(QtWidgets.QMainWindow):
             ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
                                           xlim=None, ylim=None, xscale='linear', yscale='linear',
-                                          width=12, height=3, dpi=100)
+                                          width=12, height=3, dpi=95)
 
         timer = QtCore.QTimer(self)
-       
         timer.timeout.connect(self.update_figure)
+        ui.timer=timer
         timer.start()
+        ui.timer=timer
         ui.save = False
         ui.valve_1 = [False, False, False, False,
                       False, False, False, False, False, False]
@@ -53,7 +54,8 @@ class MainWindow(QtWidgets.QMainWindow):
         #     NI.ArduinoDO(icnt,ui.valve_1[icnt])
         self.open_single_valve(-1)
         #ui.vNumA=11
-        ui.vNumA=10
+        ui.vNumA=9
+        ui.vNumA2=10
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0)
         NI.ArduinoAO(ui.vNumA, False, 0)
         ui.Filename = ' '
@@ -73,8 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.pid_parameters = {}
         ui.tuningbutton.clicked.connect(self.tuning_resistanse_rate)
         #K2 Added
-        ui.tuningtimer=QtCore.QTimer(self)
-        ui.is_runnning=False
+        ui.tuning_is_runnning=False
         #JM added
         ui.valveButton_2.hide()
         ui.valveLcd_2.hide()
@@ -139,9 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 # ui.current_duration=duration
                 ui.voltage1[valve_num-1] = pressure  # register pressure value
                 
-               # NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
-                #NI.ArduinoAO(ui.vNumA, False, 0)
-                
+        
                 #close valve
                 self.open_single_valve(-1)
                 MXsII.FTWrite(str(valve) + '\r')  # switch the valve
@@ -155,15 +154,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 time.sleep(1)
                 # send pressure value
                 # NI.ArduinoAO(ui.vNumA,True,pressure)
-                global operating
-                if pressure >0:
+                # global operating
+                if ui.mode=="p":#open loop
+                    # self.open_single_valve(valve_num)
+                    # NI.ArduinoAO(ui.vNumA, True, int(pressure/100*255))
+                    NI.ArduinoAO(ui.vNumA, True, int(pressure/70*255))
                     self.open_single_valve(valve_num)
-                    NI.ArduinoFB(True,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
-                    operating=1
-                else:
-                    NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
-                    NI.ArduinoAO(ui.vNumA, False, 0)
-                    operating =0
+                else: # closed loop
+                    if pressure >0:
+                        self.open_single_valve(valve_num)
+                        NI.ArduinoFB(True,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
+                        # operating=1
+                    else:
+                        NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd) 
+                        NI.ArduinoAO(ui.vNumA, False, 0)
+                        # operating =0
                     
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
@@ -244,27 +249,31 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def draw_graph(self):
         ui.graphwidget.figure.clear()
-        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131, xlabel = 'Time [s]', ylabel = 'Pressure [kPa]')
         ui.graphwidget.axes.clear()
+        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131, xlabel = 'Time [s]', ylabel = 'Pressure [kPa]')
+        #ui.graphwidget.axes.clear()
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = np.transpose(ui.CA1)
         ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
 
+                
         ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132, xlabel = 'Time [s]', ylabel = 'Flow rate [μL/min]')
-        ui.graphwidget.axes.clear()
+        #ui.graphwidget.axes.clear()
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.f
         ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
 
         ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(133, xlabel = 'Time [s]', ylabel = 'Pumped volume [μL]')
-        ui.graphwidget.axes.clear()
+        #ui.graphwidget.axes.clear()
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.q
         ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
+        
+        ui.graphwidget.figure.tight_layout()
         ui.graphwidget.draw()
-
+       
     def update_figure(self):
 
         time, c, r= NI.ArduinoAI()# potentio　does not used in this stack
@@ -292,13 +301,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     else:  # compute integrated flow quantity at t=1
                         q = f*(ui.dt[-1])/60
                     ui.q = np.append(ui.q, q)
-                    global operating
-                    #save result phase
-                    print(time-ui.t,",",f,",",operating)
-                    result_file_path=os.path.join("./result/",resultfilename)
-                    resultitself=str(time-ui.t)+","+str(f)+","+str(operating)+"\n"
-                    with open(result_file_path,'a') as file:
-                        file.write(resultitself)
+                    # global operating
+                    # #save result phase
+                    # print(time-ui.t,",",f,",",operating)
+                    # result_file_path=os.path.join("./result/",resultfilename)
+                    # resultitself=str(time-ui.t)+","+str(f)+","+str(operating)+"\n"
+                    # with open(result_file_path,'a') as file:
+                    #     file.write(resultitself)
                     #phase end
                     
                     c = np.append(
@@ -363,18 +372,18 @@ class MainWindow(QtWidgets.QMainWindow):
             rowPosition += 1
     
     def tuning_resistanse_rate(self):
-        if not ui.is_runnning:
+        if not ui.tuning_is_runnning:
             NI.ArduinoDO(0, True)
             print("number 1 opened")
             MXsII.FTWrite(str(1) + '\r')
             NI.ArduinoFB(True,10,50,1,1,1) 
-            ui.tuningtimer.timeout.connect(self.tuningCore)
-            ui.tuningtimer.start(100)
-            ui.is_runnning=True
+            ui.timer.timeout.connect(self.tuningCore)
+            ui.timer.start(100)
+            ui.tuning_is_runnning=True
             NI.ArduinoDO(10, True)
         else:
-            ui.tuningtimer.stop()  # タイマーを停止
-            ui.is_running = False
+            ui.timer.stop()  # タイマーを停止
+            ui.tuning_is_running = False
             NI.ArduinoFB(False,10,0,0,0,0)
             NI.ArduinoDO(0, False)
             print("tuning ended")
@@ -468,14 +477,20 @@ class MainWindow(QtWidgets.QMainWindow):
             s = NI.ArduinoDO(10, False)
                 
     def svalue_changed(self):
-        ui.voltage1[ui.selected_valve_index_index] = ui.horizontalSlider.value()
+        # ui.voltage1[ui.selected_valve_index_index] = ui.horizontalSlider.value()
+        # ui.lcdnumber_1.display(ui.horizontalSlider.value())
+        # NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.selected_valve_index_index])
+        ui.voltage1[ui.valveindex1] = ui.horizontalSlider.value()
         ui.lcdnumber_1.display(ui.horizontalSlider.value())
-        NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.selected_valve_index_index])
+        NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.valveindex1])
         
     def svalue2_changed(self):
-        ui.voltage1[ui.selected_valve_index_index] = ui.horizontalSlider.value()
-        ui.lcdnumber_2.display(ui.horizontalSlider.value())
-        NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.selected_valve_index_index])
+        # ui.voltage1[ui.selected_valve_index_index] = ui.horizontalSlider.value()
+        # ui.lcdnumber_2.display(ui.horizontalSlider.value())
+        # NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.selected_valve_index_index])
+        ui.voltage1[ui.valveindex2] = ui.horizontalSlider_2.value()
+        ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
+        NI.ArduinoAO(ui.vNumA2, True, ui.voltage1[ui.valveindex2])
         
         
         #K2 ADDED
