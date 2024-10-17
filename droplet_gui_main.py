@@ -48,14 +48,14 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.save = False
         ui.valve_1 = [False, False, False, False,
                       False, False, False, False, False, False]
-        ui.valve_2 = [False, False, False, False,
-                      False, False, False, False, False, False]
+        # #ui.valve_2 = [False, False, False, False,
+        #               False, False, False, False, False, False]
         # for icnt in range(len(ui.valve_1)):
         #     NI.ArduinoDO(icnt,ui.valve_1[icnt])
         self.open_single_valve(-1)
         #ui.vNumA=11
-        ui.vNumA=9
-        ui.vNumA2=10
+        ui.vNumA=10
+        ui.vNumB=9
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0)
         NI.ArduinoAO(ui.vNumA, False, 0)
         ui.Filename = ' '
@@ -157,8 +157,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 # global operating
                 if ui.mode=="p":#open loop
                     # self.open_single_valve(valve_num)
-                    # NI.ArduinoAO(ui.vNumA, True, int(pressure/100*255))
-                    NI.ArduinoAO(ui.vNumA, True, int(pressure/70*255))
+                    NI.ArduinoAO(ui.vNumA, True, int(pressure/100*255))
                     self.open_single_valve(valve_num)
                 else: # closed loop
                     if pressure >0:
@@ -402,15 +401,14 @@ class MainWindow(QtWidgets.QMainWindow):
         
     
     def valve_number_changed(self, index):
-        ui.selected_valve_index_index = index #selected_valve_index_index をそれぞれのバルブのインデクッスにそろえるとうまく行く？
+        #ui.selected_valve_index_index = index 
         ui.valveindex1=index
-        print(ui.valveindex1)
-        valvenum = str(hex(ui.selected_valve_index_index+1).upper())
+        valvenum = str(hex(index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
-        ui.lcdnumber_1.display(ui.voltage1[ui.selected_valve_index_index])
-        ui.horizontalSlider.setValue(ui.voltage1[ui.selected_valve_index_index])
+        ui.lcdnumber_1.display(ui.voltage1[index])
+        ui.horizontalSlider.setValue(ui.voltage1[index])
         if hasattr(ui, 'valve_1'):
-            if ui.valve_1[ui.selected_valve_index_index]==True: 
+            if ui.valve_1[index]==True: 
                 ui.valveButton_1.setText('ON')
             else: 
                 ui.valveButton_1.setText('OFF')
@@ -420,14 +418,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     #add JM
     def valve2_number_changed(self, index):
-        ui.selected_valve_index_index = index
+        #ui.selected_valve_index_index = index
         ui.valveindex2=index
-        valvenum = str(hex(ui.selected_valve_index_index+1).upper())
+        valvenum = str(hex(index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
-        ui.lcdnumber_2.display(ui.voltage1[ui.selected_valve_index_index])
-        ui.horizontalSlider.setValue(ui.voltage1[ui.selected_valve_index_index])
-        if hasattr(ui, 'valve_2'):
-            if ui.valve_2[ui.selected_valve_index_index]==True: 
+        ui.lcdnumber_2.display(ui.voltage1[index])
+        ui.horizontalSlider.setValue(ui.voltage1[index])
+        if hasattr(ui, 'valve_1'):
+            if ui.valve_1[index]==True: 
                 ui.valveButton_2.setText('ON')
             else: 
                 ui.valveButton_2.setText('OFF')
@@ -464,14 +462,14 @@ class MainWindow(QtWidgets.QMainWindow):
             # s = NI.ArduinoDO(ui.selected_valve_index_index,
             #                  ui.valve_2[ui.selected_valve_index_index])
             # if ui.valve_2[ui.selected_valve_index_index]==True: 
-        ui.valve_2[ui.valveindex2] = not ui.valve_2[ui.valveindex2]
+        ui.valve_1[ui.valveindex2] = not ui.valve_1[ui.valveindex2]
         s = NI.ArduinoDO(ui.valveindex2,
-                             ui.valve_2[ui.valveindex2])
-        if ui.valve_2[ui.valveindex2]==True: 
+                             ui.valve_1[ui.valveindex2])
+        if ui.valve_1[ui.valveindex2]==True: 
             ui.valveButton_2.setText('ON')
         else: 
             ui.valveButton_2.setText('OFF')
-        if any(ui.valve_2):  # open the check valve
+        if any(ui.valve_1):  # open the check valve
             s = NI.ArduinoDO(10, True)
         else:
             s = NI.ArduinoDO(10, False)
@@ -490,7 +488,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.selected_valve_index_index])
         ui.voltage1[ui.valveindex2] = ui.horizontalSlider_2.value()
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
-        NI.ArduinoAO(ui.vNumA2, True, ui.voltage1[ui.valveindex2])
+        NI.ArduinoAO(ui.vNumB, True, ui.voltage1[ui.valveindex2])
         
         
         #K2 ADDED
