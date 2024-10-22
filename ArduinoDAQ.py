@@ -116,6 +116,9 @@ class AI():
         else:
             AO6out = 'AO'+str(channel)+'v'+'0\n'
         ser.write(b'B')
-        time.sleep(2)
+        time.sleep(0.1)
         ser.write(AO6out.encode('utf-8'))
+        
+    def Arduinobye():
+        ser.close()
         
