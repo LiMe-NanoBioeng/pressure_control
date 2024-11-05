@@ -169,7 +169,7 @@ class Ui_Droplet_formation(object):
         self.valveLcd_2.setObjectName("valveLcd_2")
         self.horizontalSlider_2 = QtWidgets.QSlider(self.centralwidget)
         self.horizontalSlider_2.setGeometry(QtCore.QRect(130, 630, 231, 22))
-        self.horizontalSlider_2.setMaximum(5000)
+        self.horizontalSlider_2.setMaximum(255)
         self.horizontalSlider_2.setOrientation(QtCore.Qt.Horizontal)
         self.horizontalSlider_2.setObjectName("horizontalSlider_2")
         self.plainTextEdit = QtWidgets.QPlainTextEdit(self.centralwidget)
@@ -196,40 +196,55 @@ class Ui_Droplet_formation(object):
         self.menuMenu.setObjectName("menuMenu")
         self.menupressure_number = QtWidgets.QMenu(self.menuMenu)
         self.menupressure_number.setObjectName("menupressure_number")
+        self.menuRegulators = QtWidgets.QMenu(self.menuMenu)
+        self.menuRegulators.setObjectName("menuRegulators")
         Droplet_formation.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(Droplet_formation)
         self.statusbar.setObjectName("statusbar")
         Droplet_formation.setStatusBar(self.statusbar)
         self.actionload_sequence_file = QtWidgets.QAction(Droplet_formation)
         self.actionload_sequence_file.setObjectName("actionload_sequence_file")
-        #self.actiondouble = QtWidgets.QAction(Droplet_formation)
-        #self.actiondouble.setObjectName("actiondouble")
         self.actionsingle_2 = QtWidgets.QAction(Droplet_formation)
         self.actionsingle_2.setObjectName("actionsingle_2")
         self.actiondouble_2 = QtWidgets.QAction(Droplet_formation)
         self.actiondouble_2.setObjectName("actiondouble_2")
+        self.actionITV0010 = QtWidgets.QAction(Droplet_formation)
+        self.actionITV0010.setObjectName("actionITV0010")
+        self.actionITV0030 = QtWidgets.QAction(Droplet_formation)
+        self.actionITV0030.setObjectName("actionITV0030")
+        self.actionITV0010_2 = QtWidgets.QAction(Droplet_formation)
+        self.actionITV0010_2.setObjectName("actionITV0010_2")
+        self.actionITV0030_2 = QtWidgets.QAction(Droplet_formation)
+        self.actionITV0030_2.setObjectName("actionITV0030_2")
+        self.actionITV0090 = QtWidgets.QAction(Droplet_formation)
+        self.actionITV0090.setObjectName("actionITV0090")
         self.menuFile.addAction(self.actionload_sequence_file)
         self.menuFile.addSeparator()
         self.menupressure_number.addAction(self.actionsingle_2)
         self.menupressure_number.addAction(self.actiondouble_2)
+        self.menuRegulators.addAction(self.actionITV0010_2)
+        self.menuRegulators.addAction(self.actionITV0030_2)
+        self.menuRegulators.addAction(self.actionITV0090)
         self.menuMenu.addAction(self.menupressure_number.menuAction())
+        self.menuMenu.addAction(self.menuRegulators.menuAction())
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuMenu.menuAction())
 
         self.retranslateUi(Droplet_formation)
         self.recordButton.clicked.connect(Droplet_formation.recordIO) # type: ignore
         self.valveButton_1.clicked.connect(Droplet_formation.ValveOC) # type: ignore
-        self.valveButton_2.clicked.connect(Droplet_formation.ValveOC2)
         self.horizontalSlider.valueChanged['int'].connect(Droplet_formation.svalue_changed) # type: ignore
-        self.horizontalSlider_2.valueChanged['int'].connect(Droplet_formation.svalue2_changed)
         self.comboBox.currentIndexChanged['int'].connect(Droplet_formation.valve_number_changed) # type: ignore
-        self.comboBox_2.currentIndexChanged['int'].connect(Droplet_formation.valve2_number_changed)
-        self.menuFile.triggered['QAction*'].connect(Droplet_formation.openSeqFile) # type: ignore
+        self.actionload_sequence_file.triggered.connect(Droplet_formation.openSeqFile) # type: ignore
         self.SequenceRun.clicked.connect(Droplet_formation.RunSequence) # type: ignore
         self.pulseButton.clicked.connect(Droplet_formation.DigitalPulse) # type: ignore
-        #self.menubar.triggered['QAction*'].connect(Droplet_formation.PressureNumber) # type: ignore
-        self.actionsingle_2.triggered.connect(Droplet_formation.SinglePressure)
-        self.actiondouble_2.triggered.connect(Droplet_formation.DoublePressure)
+        self.comboBox_2.currentIndexChanged['int'].connect(Droplet_formation.valve2_number_changed) # type: ignore
+        self.valveButton_2.clicked.connect(Droplet_formation.ValveOC2) # type: ignore
+        self.tuningbutton.clicked.connect(Droplet_formation.tuning_resistanse_rate) # type: ignore
+        self.horizontalSlider_2.valueChanged['int'].connect(Droplet_formation.svalue2_changed) # type: ignore
+        self.abort.clicked.connect(Droplet_formation.abort_program) # type: ignore
+        self.actionsingle_2.triggered.connect(Droplet_formation.SinglePressure) # type: ignore
+        self.actiondouble_2.triggered.connect(Droplet_formation.DoublePressure) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Droplet_formation)
 
     def retranslateUi(self, Droplet_formation):
@@ -256,7 +271,22 @@ class Ui_Droplet_formation(object):
         self.menuFile.setTitle(_translate("Droplet_formation", "File"))
         self.menuMenu.setTitle(_translate("Droplet_formation", "Menu"))
         self.menupressure_number.setTitle(_translate("Droplet_formation", "pressure number"))
+        self.menuRegulators.setTitle(_translate("Droplet_formation", "Regulators"))
         self.actionload_sequence_file.setText(_translate("Droplet_formation", "load sequence file"))
-        #self.actiondouble.setText(_translate("Droplet_formation", "double"))
         self.actionsingle_2.setText(_translate("Droplet_formation", "single"))
         self.actiondouble_2.setText(_translate("Droplet_formation", "double"))
+        self.actionITV0010.setText(_translate("Droplet_formation", "ITV0010"))
+        self.actionITV0030.setText(_translate("Droplet_formation", "ITV0030"))
+        self.actionITV0010_2.setText(_translate("Droplet_formation", "ITV0010"))
+        self.actionITV0030_2.setText(_translate("Droplet_formation", "ITV0030"))
+        self.actionITV0090.setText(_translate("Droplet_formation", "ITV0090"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Droplet_formation = QtWidgets.QMainWindow()
+    ui = Ui_Droplet_formation()
+    ui.setupUi(Droplet_formation)
+    Droplet_formation.show()
+    sys.exit(app.exec_())

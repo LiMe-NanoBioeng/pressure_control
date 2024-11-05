@@ -107,7 +107,8 @@ class AI():
         text = 'DP'+str(ch)+':'+str(int(pulsewidth))+':'+str(duty)+':'+str(number)+'\n'
         ser.write(text.encode('utf-8'))
     def ArduinoDigitalPulse(ch1,ch2,delay,width):
-        text = 'PP'+str(ch1)+':'+str(ch2)+','+str(int(delay))+','+str(width)+'\n'
+        # text = 'PP'+str(ch1)+':'+str(ch2)+','+str(int(delay))+','+str(width)+'\n'
+        text = 'PP'+str(ch1)+','+str(ch2)+','+str(int(delay))+','+str(width)+'\n' #use for two valves in pulse 
         ser.write(text.encode('utf-8'))
         # time.sleep(delay+width)
     def ArduinoAO(channel,flag,values):

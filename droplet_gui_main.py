@@ -71,11 +71,11 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.RunSequenceFlag = False
         ui.number_of_commands = 0
         ui.command = 1
-        ui.abort.clicked.connect(self.abort_program)
+        # ui.abort.clicked.connect(self.abort_program)
         ui.pid_parameters = {}
         #K2 Added
         ui.timer.timeout.connect(self.check_tuning)
-        ui.tuningbutton.clicked.connect(self.tuning_resistanse_rate)
+        # ui.tuningbutton.clicked.connect(self.tuning_resistanse_rate)
         ui.tuning_is_running=False
         #JM added
         ui.valveButton_2.hide()
@@ -86,7 +86,10 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.lcdnumber_2.hide()
         ui.valveindex1=0
         ui.valveindex2=0
-        
+        ui.reg=0
+        ui.actionITV0010_2.triggered.connect(lambda: self.function_change(0))
+        ui.actionITV0030_2.triggered.connect(lambda: self.function_change(1))
+        ui.actionITV0090.triggered.connect(lambda: self.function_change(2)) 
 
     def open_single_valve(self, index):
         for i in range(len(ui.valve_1)):
@@ -275,22 +278,25 @@ class MainWindow(QtWidgets.QMainWindow):
         #ui.graphwidget.axes.clear()
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.q
-        ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
-        
+        ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)    
         ui.graphwidget.figure.tight_layout()
         ui.graphwidget.draw()
-       
+    
+    def function_change(self,index):
+        ui.reg = index
+            
     def update_figure(self):
-
         time, c, r= NI.ArduinoAI()
-
         f = NI.ArduinoI2C()
         # print(c)
         # print(f)
-        
         if r:
-            c[0] = 0.1208*c[0]-23.75
-            c[1] = 0.1208*c[1]-23.75
+            g = [0.1208, 1.097, -0.1208]
+            h = [-23.75, -223.75, 23.78]
+            # c[0] = 0.1208*c[0]-23.75
+            # c[1] = 0.1208*c[1]-23.75
+            c[0] = g[ui.reg] * c[0] + h[ui.reg]
+            c[1] = g[ui.reg] * c[1] + h[ui.reg]
             ui.valveLcd_1.display(c[0])
             ui.valveLcd_2.display(c[1]) #add JM
             if ui.save == True:
