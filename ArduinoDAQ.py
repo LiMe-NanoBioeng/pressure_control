@@ -9,7 +9,7 @@ Update: 2020-11-05, kaneko
 
 import time, datetime, os, serial
 
-ser = serial.Serial('COM11', 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient however slow it is... 
+ser = serial.Serial('COM8', 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient however slow it is... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -44,8 +44,7 @@ class AI():
     def ArduinoAI():        
         c = []
         # Read analog input of AN4-5
-        # ser.write(b'AI6,7')
-        ser.write(b'AI7,8')
+        ser.write(b'AI6,7')
         time.sleep(0.1)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
@@ -103,12 +102,12 @@ class AI():
         ser_bytes = ser.readline().decode('utf-8')
         return(ser_bytes.strip())
 
-    def ArduinoDP(ch,pulsewidth,duty,number):
+    def ArduinoDP(ch,pulsewidth,duty,number,threshold):
         text = 'DP'+str(ch)+':'+str(int(pulsewidth))+':'+str(duty)+':'+str(number)+'\n'
         ser.write(text.encode('utf-8'))
-    def ArduinoDigitalPulse(ch1,ch2,delay,width):
+    def ArduinoDigitalPulse(ch1,ch2,delay,width,threshold):
         # text = 'PP'+str(ch1)+':'+str(ch2)+','+str(int(delay))+','+str(width)+'\n'
-        text = 'PP'+str(ch1)+','+str(ch2)+','+str(int(delay))+','+str(width)+'\n' #use for two valves in pulse 
+        text = 'PP'+str(ch1)+','+str(ch2)+','+str(int(delay))+','+str(width)+','+'8'+','+str(int(threshold))+'\n' #use for two valves in pulse 
         ser.write(text.encode('utf-8'))
         # time.sleep(delay+width)
     def ArduinoAO(channel,flag,values):

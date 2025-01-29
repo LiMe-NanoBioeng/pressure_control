@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0)
         NI.ArduinoAO(ui.vNumA, False, 0)
         ui.Filename = ' '
-        ui.Foldername = 'C:/Users/Microfluidics-team'
+        ui.Foldername = 'C:/lab/cryo-EM_codes'
         ui.value = 0
         ui.residualtime = 0
         ui.start = time.time()
@@ -208,7 +208,7 @@ class MainWindow(QtWidgets.QMainWindow):
         width = ui.plainTextEdit.toPlainText()
         #print(width)
         c = float(width)
-        NI.ArduinoDigitalPulse(a,b,1,c)
+        NI.ArduinoDigitalPulse(a,b,1,c,100) # 100 is the threshold
         #NI.ArduinoDigitalPulse(0,1,1,0.1)
         # valve numberが　ひとつめとふたつ目に入るようにする
     
@@ -288,13 +288,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_figure(self):
         time, c, r= NI.ArduinoAI()
         f = NI.ArduinoI2C()
-        # print(c)
-        # print(f)
         if r:
             g = [0.1208, 1.097, -0.1208]
             h = [-23.75, -223.75, 23.78]
-            # c[0] = 0.1208*c[0]-23.75
-            # c[1] = 0.1208*c[1]-23.75
             c[0] = g[ui.reg] * c[0] + h[ui.reg]
             c[1] = g[ui.reg] * c[1] + h[ui.reg]
             ui.valveLcd_1.display(c[0])
@@ -302,8 +298,6 @@ class MainWindow(QtWidgets.QMainWindow):
             if ui.save == True:
                 # add Hiroyuki
                 if ui.count != 0:
-                    # ui.count = 0で新規file open
-                    # ui.t = np.append(ui.t,time)
                     ui.dt = np.append(ui.dt, time-ui.t)
                     # ui.CA1 = np.append(ui.CA1, c)
                     ui.CA1 = np.c_[ui.CA1,c]
@@ -313,15 +307,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     else:  # compute integrated flow quantity at t=1
                         q = f*(ui.dt[-1])/60
                     ui.q = np.append(ui.q, q)
-                    # global operating
-                    # #save result phase
-                    # print(time-ui.t,",",f,",",operating)
-                    # result_file_path=os.path.join("./result/",resultfilename)
-                    # resultitself=str(time-ui.t)+","+str(f)+","+str(operating)+"\n"
-                    # with open(result_file_path,'a') as file:
-                    #     file.write(resultitself)
-                    #phase end
-                    
+
                     c = np.append(
                         np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q))
                     self.draw_graph()
