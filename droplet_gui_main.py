@@ -5,6 +5,7 @@ import numpy as np
 from ArduinoDAQ import AI as NI
 import tkinter.filedialog
 import os
+from os.path import expanduser
 import serial
 import time
 from PyQt5 import QtWidgets, QtCore, QtGui
@@ -15,7 +16,7 @@ import datetime
 now=datetime.datetime.now()
 timestamp=now.strftime("%Y%m%d%H%M%S")
 resultfilename="result"+timestamp
-
+homedir=expanduser("~")
 
 # operating=0;
 class MainWindow(QtWidgets.QMainWindow):
@@ -37,29 +38,26 @@ class MainWindow(QtWidgets.QMainWindow):
                                           xlim=None, ylim=None, xscale='linear', yscale='linear',
                                           width=12, height=3, dpi=95)
 
-        #timer = QtCore.QTimer(self)
-        #timer.timeout.connect(self.update_figure)
-        #ui.timer=timer
-        #timer.start()
-        #ui.timer=timer
+
         ui.timer= QtCore.QTimer(self)
-        ui.timer.timeout.connect(self.update_figure)
         ui.timer.start()
+        ui.timer.timeout.connect(self.update_figure)
+        #K2 Added
+        ui.timer.timeout.connect(self.check_tuning)
         ui.save = False
+        # valve initialization
         ui.valve_1 = [False, False, False, False,
                       False, False, False, False, False, False]
-        # #ui.valve_2 = [False, False, False, False,
-        #               False, False, False, False, False, False]
-        # for icnt in range(len(ui.valve_1)):
-        #     NI.ArduinoDO(icnt,ui.valve_1[icnt])
         self.open_single_valve(-1)
         #ui.vNumA=11
-        ui.vNumA=10
-        ui.vNumB=9
+        # valve channels
+        ui.vNumA=10 # first AO channel feedback channel
+        ui.vNumB=9 # second AO channel
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0)
         NI.ArduinoAO(ui.vNumA, False, 0)
+        
         ui.Filename = ' '
-        ui.Foldername = 'C:/lab/cryo-EM_codes'
+        ui.Foldername = homedir
         ui.value = 0
         ui.residualtime = 0
         ui.start = time.time()
@@ -73,9 +71,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.command = 1
         # ui.abort.clicked.connect(self.abort_program)
         ui.pid_parameters = {}
-        #K2 Added
-        ui.timer.timeout.connect(self.check_tuning)
-        # ui.tuningbutton.clicked.connect(self.tuning_resistanse_rate)
+        
+       
         ui.tuning_is_running=False
         #JM added
         ui.valveButton_2.hide()
@@ -97,7 +94,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.valve_1[i] = False
             else:
                 ui.valve_1[i] = True
-            #s = NI.ArduinoDO(i, ui.valve_1[i])
             NI.ArduinoDO(i, ui.valve_1[i])
         if any(ui.valve_1):  # open the check valve
             #s= NI.ArduinoDO(10, True)
@@ -203,12 +199,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 time.sleep(1)
    
     def DigitalPulse(self):
+        ui.mode='Pulse'
         a = ui.valveindex1
         b = ui.valveindex2
         width = ui.plainTextEdit.toPlainText()
         #print(width)
         c = float(width)
-        NI.ArduinoDigitalPulse(a,b,1,c,100) # 100 is the threshold
+        NI.ArduinoDigitalPulse(a,b,1,c,10) # 100 is the threshold
         #NI.ArduinoDigitalPulse(0,1,1,0.1)
         # valve numberが　ひとつめとふたつ目に入るようにする
     
@@ -286,61 +283,66 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.reg = index
             
     def update_figure(self):
-        time, c, r= NI.ArduinoAI()
-        f = NI.ArduinoI2C()
-        if r:
-            g = [0.1208, 1.097, -0.1208]
-            h = [-23.75, -223.75, 23.78]
-            c[0] = g[ui.reg] * c[0] + h[ui.reg]
-            c[1] = g[ui.reg] * c[1] + h[ui.reg]
-            ui.valveLcd_1.display(c[0])
-            ui.valveLcd_2.display(c[1]) #add JM
-            if ui.save == True:
-                # add Hiroyuki
-                if ui.count != 0:
-                    ui.dt = np.append(ui.dt, time-ui.t)
-                    # ui.CA1 = np.append(ui.CA1, c)
-                    ui.CA1 = np.c_[ui.CA1,c]
-                    ui.f = np.append(ui.f, f)
-                    if ui.count != 1:  # compute integrated flow quantity at t > 1
-                        q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
-                    else:  # compute integrated flow quantity at t=1
-                        q = f*(ui.dt[-1])/60
-                    ui.q = np.append(ui.q, q)
-
-                    c = np.append(
-                        np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q))
-                    self.draw_graph()
-
-                    file = open(ui.Filename, 'a')
+        status = NI.ArduinoStatusCheck()
+        #print(status)
+        if status =='R':
+            time, c, r= NI.ArduinoAI()
+            f = NI.ArduinoI2C()
+    
+            
+            if r:
+                g = [0.1208, 1.097, -0.1208]
+                h = [-23.75, -223.75, 23.78]
+                c[0] = g[ui.reg] * c[0] + h[ui.reg]
+                c[1] = g[ui.reg] * c[1] + h[ui.reg]
+                ui.valveLcd_1.display(c[0])
+                ui.valveLcd_2.display(c[1]) #add JM
+                if ui.save == True:
+                    # add Hiroyuki
+                    if ui.count != 0:
+                        ui.dt = np.append(ui.dt, time-ui.t)
+                        # ui.CA1 = np.append(ui.CA1, c)
+                        ui.CA1 = np.c_[ui.CA1,c]
+                        ui.f = np.append(ui.f, f)
+                        if ui.count != 1:  # compute integrated flow quantity at t > 1
+                            q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
+                        else:  # compute integrated flow quantity at t=1
+                            q = f*(ui.dt[-1])/60
+                        ui.q = np.append(ui.q, q)
+    
+                        c = np.append(
+                            np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q))
+                        self.draw_graph()
+    
+                        file = open(ui.Filename, 'a')
+                    else:
+                        ui.t = time  # initial time
+                        ui.dt = time-ui.t
+                        ui.CA1 = c
+                        ui.f = f
+                        ui.q = 0
+                        file = open(ui.Filename, 'w')
+                        c = np.append(
+                            np.append(np.append(round(ui.dt, 6), c), float(f)), float(ui.q))
+    
+                    ui.count = ui.count + 1
+    
+                    for i in c:
+                        jp = (str(i))
+                        file.write(jp)
+                        file.write(',')  # コンマ
+                    file.write('\n')  # 改行コード
+                    file.close()
+    
                 else:
-                    ui.t = time  # initial time
-                    ui.dt = time-ui.t
-                    ui.CA1 = c
-                    ui.f = f
-                    ui.q = 0
-                    file = open(ui.Filename, 'w')
-                    c = np.append(
-                        np.append(np.append(round(ui.dt, 6), c), float(f)), float(ui.q))
-
-                ui.count = ui.count + 1
-
-                for i in c:
-                    jp = (str(i))
-                    file.write(jp)
-                    file.write(',')  # コンマ
-                file.write('\n')  # 改行コード
-                file.close()
-
-            else:
-                ui.count = 0  # add Hiroyuki
-            ui.flowrate.display(f)
-            # counter Display
-            #
-            if ui.number_of_commands != 0 and len(ui.f) > 4:
-                self.SequenceControlTime()
-
-            #ui.resistance_rate.display(str(potentio))
+                    ui.count = 0  # add Hiroyuki
+                ui.flowrate.display(f)
+                # counter Display
+                #
+                if ui.number_of_commands != 0 and len(ui.f) > 4:
+                    self.SequenceControlTime()
+    
+                #ui.resistance_rate.display(str(potentio))
 
     def RunSequence(self):
         ui.command = 0
@@ -505,11 +507,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
         NI.ArduinoAO(ui.vNumB, True, ui.voltage1[ui.valveindex2])
         
-        
-        #K2 ADDED
-    #def calculate_resistance_value(self):
-        #time, c, r, potentio = NI.ArduinoAI() #time c,r　are not used in this stack
-        #ui.resistance_value.display(str(potentio))
+
 
     def abort_program(self):
         #ser = serial.Serial('COM11', 9600, timeout=1)
