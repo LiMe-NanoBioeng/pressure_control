@@ -24,6 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         global ui
         super(MainWindow, self).__init__(parent=parent)
         ui = Ui_Droplet_formation()
+        ui.MXsII=False  # selector valve True/False
         ui.t = []
         ui.dt = []
         ui.c = []
@@ -40,10 +41,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         ui.timer= QtCore.QTimer(self)
-        ui.timer.start()
+        ui.timer.start(50)
         ui.timer.timeout.connect(self.update_figure)
         #K2 Added
-        ui.timer.timeout.connect(self.check_tuning)
+       # ui.timer.timeout.connect(self.check_tuning)
         ui.save = False
         # valve initialization
         ui.valve_1 = [False, False, False, False,
@@ -69,7 +70,6 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.RunSequenceFlag = False
         ui.number_of_commands = 0
         ui.command = 1
-        # ui.abort.clicked.connect(self.abort_program)
         ui.pid_parameters = {}
         
        
@@ -284,12 +284,9 @@ class MainWindow(QtWidgets.QMainWindow):
             
     def update_figure(self):
         status = NI.ArduinoStatusCheck()
-        #print(status)
         if status =='R':
             time, c, r= NI.ArduinoAI()
             f = NI.ArduinoI2C()
-    
-            
             if r:
                 g = [0.1208, 1.097, -0.1208]
                 h = [-23.75, -223.75, 23.78]
@@ -342,7 +339,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 if ui.number_of_commands != 0 and len(ui.f) > 4:
                     self.SequenceControlTime()
     
-                #ui.resistance_rate.display(str(potentio))
 
     def RunSequence(self):
         ui.command = 0
@@ -375,11 +371,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if ui.tuning_is_running:
             self.tuningCore()
 
-    def tuning_resistanse_rate(self):
+    def tuning_resistanse_rate(self): # click tuning event
         if not ui.tuning_is_running:
             NI.ArduinoDO(0, True)
             print("number 1 opened")
-            MXsII.FTWrite(str(1) + '\r')
+            if ui.MXsII==True: MXsII.FTWrite(str(1) + '\r')
             NI.ArduinoAO(ui.vNumA, True, 100)
             #NI.ArduinoFB(True,10,50,1,1,1) 
             #ui.timer.timeout.connect(self.tuningCore)
@@ -421,8 +417,8 @@ class MainWindow(QtWidgets.QMainWindow):
             else: 
                 ui.valveButton_1.setText('OFF')
             
-        MXsII.FTWrite(message)
-        # Recordbutton
+        if ui.MXsII==True: MXsII.FTWrite(message)
+
 
     #add JM
     def valve2_number_changed(self, index):
@@ -438,7 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
             else: 
                 ui.valveButton_2.setText('OFF')
             
-        MXsII.FTWrite(message)
+        if ui.MXsII==True: MXsII.FTWrite(message)
 
     def recordIO(self):
         ui.save = not ui.save
@@ -448,10 +444,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # ValveBotton_1
     def ValveOC(self):
-        # ui.valve_1[ui.selected_valve_index_index] = not ui.valve_1[ui.selected_valve_index_index]
-        # s = NI.ArduinoDO(ui.selected_valve_index_index,
-        #                  ui.valve_1[ui.selected_valve_index_index])
-        # if ui.valve_1[ui.selected_valve_index_index]==True: 
+
         ui.valve_1[ui.valveindex1] = not ui.valve_1[ui.valveindex1]
         #s = NI.ArduinoDO(ui.valveindex1,
         #                  ui.valve_1[ui.valveindex1])
@@ -469,12 +462,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #s = NI.ArduinoDO(10, False)
             NI.ArduinoDO(10, False)
 
-    # add JM ValveButton_2
+    # add JM ValveButton_2  # can be combined with ValveOC
     def ValveOC2(self):
-            # ui.valve_2[ui.selected_valve_index_index] = not ui.valve_2[ui.selected_valve_index_index]
-            # s = NI.ArduinoDO(ui.selected_valve_index_index,
-            #                  ui.valve_2[ui.selected_valve_index_index])
-            # if ui.valve_2[ui.selected_valve_index_index]==True: 
+
         ui.valve_1[ui.valveindex2] = not ui.valve_1[ui.valveindex2]
         # s = NI.ArduinoDO(ui.valveindex2,
         #                      ui.valve_1[ui.valveindex2])
@@ -492,17 +482,13 @@ class MainWindow(QtWidgets.QMainWindow):
             NI.ArduinoDO(10, False)
                 
     def svalue_changed(self):
-        # ui.voltage1[ui.selected_valve_index_index] = ui.horizontalSlider.value()
-        # ui.lcdnumber_1.display(ui.horizontalSlider.value())
-        # NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.selected_valve_index_index])
+
         ui.voltage1[ui.valveindex1] = ui.horizontalSlider.value()
         ui.lcdnumber_1.display(ui.horizontalSlider.value())
         NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.valveindex1])
         
     def svalue2_changed(self):
-        # ui.voltage1[ui.selected_valve_index_index] = ui.horizontalSlider.value()
-        # ui.lcdnumber_2.display(ui.horizontalSlider.value())
-        # NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.selected_valve_index_index])
+
         ui.voltage1[ui.valveindex2] = ui.horizontalSlider_2.value()
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
         NI.ArduinoAO(ui.vNumB, True, ui.voltage1[ui.valveindex2])
@@ -510,10 +496,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def abort_program(self):
-        #ser = serial.Serial('COM11', 9600, timeout=1)
-        #ser.dtr = False
-        #time.sleep(0.1)
-        #ser.dtr = True
+
         ui.timer.stop()
         NI.Arduinobye()
         self.close()

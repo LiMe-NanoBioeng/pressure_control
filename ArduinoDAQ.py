@@ -9,7 +9,7 @@ Update: 2020-11-05, kaneko
 
 import time, datetime, os, serial
 
-ser = serial.Serial('COM8', 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
+ser = serial.Serial('COM8', 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -44,30 +44,30 @@ class AI():
         # if ser_bytes == 'B':
         #     return(0)
         # else:
-        ser.write(b'II')
+        ser.write(b'II\n')
         time.sleep(0.01)
-        ser_bytes = ser.readline().decode('utf-8')
-        ser_bytes=ser_bytes.rstrip()
+        ser_bytes = ser.readline()
+        # print(ser_bytes)
+        ser_bytes=ser_bytes.decode('utf-8').rstrip()
+        # print(ser_bytes)
         return(float(ser_bytes))
 
     def ArduinoAI():
-           # import time as tempo   
+        # import time as tempo   
         c = []
-        # ser_bytes = ser.readline().decode('utf-8')
-        # if ser_bytes == 'B':
-        #     c[0]=''
-        # else:
-        # Read analog input of AN4-5
-        ser.write(b'AI6,7')
+
+        ser.write(b'AI6,7\n')
         time.sleep(0.01)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
-      #  initialT=tempo.time() 
-        ser_bytes = ser.readline().decode('utf-8') # extremely slow
-       # endT=tempo.time()-initialT
-      #  print(endT)
-        decoded_bytes = ser_bytes.strip()
-        
+        # initialT=tempo.time() 
+        ser_bytes = ser.readline() # extremely slow
+
+        ser_bytes = ser_bytes.decode('utf-8').strip() # extremely slow
+        # endT=tempo.time()-initialT
+        # print(endT)
+        decoded_bytes = ser_bytes
+        # print(decoded_bytes)
         # x and y are sequential data from the begining
 #        x.append(time.time())
 #        y.extend(decoded_bytes.split(","))
@@ -88,11 +88,11 @@ class AI():
     
     def ArduinoTuning():
         #potentiometer calcuration
-        ser.write(b'AI8')
+        ser.write(b'AI8\n')
         time.sleep(0.1)
         ser_bytes = ser.readline().decode('utf-8')
         r1=ser_bytes
-        ser.write(b'AI11')
+        ser.write(b'AI11\n')
         time.sleep(0.1)
         ser_bytes = ser.readline().decode('utf-8')
         r2=ser_bytes
