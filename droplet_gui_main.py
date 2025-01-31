@@ -41,7 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         ui.timer= QtCore.QTimer(self)
-        ui.timer.start(50)
+        ui.timer.start(30)
         ui.timer.timeout.connect(self.update_figure)
         #K2 Added
        # ui.timer.timeout.connect(self.check_tuning)
