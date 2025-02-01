@@ -8,7 +8,13 @@ Update: 2020-11-05, kaneko
 """
 
 import time, datetime, os, serial
+"""
+provide definition of Arduino pins
+Analog IN 6,7,8,11
+Analog OUT
+Digital Out
 
+"""
 ser = serial.Serial('COM8', 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
 
 class AI():  

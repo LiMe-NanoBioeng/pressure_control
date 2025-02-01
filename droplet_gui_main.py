@@ -25,54 +25,57 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(parent=parent)
         ui = Ui_Droplet_formation()
         ui.MXsII=False  # selector valve True/False
-        ui.t = []
-        ui.dt = []
-        ui.c = []
-        ui.f = []
-        ui.voltage1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ui.t = [] # time 
+        ui.dt = [] # time difference
+        ui.c = [] # voltage of pressure
+        ui.f = [] # flow rate
+        ui.voltage = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] # voltage to pressre regulator
         ui.setupUi(self)
         ui.comboBox.addItems(
-            ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
+            ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']) # valve/channel number
         ui.comboBox_2.addItems(
-            ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
+            ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']) # valve channel number
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
                                           xlim=None, ylim=None, xscale='linear', yscale='linear',
                                           width=12, height=3, dpi=95)
 
 
         ui.timer= QtCore.QTimer(self)
-        ui.timer.start(30)
+        ui.timer.start(30) # update the display every this ms
         ui.timer.timeout.connect(self.update_figure)
-        #K2 Added
-       # ui.timer.timeout.connect(self.check_tuning)
-        ui.save = False
+        ui.save = False  # Record data or not
         # valve initialization
-        ui.valve_1 = [False, False, False, False,
+        ui.valve_state = [False, False, False, False,
                       False, False, False, False, False, False]
-        self.open_single_valve(-1)
+        self.open_single_valve(-1) # shut all the valves
         #ui.vNumA=11
         # valve channels
+        #
+        # arduino channel number should be defiend in ArduionDAQ.py
         ui.vNumA=10 # first AO channel feedback channel
         ui.vNumB=9 # second AO channel
-        NI.ArduinoFB(False,ui.vNumA,0,0,0,0)
-        NI.ArduinoAO(ui.vNumA, False, 0)
         
-        ui.Filename = ' '
-        ui.Foldername = homedir
-        ui.value = 0
+        NI.ArduinoFB(False,ui.vNumA,0,0,0,0) # initialize feedback parameters
+        NI.ArduinoAO(ui.vNumA, False, 0) # initialize the pressure regulator
+        ui.Filename = ' ' # file name to save
+        ui.Foldername = homedir # file saving directory
+        #ui.value = 0
+        #
+        # parameters for sequence
+        #
         ui.residualtime = 0
-        ui.start = time.time()
-        ui.termination_mode=""
-        ui.mode=""
-        ui.qstart=0
-        ui.volume=0
-        ui.duration = 0
+        ui.start = time.time() 
+        ui.termination_mode="" # volume or time
+        ui.mode="" #feedback or not
+        ui.qstart=0 # cummulative quantity
+        ui.volume=0 # 
+        ui.duration = 0 # duration
         ui.RunSequenceFlag = False
-        ui.number_of_commands = 0
-        ui.command = 1
-        ui.pid_parameters = {}
-        
-       
+        ui.number_of_commands = 0 # number of commands
+        ui.command = 1 # current command
+        ui.pid_parameters = {} # Ki Kp Kd
+        #
+        #
         ui.tuning_is_running=False
         #JM added
         ui.valveButton_2.hide()
@@ -89,14 +92,13 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.actionITV0090.triggered.connect(lambda: self.function_change(2)) 
 
     def open_single_valve(self, index):
-        for i in range(len(ui.valve_1)):
+        for i in range(len(ui.valve_state)):
             if i != index-1:
-                ui.valve_1[i] = False
+                ui.valve_state[i] = False
             else:
-                ui.valve_1[i] = True
-            NI.ArduinoDO(i, ui.valve_1[i])
-        if any(ui.valve_1):  # open the check valve
-            #s= NI.ArduinoDO(10, True)
+                ui.valve_state[i] = True
+            NI.ArduinoDO(i, ui.valve_state[i])
+        if any(ui.valve_state):  # open the check valve
             NI.ArduinoDO(10, True)
             print('LSV is open')
         else:
@@ -142,12 +144,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.duration = duration
                 ui.volume=volume
                 # ui.current_duration=duration
-                ui.voltage1[valve_num-1] = pressure  # register pressure value
+                ui.voltage[valve_num-1] = pressure  # register pressure value
                 
         
                 #close valve
                 self.open_single_valve(-1)
-                MXsII.FTWrite(str(valve) + '\r')  # switch the valve
+                if ui.MXsII==True: MXsII.FTWrite(str(valve) + '\r')  # switch the valve
                 # send commands when switch the sequence
                 #time.sleep(1)
                 
@@ -203,11 +205,8 @@ class MainWindow(QtWidgets.QMainWindow):
         a = ui.valveindex1
         b = ui.valveindex2
         width = ui.plainTextEdit.toPlainText()
-        #print(width)
         c = float(width)
         NI.ArduinoDigitalPulse(a,b,1,c,10) # 100 is the threshold
-        #NI.ArduinoDigitalPulse(0,1,1,0.1)
-        # valve numberが　ひとつめとふたつ目に入るようにする
     
     def SinglePressure(self):# add JM
         #print('work well')
@@ -284,6 +283,8 @@ class MainWindow(QtWidgets.QMainWindow):
             
     def update_figure(self):
         status = NI.ArduinoStatusCheck()
+        if ui.tuning_is_running:
+            self.tuningCore()
         if status =='R':
             time, c, r= NI.ArduinoAI()
             f = NI.ArduinoI2C()
@@ -356,37 +357,27 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.tableWidget.setColumnCount(1)
         rowPosition = 0
         ui.tableWidget.setRowCount(0)
-        #parameters=(f.readlines(1))
-        #parameters=parameters[0].split(',')
-        #ui.Kp=float(parameters[0])
-        #ui.Ki=float(parameters[1])
-        #ui.Kd=float(parameters[2].rstrip())
         for x in f:
             ui.tableWidget.insertRow(rowPosition)
             ui.tableWidget.setItem(
                 rowPosition, 0, QtWidgets.QTableWidgetItem(x))
             rowPosition += 1
 
-    def check_tuning(self):
-        if ui.tuning_is_running:
-            self.tuningCore()
+#    def check_tuning(self):
+
 
     def tuning_resistanse_rate(self): # click tuning event
+        #ui.timer.timeout.connect(self.check_tuning)
         if not ui.tuning_is_running:
             NI.ArduinoDO(0, True)
             print("number 1 opened")
             if ui.MXsII==True: MXsII.FTWrite(str(1) + '\r')
             NI.ArduinoAO(ui.vNumA, True, 100)
-            #NI.ArduinoFB(True,10,50,1,1,1) 
-            #ui.timer.timeout.connect(self.tuningCore)
-            #ui.timer.start(100)
             ui.tuning_is_running=True
             NI.ArduinoDO(10, True)
         else:
-            #ui.timer.stop()  # タイマーを停止
             ui.tuning_is_running = False
             NI.ArduinoAO(ui.vNumA, False, 100)
-            #NI.ArduinoFB(False,10,0,0,0,0)
             NI.ArduinoDO(0, False)
             print("tuning ended")
             NI.ArduinoDO(10, False)
@@ -409,10 +400,10 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.valveindex1=index
         valvenum = str(hex(index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
-        ui.lcdnumber_1.display(ui.voltage1[index])
-        ui.horizontalSlider.setValue(ui.voltage1[index])
+        ui.lcdnumber_1.display(ui.voltage[index])
+        ui.horizontalSlider.setValue(ui.voltage[index])
         if hasattr(ui, 'valve_1'):
-            if ui.valve_1[index]==True: 
+            if ui.valve_state[index]==True: 
                 ui.valveButton_1.setText('ON')
             else: 
                 ui.valveButton_1.setText('OFF')
@@ -426,10 +417,10 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.valveindex2=index
         valvenum = str(hex(index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
-        ui.lcdnumber_2.display(ui.voltage1[index])
-        ui.horizontalSlider.setValue(ui.voltage1[index])
+        ui.lcdnumber_2.display(ui.voltage[index])
+        ui.horizontalSlider.setValue(ui.voltage[index])
         if hasattr(ui, 'valve_1'):
-            if ui.valve_1[index]==True: 
+            if ui.valve_state[index]==True: 
                 ui.valveButton_2.setText('ON')
             else: 
                 ui.valveButton_2.setText('OFF')
@@ -445,16 +436,16 @@ class MainWindow(QtWidgets.QMainWindow):
     # ValveBotton_1
     def ValveOC(self):
 
-        ui.valve_1[ui.valveindex1] = not ui.valve_1[ui.valveindex1]
+        ui.valve_state[ui.valveindex1] = not ui.valve_state[ui.valveindex1]
         #s = NI.ArduinoDO(ui.valveindex1,
-        #                  ui.valve_1[ui.valveindex1])
+        #                  ui.valve_state[ui.valveindex1])
         NI.ArduinoDO(ui.valveindex1,
-                          ui.valve_1[ui.valveindex1])
-        if ui.valve_1[ui.valveindex1]==True: 
+                          ui.valve_state[ui.valveindex1])
+        if ui.valve_state[ui.valveindex1]==True: 
             ui.valveButton_1.setText('ON')
         else: 
             ui.valveButton_1.setText('OFF')
-        if any(ui.valve_1):  # open the check valve
+        if any(ui.valve_state):  # open the check valve
             #s = NI.ArduinoDO(10, True)
             NI.ArduinoDO(10, True)
             print('LSV is open')
@@ -465,16 +456,16 @@ class MainWindow(QtWidgets.QMainWindow):
     # add JM ValveButton_2  # can be combined with ValveOC
     def ValveOC2(self):
 
-        ui.valve_1[ui.valveindex2] = not ui.valve_1[ui.valveindex2]
+        ui.valve_state[ui.valveindex2] = not ui.valve_state[ui.valveindex2]
         # s = NI.ArduinoDO(ui.valveindex2,
-        #                      ui.valve_1[ui.valveindex2])
+        #                      ui.valve_state[ui.valveindex2])
         NI.ArduinoDO(ui.valveindex2,
-                             ui.valve_1[ui.valveindex2])
-        if ui.valve_1[ui.valveindex2]==True: 
+                             ui.valve_state[ui.valveindex2])
+        if ui.valve_state[ui.valveindex2]==True: 
             ui.valveButton_2.setText('ON')
         else: 
             ui.valveButton_2.setText('OFF')
-        if any(ui.valve_1):  # open the check valve
+        if any(ui.valve_state):  # open the check valve
             #s = NI.ArduinoDO(10, True)
             NI.ArduinoDO(10, True)
         else:
@@ -483,15 +474,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 
     def svalue_changed(self):
 
-        ui.voltage1[ui.valveindex1] = ui.horizontalSlider.value()
+        ui.voltage[ui.valveindex1] = ui.horizontalSlider.value()
         ui.lcdnumber_1.display(ui.horizontalSlider.value())
-        NI.ArduinoAO(ui.vNumA, True, ui.voltage1[ui.valveindex1])
+        NI.ArduinoAO(ui.vNumA, True, ui.voltage[ui.valveindex1])
         
     def svalue2_changed(self):
 
-        ui.voltage1[ui.valveindex2] = ui.horizontalSlider_2.value()
+        ui.voltage[ui.valveindex2] = ui.horizontalSlider_2.value()
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
-        NI.ArduinoAO(ui.vNumB, True, ui.voltage1[ui.valveindex2])
+        NI.ArduinoAO(ui.vNumB, True, ui.voltage[ui.valveindex2])
         
 
 
