@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 
+# -*- coding: utf-8 -*-
 import sys
 import numpy as np
 from ArduinoDAQ import AI as NI
@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0)
         NI.ArduinoAO(ui.vNumA, False, 0)
         ui.Filename = ' '
-        ui.Foldername = 'C:/Users/Microfluidics-team'
+        ui.Foldername = 'C:/Users/Lab'
         ui.value = 0
         ui.residualtime = 0
         ui.start = time.time()
@@ -288,7 +288,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_figure(self):
         time, c, r= NI.ArduinoAI()
         f = NI.ArduinoI2C()
-        # print(c)
         # print(f)
         if r:
             g = [0.1208, 1.097, -0.1208]
@@ -301,6 +300,8 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.valveLcd_2.display(c[1]) #add JM
             if ui.save == True:
                 # add Hiroyuki
+
+
                 if ui.count != 0:
                     # ui.count = 0で新規file open
                     # ui.t = np.append(ui.t,time)

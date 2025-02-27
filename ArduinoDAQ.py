@@ -9,7 +9,7 @@ Update: 2020-11-05, kaneko
 
 import time, datetime, os, serial
 
-ser = serial.Serial('COM11', 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient however slow it is... 
+ser = serial.Serial('COM12', 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient however slow it is... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -25,7 +25,12 @@ class AI():
         ser.write(b'R')
         time.sleep(0.1)
         ser_bytes = ser.readline().decode("utf-8")
-        return(ser_bytes.strip())
+        # return(ser_bytes.strip())
+        ser_bytes = ser_bytes.rstrip()
+        value = ser_bytes.split(",")
+        value = float(value[0])
+        return(value)
+        
     def ArduinoFB(value,vNumA,setpoint,Kp,Ki,Kd):
         if value==True:
             text='FB' + str(vNumA) + ',' + str(setpoint) + ',' + str(Kp) + ',' + str(Ki) + ',' + str(Kd) +'\n'
@@ -45,7 +50,7 @@ class AI():
         c = []
         # Read analog input of AN4-5
         # ser.write(b'AI6,7')
-        ser.write(b'AI7,8')
+        ser.write(b'AI7,8\n')
         time.sleep(0.1)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...

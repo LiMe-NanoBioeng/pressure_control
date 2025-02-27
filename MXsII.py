@@ -45,7 +45,7 @@ class MXsIIt(object):
     #     self.getDevInfoList()
 
     def FTWrite(message):
-        serMX = serial.Serial('COM10', 19200, timeout=2, 
+        serMX = serial.Serial('COM7', 19200, timeout=2, 
                    write_timeout=5)
         serMX.write(message.encode('ascii'))
         serMX.close
