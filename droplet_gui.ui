@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1349</width>
-    <height>804</height>
+    <width>1250</width>
+    <height>773</height>
    </rect>
   </property>
   <property name="font">
@@ -22,8 +22,8 @@
    <widget class="QPushButton" name="recordButton">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>650</y>
+      <x>1150</x>
+      <y>100</y>
       <width>90</width>
       <height>50</height>
      </rect>
@@ -62,7 +62,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Valve1</string>
+     <string>Off</string>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -155,10 +155,10 @@
    <widget class="QPushButton" name="abort">
     <property name="geometry">
      <rect>
-      <x>850</x>
-      <y>720</y>
+      <x>1140</x>
+      <y>660</y>
       <width>101</width>
-      <height>41</height>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -167,14 +167,14 @@
      </font>
     </property>
     <property name="text">
-     <string>abort</string>
+     <string>Abort</string>
     </property>
    </widget>
    <widget class="QLCDNumber" name="lcdnumber_2">
     <property name="geometry">
      <rect>
       <x>50</x>
-      <y>630</y>
+      <y>640</y>
       <width>64</width>
       <height>23</height>
      </rect>
@@ -184,7 +184,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>660</y>
+      <y>670</y>
       <width>90</width>
       <height>50</height>
      </rect>
@@ -195,14 +195,14 @@
      </font>
     </property>
     <property name="text">
-     <string>Valve2</string>
+     <string>Off</string>
     </property>
    </widget>
    <widget class="QComboBox" name="comboBox_2">
     <property name="geometry">
      <rect>
       <x>200</x>
-      <y>670</y>
+      <y>680</y>
       <width>141</width>
       <height>31</height>
      </rect>
@@ -212,7 +212,7 @@
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>560</y>
+      <y>570</y>
       <width>41</width>
       <height>20</height>
      </rect>
@@ -230,7 +230,7 @@
     <property name="geometry">
      <rect>
       <x>150</x>
-      <y>540</y>
+      <y>550</y>
       <width>120</width>
       <height>50</height>
      </rect>
@@ -240,7 +240,7 @@
     <property name="geometry">
      <rect>
       <x>130</x>
-      <y>630</y>
+      <y>640</y>
       <width>231</width>
       <height>22</height>
      </rect>
@@ -550,14 +550,63 @@
      </widget>
     </widget>
    </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>550</y>
+      <width>101</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>   2nd valve</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>360</y>
+      <width>101</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>   1st valve</string>
+    </property>
+   </widget>
+   <widget class="Line" name="line">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>530</y>
+      <width>391</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1349</width>
-     <height>24</height>
+     <width>1250</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -573,7 +622,7 @@
     </property>
     <widget class="QMenu" name="menupressure_number">
      <property name="title">
-      <string>pressure number</string>
+      <string>Pressure number</string>
      </property>
      <addaction name="actionsingle_2"/>
      <addaction name="actiondouble_2"/>
@@ -586,8 +635,16 @@
      <addaction name="actionITV0030_2"/>
      <addaction name="actionITV0090"/>
     </widget>
+    <widget class="QMenu" name="menuSelector_valve">
+     <property name="title">
+      <string>Selector valve</string>
+     </property>
+     <addaction name="actionOn"/>
+     <addaction name="actionOff"/>
+    </widget>
     <addaction name="menupressure_number"/>
     <addaction name="menuRegulators"/>
+    <addaction name="menuSelector_valve"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuMenu"/>
@@ -599,11 +656,20 @@
    </property>
   </action>
   <action name="actionsingle_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>single</string>
    </property>
   </action>
   <action name="actiondouble_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>double</string>
    </property>
@@ -619,18 +685,49 @@
    </property>
   </action>
   <action name="actionITV0010_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>ITV0010</string>
    </property>
   </action>
   <action name="actionITV0030_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>ITV0030</string>
    </property>
   </action>
   <action name="actionITV0090">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>ITV0090</string>
+   </property>
+  </action>
+  <action name="actionOn">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>On</string>
+   </property>
+  </action>
+  <action name="actionOff">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Off</string>
    </property>
   </action>
  </widget>
@@ -643,8 +740,8 @@
    <slot>recordIO()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>410</x>
-     <y>697</y>
+     <x>1150</x>
+     <y>172</y>
     </hint>
     <hint type="destinationlabel">
      <x>441</x>
@@ -723,8 +820,8 @@
    <slot>RunSequence()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>560</x>
-     <y>697</y>
+     <x>752</x>
+     <y>575</y>
     </hint>
     <hint type="destinationlabel">
      <x>571</x>
@@ -739,8 +836,8 @@
    <slot>DigitalPulse()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>820</x>
-     <y>483</y>
+     <x>642</x>
+     <y>528</y>
     </hint>
     <hint type="destinationlabel">
      <x>819</x>
@@ -787,8 +884,8 @@
    <slot>tuning_resistanse_rate()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1060</x>
-     <y>468</y>
+     <x>642</x>
+     <y>535</y>
     </hint>
     <hint type="destinationlabel">
      <x>1123</x>
@@ -819,44 +916,12 @@
    <slot>abort_program()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1040</x>
-     <y>687</y>
+     <x>1140</x>
+     <y>716</y>
     </hint>
     <hint type="destinationlabel">
      <x>1033</x>
      <y>741</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionsingle_2</sender>
-   <signal>triggered()</signal>
-   <receiver>Droplet_formation</receiver>
-   <slot>SinglePressure()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>674</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actiondouble_2</sender>
-   <signal>triggered()</signal>
-   <receiver>Droplet_formation</receiver>
-   <slot>DoublePressure()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>674</x>
-     <y>401</y>
     </hint>
    </hints>
   </connection>

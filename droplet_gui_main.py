@@ -9,6 +9,7 @@ from os.path import expanduser
 import serial
 import time
 from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5.QtWidgets import QActionGroup
 from droplet_gui import Ui_Droplet_formation
 from matplotlibwidget import MatplotlibWidget
 from MXsII import MXsIIt as MXsII
@@ -37,9 +38,8 @@ class MainWindow(QtWidgets.QMainWindow):
             ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']) # valve channel number
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
                                           xlim=None, ylim=None, xscale='linear', yscale='linear',
-                                          width=12, height=3, dpi=95)
-
-
+                                          width=12, height=3, dpi=95)        
+    
         ui.timer= QtCore.QTimer(self)
         ui.timer.start(30) # update the display every this ms
         ui.timer.timeout.connect(self.update_figure)
@@ -52,8 +52,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # valve channels
         #
         # arduino channel number should be defiend in ArduionDAQ.py
-        ui.vNumA=10 # first AO channel feedback channel
-        ui.vNumB=9 # second AO channel
+        ui.vNumA=9 # first AO channel feedback channel
+        ui.vNumB=10 # second AO channel
         
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0) # initialize feedback parameters
         NI.ArduinoAO(ui.vNumA, False, 0) # initialize the pressure regulator
@@ -83,13 +83,30 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.horizontalSlider_2.hide()
         ui.comboBox_2.hide()
         ui.label_8.hide()
+        ui.label_10.hide()
         ui.lcdnumber_2.hide()
+        ui.line.hide()
         ui.valveindex1=0
         ui.valveindex2=0
         ui.reg=0
+        ui.Numpre=0
         ui.actionITV0010_2.triggered.connect(lambda: self.function_change(0))
         ui.actionITV0030_2.triggered.connect(lambda: self.function_change(1))
         ui.actionITV0090.triggered.connect(lambda: self.function_change(2)) 
+        ui.actionsingle_2.triggered.connect(lambda: self.pressure_number(0)) 
+        ui.actiondouble_2.triggered.connect(lambda: self.pressure_number(1)) 
+        ui.actionOn.triggered.connect(lambda: self.check_selectorvalve(0))
+        ui.actionOff.triggered.connect(lambda:self.check_selectorvalve(1))
+        action_group1 = QActionGroup(self)
+        action_group1.addAction(ui.actionITV0010_2)
+        action_group1.addAction(ui.actionITV0030_2)
+        action_group1.addAction(ui.actionITV0090)
+        action_group2 = QActionGroup(self)
+        action_group2.addAction(ui.actionsingle_2)
+        action_group2.addAction(ui.actiondouble_2)
+        action_group3 = QActionGroup(self)
+        action_group3.addAction(ui.actionOn)
+        action_group3.addAction(ui.actionOff)
 
     def open_single_valve(self, index):
         for i in range(len(ui.valve_state)):
@@ -105,6 +122,14 @@ class MainWindow(QtWidgets.QMainWindow):
             #s=NI.ArduinoDO(10, False)
             NI.ArduinoDO(10, False)
 
+    def check_selectorvalve(self,index): #JM added
+        if index == 0:
+            ui.MXsII = True
+            print('use selector valve')
+        else:
+            ui.MXsII = False
+            print('quit using selector valve')
+         
     def SequenceControlTime(self):
         #Kp = ui.Kp #0.1
         #Ki = ui.Ki #0.001
@@ -207,24 +232,30 @@ class MainWindow(QtWidgets.QMainWindow):
         width = ui.plainTextEdit.toPlainText()
         c = float(width)
         NI.ArduinoDigitalPulse(a,b,1,c,10) # 100 is the threshold
-    
-    def SinglePressure(self):# add JM
-        #print('work well')
-        ui.valveButton_2.hide()
-        ui.valveLcd_2.hide()
-        ui.horizontalSlider_2.hide()
-        ui.comboBox_2.hide()
-        ui.label_8.hide()
-        ui.lcdnumber_2.hide()
         
-    def DoublePressure(self):# add JM
-        #print('work very well')
-        ui.valveButton_2.show()
-        ui.valveLcd_2.show()
-        ui.horizontalSlider_2.show()
-        ui.comboBox_2.show()
-        ui.label_8.show()
-        ui.lcdnumber_2.show()
+    def pressure_number(self,index):#add JM
+        ui.Numpre = index
+        if ui.Numpre == 0:
+            print('single pressure')
+            ui.valveButton_2.hide()
+            ui.valveLcd_2.hide()
+            ui.horizontalSlider_2.hide()
+            ui.comboBox_2.hide()
+            ui.label_8.hide()
+            ui.label_10.hide()
+            ui.lcdnumber_2.hide()
+            ui.line.hide()
+            
+        elif ui.Numpre == 1:
+            print('double pressure')
+            ui.valveButton_2.show()
+            ui.valveLcd_2.show()
+            ui.horizontalSlider_2.show()
+            ui.comboBox_2.show()
+            ui.label_8.show()
+            ui.label_10.show()
+            ui.lcdnumber_2.show()
+            ui.line.show()
         
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()
@@ -252,29 +283,29 @@ class MainWindow(QtWidgets.QMainWindow):
         
         return (valve, valve_num, pressure, duration,volume)
 
-    def draw_graph(self):
+    def draw_graph(self): #update JM
         ui.graphwidget.figure.clear()
-        ui.graphwidget.axes.clear()
-        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(131, xlabel = 'Time [s]', ylabel = 'Pressure [kPa]')
-        #ui.graphwidget.axes.clear()
+        ui.graphwidget.axes1.clear()
+        ui.graphwidget.axes2.clear()
+        ui.graphwidget.axes3.clear()
+        
+        ui.graphwidget.axes1 = ui.graphwidget.figure.add_subplot(131, xlabel = 'Time [s]', ylabel = 'Pressure [kPa]')
         ui.graphwidget.x = ui.dt
-        ui.graphwidget.y = np.transpose(ui.CA1)
-        ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
+        ui.graphwidget.y = np.transpose(ui.CA1[:ui.Numpre+1])
+        # ui.graphwidget.y = np.transpose(ui.CA1)
+        ui.graphwidget.axes1.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
-
                 
-        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(132, xlabel = 'Time [s]', ylabel = 'Flow rate [μL/min]')
-        #ui.graphwidget.axes.clear()
+        ui.graphwidget.axes2 = ui.graphwidget.figure.add_subplot(132, xlabel = 'Time [s]', ylabel = 'Flow rate [μL/min]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.f
-        ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)
+        ui.graphwidget.axes2.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
 
-        ui.graphwidget.axes = ui.graphwidget.figure.add_subplot(133, xlabel = 'Time [s]', ylabel = 'Pumped volume [μL]')
-        #ui.graphwidget.axes.clear()
+        ui.graphwidget.axes3 = ui.graphwidget.figure.add_subplot(133, xlabel = 'Time [s]', ylabel = 'Pumped volume [μL]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.q
-        ui.graphwidget.axes.plot(ui.graphwidget.x, ui.graphwidget.y)    
+        ui.graphwidget.axes3.plot(ui.graphwidget.x, ui.graphwidget.y)    
         ui.graphwidget.figure.tight_layout()
         ui.graphwidget.draw()
     
@@ -285,12 +316,13 @@ class MainWindow(QtWidgets.QMainWindow):
         status = NI.ArduinoStatusCheck()
         if ui.tuning_is_running:
             self.tuningCore()
-        if status =='R':
+        if status =='R' or True:
             time, c, r= NI.ArduinoAI()
             f = NI.ArduinoI2C()
+            # print(c)#for test
             if r:
                 g = [0.1208, 1.097, -0.1208]
-                h = [-23.75, -223.75, 23.78]
+                h = [-23.75, -223.75, 23.78]                    
                 c[0] = g[ui.reg] * c[0] + h[ui.reg]
                 c[1] = g[ui.reg] * c[1] + h[ui.reg]
                 ui.valveLcd_1.display(c[0])
@@ -299,7 +331,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     # add Hiroyuki
                     if ui.count != 0:
                         ui.dt = np.append(ui.dt, time-ui.t)
-                        # ui.CA1 = np.append(ui.CA1, c)
                         ui.CA1 = np.c_[ui.CA1,c]
                         ui.f = np.append(ui.f, f)
                         if ui.count != 1:  # compute integrated flow quantity at t > 1
@@ -418,7 +449,7 @@ class MainWindow(QtWidgets.QMainWindow):
         valvenum = str(hex(index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
         ui.lcdnumber_2.display(ui.voltage[index])
-        ui.horizontalSlider.setValue(ui.voltage[index])
+        ui.horizontalSlider_2.setValue(ui.voltage[index])
         if hasattr(ui, 'valve_1'):
             if ui.valve_state[index]==True: 
                 ui.valveButton_2.setText('ON')
