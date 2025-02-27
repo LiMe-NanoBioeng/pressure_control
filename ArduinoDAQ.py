@@ -8,8 +8,14 @@ Update: 2020-11-05, kaneko
 """
 
 import time, datetime, os, serial
+"""
+provide definition of Arduino pins
+Analog IN 6,7,8,11
+Analog OUT
+Digital Out
 
-ser = serial.Serial('COM12', 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient however slow it is... 
+"""
+ser = serial.Serial('COM8', 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -21,16 +27,16 @@ class AI():
                      today().strftime("%Y%m%d_%H%M%S"))+'_exp'
         FileName1=FolderName1+"/"+FileName+str(1+len([x for x in os.listdir(FolderName1) if x.endswith(".csv")])).zfill(4)
         return(FileName1)
+    def ArduinoStatusCheck():
+        ser.write(b'S')
+        time.sleep(0.01)
+        ser_bytes = ser.readline().decode("utf-8")
+        return(ser_bytes)
     def ArduinoFBStatus(vNumA):
         ser.write(b'R')
         time.sleep(0.1)
         ser_bytes = ser.readline().decode("utf-8")
-        # return(ser_bytes.strip())
-        ser_bytes = ser_bytes.rstrip()
-        value = ser_bytes.split(",")
-        value = float(value[0])
-        return(value)
-        
+        return(ser_bytes.strip())
     def ArduinoFB(value,vNumA,setpoint,Kp,Ki,Kd):
         if value==True:
             text='FB' + str(vNumA) + ',' + str(setpoint) + ',' + str(Kp) + ',' + str(Ki) + ',' + str(Kd) +'\n'
@@ -40,23 +46,34 @@ class AI():
             ser.write(b'B')
             time.sleep(0.1)
     def ArduinoI2C():
-        ser.write(b'II')
-        time.sleep(0.1)
-        ser_bytes = ser.readline().decode('utf-8')
-        ser_bytes=ser_bytes.rstrip()
+        # ser_bytes = ser.readline().decode('utf-8')
+        # if ser_bytes == 'B':
+        #     return(0)
+        # else:
+        ser.write(b'II\n')
+        time.sleep(0.01)
+        ser_bytes = ser.readline()
+        # print(ser_bytes)
+        ser_bytes=ser_bytes.decode('utf-8').rstrip()
+        # print(ser_bytes)
         return(float(ser_bytes))
 
-    def ArduinoAI():        
+    def ArduinoAI():
+        # import time as tempo   
         c = []
-        # Read analog input of AN4-5
-        # ser.write(b'AI6,7')
-        ser.write(b'AI7,8\n')
-        time.sleep(0.1)
+
+        ser.write(b'AI6,7\n')
+        time.sleep(0.01)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...
-        ser_bytes = ser.readline().decode('utf-8')
-        decoded_bytes = ser_bytes.strip()
-        
+        # initialT=tempo.time() 
+        ser_bytes = ser.readline() # extremely slow
+
+        ser_bytes = ser_bytes.decode('utf-8').strip() # extremely slow
+        # endT=tempo.time()-initialT
+        # print(endT)
+        decoded_bytes = ser_bytes
+        # print(decoded_bytes)
         # x and y are sequential data from the begining
 #        x.append(time.time())
 #        y.extend(decoded_bytes.split(","))
@@ -64,14 +81,7 @@ class AI():
         # c is a temporal data
         t = time.time()
         c=decoded_bytes.split(",")
-        
-        # potentiometer
-        #ser.write(b'AI11')
-        #time.sleep(0.1)
-        #ser_bytes = ser.readline().decode('utf-8')
-        ##decoded_bytes = ser_bytes.strip()
-        #c.append(ser_bytes)
-
+            
         if c[0] == '':  # if faied in obtaining data
             c[0] = 0
             result= False
@@ -84,11 +94,11 @@ class AI():
     
     def ArduinoTuning():
         #potentiometer calcuration
-        ser.write(b'AI8')
+        ser.write(b'AI8\n')
         time.sleep(0.1)
         ser_bytes = ser.readline().decode('utf-8')
         r1=ser_bytes
-        ser.write(b'AI11')
+        ser.write(b'AI11\n')
         time.sleep(0.1)
         ser_bytes = ser.readline().decode('utf-8')
         r2=ser_bytes
@@ -108,14 +118,14 @@ class AI():
         ser_bytes = ser.readline().decode('utf-8')
         return(ser_bytes.strip())
 
-    def ArduinoDP(ch,pulsewidth,duty,number):
+    def ArduinoDP(ch,pulsewidth,duty,number,threshold):
         text = 'DP'+str(ch)+':'+str(int(pulsewidth))+':'+str(duty)+':'+str(number)+'\n'
         ser.write(text.encode('utf-8'))
-    def ArduinoDigitalPulse(ch1,ch2,delay,width):
+    def ArduinoDigitalPulse(ch1,ch2,delay,width,threshold):
         # text = 'PP'+str(ch1)+':'+str(ch2)+','+str(int(delay))+','+str(width)+'\n'
-        text = 'PP'+str(ch1)+','+str(ch2)+','+str(int(delay))+','+str(width)+'\n' #use for two valves in pulse 
+        text = 'PP'+str(ch1)+','+str(ch2)+','+str(int(delay))+','+str(width)+','+'8'+','+str(int(threshold))+'\n' #use for two valves in pulse
         ser.write(text.encode('utf-8'))
-        # time.sleep(delay+width)
+        #time.sleep(delay+width)
     def ArduinoAO(channel,flag,values):
         if flag == True:
             AO6out = 'AO'+str(channel)+'v'+ str(values) + '\n'
