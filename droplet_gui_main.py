@@ -25,7 +25,7 @@ class MainWindow(QtWidgets.QMainWindow):
         global ui
         super(MainWindow, self).__init__(parent=parent)
         ui = Ui_Droplet_formation()
-        ui.MXsII=False  # selector valve True/False
+        ui.MXsII=True  # selector valve True/False  ##change for HybISS version
         ui.t = [] # time 
         ui.dt = [] # time difference
         ui.c = [] # voltage of pressure
@@ -52,8 +52,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # valve channels
         #
         # arduino channel number should be defiend in ArduionDAQ.py
-        ui.vNumA=9 # first AO channel feedback channel
-        ui.vNumB=10 # second AO channel
+        ui.vNumA=10 # first AO channel feedback channel ##this number order is MISA for HyBISS version
+        ui.vNumB=9 # second AO channel
         
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0) # initialize feedback parameters
         NI.ArduinoAO(ui.vNumA, False, 0) # initialize the pressure regulator
@@ -174,14 +174,18 @@ class MainWindow(QtWidgets.QMainWindow):
         
                 #close valve
                 self.open_single_valve(-1)
-                if ui.MXsII==True: MXsII.FTWrite(str(valve) + '\r')  # switch the valve
+                if ui.MXsII==True: 
+                    MXsII.FTWrite(str(valve) + '\r')  # switch the valve
+                    # message = 'S' + '\r'
+                    # rmessage = MXsII.FTWriteRead(message)
+                    # print('Current valve is ' + rmessage)
+                    # print('Setting valve is ' + str(valve_num))
                 # send commands when switch the sequence
                 #time.sleep(1)
                 
                 NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
                 NI.ArduinoAO(ui.vNumA, False, 0)
                 
-                #MXsII.FTWrite(str(valve) + '\r')  # switch the valve
                 time.sleep(1)
                 # send pressure value
                 # NI.ArduinoAO(ui.vNumA,True,pressure)
@@ -282,6 +286,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.pid_parameters[command] = (Kp,Ki,Kd)
         
         return (valve, valve_num, pressure, duration,volume)
+
 
     def draw_graph(self): #update JM
         ui.graphwidget.figure.clear()
@@ -439,7 +444,11 @@ class MainWindow(QtWidgets.QMainWindow):
             else: 
                 ui.valveButton_1.setText('OFF')
             
-        if ui.MXsII==True: MXsII.FTWrite(message)
+        if ui.MXsII==True:
+            MXsII.FTWrite(message)
+            # message = 'S' + '\r'
+            # rmessage = MXsII.FTWriteRead(message)
+            # print(rmessage)
 
 
     #add JM
@@ -456,7 +465,11 @@ class MainWindow(QtWidgets.QMainWindow):
             else: 
                 ui.valveButton_2.setText('OFF')
             
-        if ui.MXsII==True: MXsII.FTWrite(message)
+        if ui.MXsII==True:
+            MXsII.FTWrite(message)
+            # message = 'S' + '\r'
+            # rmessage = MXsII.FTWriteRead(message)
+            # print(rmessage)
 
     def recordIO(self):
         ui.save = not ui.save

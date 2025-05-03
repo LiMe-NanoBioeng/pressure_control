@@ -15,7 +15,7 @@ Analog OUT
 Digital Out
 
 """
-ser = serial.Serial('COM8', 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
+ser = serial.Serial('COM12', 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -62,7 +62,7 @@ class AI():
         # import time as tempo   
         c = []
 
-        ser.write(b'AI6,7\n')
+        ser.write(b'AI7,8\n')
         time.sleep(0.01)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...

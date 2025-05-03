@@ -6,7 +6,7 @@ Created on Thu Jun 20 07:53:53 2024
 """
 
 
-import serial, sys, ctypes
+import serial, sys, ctypes, time
 def check(f):
     if f != 0:
         names = [
@@ -45,13 +45,25 @@ class MXsIIt(object):
     #     self.getDevInfoList()
 
     def FTWrite(message):
-        serMX = serial.Serial('COM7', 19200, timeout=2, 
-                   write_timeout=5)
+        serMX = serial.Serial('COM7', 19200, timeout=0.1, 
+                   write_timeout=0.1)
         serMX.write(message.encode('ascii'))
+        # ser_bytes = serMX.readline().decode("utf-8")
+        # print(ser_bytes)
         serMX.close
-        #ser_bytes = ser.readline().decode("utf-8")
-        #print(ser_bytes)
+    def FTWriteRead(message):
+        serMX = serial.Serial('COM7', 19200, timeout=0.1, 
+                   write_timeout=0.1)
+        ser_bytes='**\r'
+        while ser_bytes == '**\r':
+            serMX.write(message.encode('ascii'))
+            time.sleep(1)
+            ser_bytes = serMX.readline().decode("utf-8")
         
+        #print(ser_bytes)
+        serMX.close
+        return(ser_bytes)
+      
     def initDev(self):
  
         ftHandleTemp=ctypes.c_void_p()
