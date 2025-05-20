@@ -77,7 +77,7 @@ The circuit thus uses a 24 V for the power supply and regulates 5V from the Ardu
 | LSV | Latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) | 5V | 
 
 
-### Pressure source and tubings (Fig?: Junichi Murai)
+### Pressure source and tubings 
 A miniature diaphragm pump creates the pressure source at about 100 kPa given to the electro-pneumatic regulator.
 To adapt the pump outlet to the inlet of the electro-pneumatic regulator, we connected urethane tube of 6 mm of outer diameter (OD) to the pump outlet and converted to 4 mm OD using a fitting (MPG6-4).
 The regulator and the solenoid valve manifold are connected through a syringe filter (sartorius, Minisart RC4) and a urethane tube of 4 mm OD.
@@ -91,30 +91,6 @@ To fit the peek tube with phi 0.5 mm OD to 1/16" connectors, we used 1/16-to-0.5
 We installed the flow sensor between the microfluidic device and the selector valve.
 We used 1/16" peek tube at the end of the 0.5 mm OD peek tube to fit the tubing to the 1-mm hole punched in the PDMS.
 We installed the latching solenoid valve in a tube extending from the outlet of the microfluidic system.
-
-## Design files summary
-Keisuke Kondo
-
-## Bill of materials summary
-Junichi Murai
-
-https://docs.google.com/spreadsheets/d/1DA3WnisZPPh0mLJruJ4DynrS7ac4WS7NuqQuolvCBMg/edit?usp=drive_link
-
-## Build instructions
-Keisuke (lead) and Junichi
-
-## Operation instructions
-Misa Mineghisi
-
-## Validation and characterization
-### closed-loop
-Junichi(lead) and Keisuke
-
-### open-loop extension to four pressure regulators (other applications)
-#### droplet generator
-Keiji Nozaki
-#### jet
-Mahmoud and Kohei Takamuro
 
 
 
