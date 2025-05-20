@@ -26,17 +26,6 @@ Thus, to provide a constant flow rate, the systems required a calibration curve 
 
 Here, we present an open-source microfluidic controller that enables regulation of the flow rate using the proportional-integral-derivative (PID) feedback control.
 Our controller uses an Arduino micro that fully integrates the PID feedback control. This control involves measuring the flow rate with a flow sensor and controlling the pressure with an electro-pneumatic regulator to provide a constant flow rate.
-We show the robust fluid exchange with our controller demonstrating XX rounds of fluorescent oligo hybridization and stripping.
-
-To further demonstrate our system's flexibility, we show an extension of our controller using open-loop control demonstrating two different applications: microfluidic droplet generation and pulsed jet formation.
-The extended controller integrated two electro-pneumatic regulators to provide different pressures for two phases, oil and aqueous solutions or gas and liquid.
-In the microfluidic droplet generation, we injected oil and aqueous solutions into a hydrophobic microfluidic device, in which aqueous droplets are generated in an oil continuous phase.
-We used agarose gel as the aqueous phase and demonstrated the single-cell encapsulation in agarose gel beads.
-To keep the agarose gel matrix in liquid form before the injection, we maintained the temperature of the agarose gel matrix containing cells in a 1.5 mL tube at 37C.
-In the pulsed jet formation, we adapted our controller to a nozzle that generated small droplets using two-phase flows.
-To minimize the amount of aqueous solution used, we here leveraged the solenoid valve to generate a liquid jet for a short period of time.
-Our controller has a capacity to integrate up to four electro-pneumatic regulators (four analog inputs/outputs), ten solenoid valves (driven at 24V via ten digital pins), one flow meter (I2C), and one latching valve  (driven at 5 V via one digital pin).
-These demonstrations show the robustness and flexibility of our open-source microfluidic system for various applications.
 
 ## Hardware description
 ### Overview 
@@ -61,24 +50,6 @@ Under open-loop control, the controller regulates the pressure at a constant val
 Under feedback control, the Arduino micro reads the flow rate and regulates the pressure using PID control to achieve the specified flow rate.
 The Arduino micro continues the feedback control until it is interrupted by a serial command from the PC.
 The selector valve communicates with the PC through another USB.
-
-
-
-### Pressure source and tubings 
-A miniature diaphragm pump creates the pressure source at about 100 kPa given to the electro-pneumatic regulator.
-To adapt the pump outlet to the inlet of the electro-pneumatic regulator, we connected urethane tube of 6 mm of outer diameter (OD) to the pump outlet and converted to 4 mm OD using a fitting (MPG6-4).
-The regulator and the solenoid valve manifold are connected through a syringe filter (sartorius, Minisart RC4) and a urethane tube of 4 mm OD.
-The outlet of the regulator is connected to 4 mm OD urethane tube and connected to the manifold with a fitting(?).
-The individual outlet from the manifold is connected with a 3 mm OD tube via a fitting (Koganei, BF3BU-M3).
-The phi 3 mm OD tubes are converted to 26G PTFE tubes (Chukyo Co Ltd	TUF-100) with fittings.
-We cap sample tubes (1.5 mL tubes) with rubber lids (AsOne, 1-9662-06) having two through holes that can fit a PTFE tube for pressurization and a peek tube for a sample outlet.
-To minimize the pressure drop in the tubing, we connect the sample tube and the selector valve using a peek tube (XX part number?) with 0.5 mm ID.
-We then used a peek tube (Institute of Microchemical Technology Co Ltd, ICP-30P) with 0.5 mm OD and 0.3 mm ID for the outlet from the selector valve.
-To fit the peek tube with phi 0.5 mm OD to 1/16" connectors, we used 1/16-to-0.5 mm adapter sleeves (Institute of Microchemical Technology Co Ltd, ICT-16S).
-We installed the flow sensor between the microfluidic device and the selector valve.
-We used 1/16" peek tube at the end of the 0.5 mm OD peek tube to fit the tubing to the 1-mm hole punched in the PDMS.
-We installed the latching solenoid valve in a tube extending from the outlet of the microfluidic system.
-
 
 
 
