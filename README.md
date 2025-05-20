@@ -48,7 +48,7 @@ To prevent a gravitational flow when all the solenoid valves are closed, we inst
 
 ### Software and device control via Arduino micro
 The controller works on GUI-based Python code that communicates with devices through an Arduino micro via a serial connection using pySerial.
-We provide the program for the Arduino micro as [another repository] (https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
+We provide the program for the Arduino micro as [another repository](https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
 To read data from and control devices upon request, the Arduino micro routinely checks a serial command sent from the PC.
 The Arduino micro monitors the pressure via the regulator's analog input, which is 0-5 V, and controls the electro-pneumatic regulator via 8-bit PWM, which is converted to a 0-5 V analog output with a digital-analog converter (DAC).
 We installed a potentiometer at the analog output given to the electro-pneumatic regulator to stabilize PID feedback control, especially for a low constant flow rate. 
