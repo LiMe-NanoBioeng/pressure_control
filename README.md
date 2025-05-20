@@ -55,7 +55,7 @@ We installed a potentiometer at the analog output given to the electro-pneumatic
 The potentiometer effectively modulates the maximum voltage of the analog output (originally, 0-5 V) from the Arduino micro down to a low voltage. Manual modulation enables the use of the full 8-bit resolution when regulating at low pressure (e.g., 1 kPa).
 The Arduino micro controls the solenoid valves via digital I/O, which is boosted to 24 V-on/off with N-type MOS-FET-based switching circuits.
 The Arduino micro communicates with the flow sensor through I2C, reading two's complement and outputting the scaled flow rate ul/min.
-We note that the other example Arduino programs for communicating with the flow sensors through I2C are available from Sensirion's GitHub (https://github.com/Sensirion/arduino-liquid-flow-snippets).
+We note that the other example Arduino programs for communicating with the flow sensors through I2C are available from [Sensirion's GitHub](https://github.com/Sensirion/arduino-liquid-flow-snippets).
 The Arduino micro operates the devices either under open-loop or feedback controls, respectively, for a constant pressure or constant flow rate.
 Under open-loop control, the controller regulates the pressure at a constant value defined by the analog output from the Arduino micro.
 Under feedback control, the Arduino micro reads the flow rate and regulates the pressure using PID control to achieve the specified flow rate.
