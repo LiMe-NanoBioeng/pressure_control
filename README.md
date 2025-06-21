@@ -1,11 +1,7 @@
 # An automated microfluidic controller for a constant flow rate by a PID feedback control.
 ## Abstract
-an open source that controls 10-channel fluidics and imaging via pycro-manager
-We employ an off-the-shelf pressure regulator and selection valve to balance cost and reliability.
-Our fluidic system controls a pneumatic pump, a pressure regulator, and 10 individually addressable on/off valves with an Arduino micro.
-We also offer a Python program that integrates the fluidics control, off-the-shelf switching valve, and imaging via pyro-manager, which makes the system available to broad users.
-We demonstrate…
-We envision that this open source will be
+Multiplexed fluid control is a demanding task in various life sciences and bioengineering research. We here present an open-source microfluidic sequence automation (MiSA) that offers flexible and multiplexed fluid control for various applications, providing a constant flow rate via pressure-based feedback control with 10-plex capability and transient flow by rapidly opening and closing pressure valves. MiSA is self-contained, including a pressure source, and employs an Arduino Micro to integrate ten solenoid valves, an off-the-shelf pressure regulator, and a flow sensor to balance cost and reliability. To offer stable microflow control, especially at a low flow rate under a low flow resistance, MiSA uses a potentiometer that tunes the range of the pressure control by effectively leveraging the full 8-bit output from the Arduino Micro applied to the pressure regulator. We demonstrate the practical use of MiSA for multiplexed chemical reactions by performing the hybridization-based in situ sequencing. To demonstrate the flexibility of MiSA, we show the extensions of our system for two pressure regulations under open-loop control in the flow rate by demonstrating three independent applications for droplet generation, microfluidic spinning of spider silk fiber, and atomization of protein solution. We envision that this open source will offer resources for researchers to quickly explore microfluidic applications with an affordable investment.
+
 
 ### Hardware in context
 In microfluidic systems, pressure-driven flow is typically given by syringe pumps or pressure-based fluidic systems.
