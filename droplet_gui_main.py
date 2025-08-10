@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 
 import sys
@@ -74,8 +75,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.number_of_commands = 0 # number of commands
         ui.command = 1 # current command
         ui.pid_parameters = {} # Ki Kp Kd
-        #
-        #
+        ui.last_pid = (0.1,0.001,0.1) #initial values
+        
         ui.tuning_is_running=False
         #JM added
         ui.valveButton_2.hide()
@@ -131,11 +132,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print('quit using selector valve')
          
     def SequenceControlTime(self):
-        #Kp = ui.Kp #0.1
-        #Ki = ui.Ki #0.001
-        #Kd = ui.Kd #0.1
-        Kp,Ki,Kd = ui.pid_parameters.get(ui.command,(0.1,0.001,0.1))
-        
+        Kp,Ki,Kd = ui.last_pid
         elapsed_time = time.time()-ui.start
         residualvol=ui.volume-(ui.q[-1]-ui.qstart)
         ui.residualtime = ui.duration-elapsed_time
@@ -182,6 +179,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     # print('Setting valve is ' + str(valve_num))
                 # send commands when switch the sequence
                 #time.sleep(1)
+                
+                if ui.command in ui.pid_parameters:
+                    ui.last_pid = ui.pid_parameters[ui.command]
+                Kp,Ki,Kd = ui.last_pid
                 
                 NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
                 NI.ArduinoAO(ui.vNumA, False, 0)
@@ -284,8 +285,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(message) > 3:
             Kp,Ki,Kd = map(float,message[3].split(';'))
             ui.pid_parameters[command] = (Kp,Ki,Kd)
-        
+            ui.last_pid = (Kp,Ki,Kd)
         return (valve, valve_num, pressure, duration,volume)
+        
 
 
     def draw_graph(self): #update JM
