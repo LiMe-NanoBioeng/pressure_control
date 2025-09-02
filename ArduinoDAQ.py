@@ -15,7 +15,7 @@ Analog OUT
 Digital Out
 
 """
-ser = serial.Serial('COM12', 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
+ser = serial.Serial('COM7', 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs

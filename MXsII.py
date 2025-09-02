@@ -45,14 +45,14 @@ class MXsIIt(object):
     #     self.getDevInfoList()
 
     def FTWrite(message):
-        serMX = serial.Serial('COM7', 19200, timeout=0.1, 
+        serMX = serial.Serial('COM8', 19200, timeout=0.1, 
                    write_timeout=0.1)
         serMX.write(message.encode('ascii'))
         # ser_bytes = serMX.readline().decode("utf-8")
         # print(ser_bytes)
         serMX.close
     def FTWriteRead(message):
-        serMX = serial.Serial('COM7', 19200, timeout=0.1, 
+        serMX = serial.Serial('COM8', 19200, timeout=0.1, 
                    write_timeout=0.1)
         ser_bytes='**\r'
         while ser_bytes == '**\r':

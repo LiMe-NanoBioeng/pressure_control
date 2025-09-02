@@ -264,9 +264,15 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()
+        # # message = text.split(',')
+        # if text == "Acq":
+        #     from pycromanager import MagellanAcquisition
+        #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
+        #     acq = MagellanAcquisition(magellan_acq_index=0)
+        #     acq.await_completion()
+        # else :
         message = text.split(',')
         valve = message[0]  # valve number
-        
         pressure = float(message[1][:-1])# pressure value
         text = message[2].rstrip()
         if text[-1] =="s":
@@ -276,7 +282,14 @@ class MainWindow(QtWidgets.QMainWindow):
             #volume=int(text[:-1])
             volume=float(text[:-1])
             duration=0
-                
+        if message[0][0]=="A":
+            from pycromanager import MagellanAcquisition
+            #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
+            acq = MagellanAcquisition(magellan_acq_index=0)
+            acq.await_completion()
+            duration=0
+            volume=0
+            
         valve_num = int(valve[-1], 16)
         ui.termination_mode=text[-1]
         ui.mode=str(message[1][-1])
@@ -401,9 +414,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 rowPosition, 0, QtWidgets.QTableWidgetItem(x))
             rowPosition += 1
 
-#    def check_tuning(self):
-
-
     def tuning_resistanse_rate(self): # click tuning event
         #ui.timer.timeout.connect(self.check_tuning)
         if not ui.tuning_is_running:
@@ -430,8 +440,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print(minflowrate)
         ui.maxflowrate.display(str(round(maxflowrate,1)))
         ui.minflowrate.display(str(round(minflowrate,1)))
-        
-        
+                
     
     def valve_number_changed(self, index):
         #ui.selected_valve_index_index = index 
@@ -530,7 +539,19 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
         NI.ArduinoAO(ui.vNumB, True, ui.voltage[ui.valveindex2])
         
+    # def get_pictures():
+        # import json
+        # json_open = open('C://Users//lab//Documents//AcqSettings.txt','r')
+        # json_load = json.load(json_open)
+        # acq_pycromanager.load_acq_setting()
+        # json_load =  acq_pycromanager.load_acq_setting()
+        # acq_pycromanager.acquire_image(json_load)
+        
+        # from pycromanager import MagellanAcquisition
 
+        # # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
+        # acq = MagellanAcquisition(magellan_acq_index=0)
+        # acq.await_completion()
 
     def abort_program(self):
 
