@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QActionGroup
 from droplet_gui import Ui_Droplet_formation
 from matplotlibwidget import MatplotlibWidget
 from MXsII import MXsIIt as MXsII
+from ThermoPlate import ThermoPlate
 import datetime
 now=datetime.datetime.now()
 timestamp=now.strftime("%Y%m%d%H%M%S")
@@ -39,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']) # valve channel number
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
                                           xlim=None, ylim=None, xscale='linear', yscale='linear',
-                                          width=12, height=3, dpi=95)        
+                                          width=12, height=5, dpi=95)        
     
         ui.timer= QtCore.QTimer(self)
         ui.timer.start(30) # update the display every this ms
@@ -108,6 +109,8 @@ class MainWindow(QtWidgets.QMainWindow):
         action_group3 = QActionGroup(self)
         action_group3.addAction(ui.actionOn)
         action_group3.addAction(ui.actionOff)
+        
+        ui.ThermoPlate = ThermoPlate()
 
     def open_single_valve(self, index):
         for i in range(len(ui.valve_state)):
@@ -275,13 +278,7 @@ class MainWindow(QtWidgets.QMainWindow):
         valve = message[0]  # valve number
         pressure = float(message[1][:-1])# pressure value
         text = message[2].rstrip()
-        if text[-1] =="s":
-            duration=int(text[:-1])
-            volume=0
-        elif text[-1]=="u":
-            #volume=int(text[:-1])
-            volume=float(text[:-1])
-            duration=0
+
         if message[0][0]=="A":
             from pycromanager import MagellanAcquisition
             #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
@@ -289,6 +286,18 @@ class MainWindow(QtWidgets.QMainWindow):
             acq.await_completion()
             duration=0
             volume=0
+        elif message[0][0] == "T":
+            ui.ThermoPlate.settemp(int(pressure))
+            duration=0
+            volume=0
+        elif message[0][0] == "P":
+            if text[-1] =="s":
+                duration=int(text[:-1])
+                volume=0
+            elif text[-1]=="u":
+                #volume=int(text[:-1])
+                volume=float(text[:-1])
+                duration=0
             
         valve_num = int(valve[-1], 16)
         ui.termination_mode=text[-1]
@@ -309,26 +318,32 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget.axes2.clear()
         ui.graphwidget.axes3.clear()
         
-        ui.graphwidget.axes1 = ui.graphwidget.figure.add_subplot(131, xlabel = 'Time [s]', ylabel = 'Pressure [kPa]')
+        ui.graphwidget.axes1 = ui.graphwidget.figure.add_subplot(221, xlabel = 'Time [s]', ylabel = 'Pressure [kPa]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = np.transpose(ui.CA1[:ui.Numpre+1])
         # ui.graphwidget.y = np.transpose(ui.CA1)
         ui.graphwidget.axes1.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
                 
-        ui.graphwidget.axes2 = ui.graphwidget.figure.add_subplot(132, xlabel = 'Time [s]', ylabel = 'Flow rate [μL/min]')
+        ui.graphwidget.axes2 = ui.graphwidget.figure.add_subplot(222, xlabel = 'Time [s]', ylabel = 'Flow rate [μL/min]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.f
         ui.graphwidget.axes2.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
 
-        ui.graphwidget.axes3 = ui.graphwidget.figure.add_subplot(133, xlabel = 'Time [s]', ylabel = 'Pumped volume [μL]')
+        ui.graphwidget.axes3 = ui.graphwidget.figure.add_subplot(223, xlabel = 'Time [s]', ylabel = 'Pumped volume [μL]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.q
         ui.graphwidget.axes3.plot(ui.graphwidget.x, ui.graphwidget.y)    
         ui.graphwidget.figure.tight_layout()
         ui.graphwidget.draw()
-    
+ 
+        ui.graphwidget.axes4 = ui.graphwidget.figure.add_subplot(224, xlabel = 'Time [s]', ylabel = 'Temperature [C]')
+        ui.graphwidget.x = ui.dt
+        ui.graphwidget.y = ui.temperature
+        ui.graphwidget.axes4.plot(ui.graphwidget.x, ui.graphwidget.y)    
+        ui.graphwidget.figure.tight_layout()
+        ui.graphwidget.draw()   
     def function_change(self,index):
         ui.reg = index
             
@@ -339,6 +354,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if status =='R' or True:
             time, c, r= NI.ArduinoAI()
             f = NI.ArduinoI2C()
+            temp = float(ui.ThermoPlate.readtemp())
+            #print(temp)
             # print(c)#for test
             if r:
                 g = [0.1208, 1.097, -0.1208]
@@ -353,14 +370,15 @@ class MainWindow(QtWidgets.QMainWindow):
                         ui.dt = np.append(ui.dt, time-ui.t)
                         ui.CA1 = np.c_[ui.CA1,c]
                         ui.f = np.append(ui.f, f)
+                        ui.temperature=np.append(ui.temperature,temp)
                         if ui.count != 1:  # compute integrated flow quantity at t > 1
                             q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
                         else:  # compute integrated flow quantity at t=1
                             q = f*(ui.dt[-1])/60
                         ui.q = np.append(ui.q, q)
     
-                        c = np.append(
-                            np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q))
+                        c = np.append(np.append(
+                            np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q)),float(temp))
                         self.draw_graph()
     
                         file = open(ui.Filename, 'a')
@@ -370,9 +388,10 @@ class MainWindow(QtWidgets.QMainWindow):
                         ui.CA1 = c
                         ui.f = f
                         ui.q = 0
+                        ui.temperature=temp
                         file = open(ui.Filename, 'w')
-                        c = np.append(
-                            np.append(np.append(round(ui.dt, 6), c), float(f)), float(ui.q))
+                        c = np.append(np.append(
+                            np.append(np.append(round(ui.dt, 6), c), float(f)), float(ui.q)),float(temp))
     
                     ui.count = ui.count + 1
     
@@ -538,7 +557,11 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.voltage[ui.valveindex2] = ui.horizontalSlider_2.value()
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
         NI.ArduinoAO(ui.vNumB, True, ui.voltage[ui.valveindex2])
-        
+    
+    # def ThermoPlate(self):
+    #     ThermoPlate.readtemp()
+    #     result = ThermoPlate.readtemp()
+    #     print(result)
     # def get_pictures():
         # import json
         # json_open = open('C://Users//lab//Documents//AcqSettings.txt','r')
@@ -564,3 +587,4 @@ if __name__ == "__main__":
     w = MainWindow()
     w.show()
     sys.exit(app.exec_())
+
