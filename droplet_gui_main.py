@@ -161,11 +161,11 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
             #if residual <0:
                 # proceeds when the ui.residual time is less than 0 (wh\en negative)
-                valve, valve_num, pressure, duration,volume = self.read_seq_commands(
+                mode, valve, valve_num, pressure, duration,volume = self.read_seq_commands(
                     ui.command)
                 ui.current_valve=valve
                 ui.current_valve_num=valve_num
-                ui.current_pressure=pressure # flow rate
+                ui.current_pressure=pressure # pressure/flow rate
                 ui.duration = duration
                 ui.volume=volume
                 # ui.current_duration=duration
@@ -194,12 +194,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 # send pressure value
                 # NI.ArduinoAO(ui.vNumA,True,pressure)
                 # global operating
-                if ui.mode=="p":#open loop
+                if mode=="p":#open loop
                     # self.open_single_valve(valve_num)
                     # NI.ArduinoAO(ui.vNumA, True, int(pressure/100*255))
                     NI.ArduinoAO(ui.vNumA, True, int(pressure))
                     self.open_single_valve(valve_num)
-                else: # closed loop
+                elif mode=="u": # closed loop
                     if pressure >0:
                         self.open_single_valve(valve_num)
                         NI.ArduinoFB(True,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
@@ -208,7 +208,14 @@ class MainWindow(QtWidgets.QMainWindow):
                         NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd) 
                         NI.ArduinoAO(ui.vNumA, False, 0)
                         # operating =0
-                    
+                elif mode=="a": #acquire image
+                    from pycromanager import MagellanAcquisition
+                    #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
+                    acq = MagellanAcquisition(magellan_acq_index=0)
+                    acq.await_completion()
+                elif mode=="c": #temperature set
+                    ui.ThermoPlate.settemp(int(pressure))
+                
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
                 # proceedsd ui.command
@@ -276,39 +283,34 @@ class MainWindow(QtWidgets.QMainWindow):
         # else :
         message = text.split(',')
         valve = message[0]  # valve number
-        pressure = float(message[1][:-1])# pressure value
-        text = message[2].rstrip()
+        parameter = float(message[1][:-1])# pressure value
+        mode=message[1][-1]
+        terminal = message[2].rstrip()
 
-        if message[0][0]=="A":
-            from pycromanager import MagellanAcquisition
-            #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
-            acq = MagellanAcquisition(magellan_acq_index=0)
-            acq.await_completion()
-            duration=0
+        # if valve[0][0]=="A":
+        #     duration=int(terminal[:-1])
+        #     volume=0
+        # elif valve[0][0] == "T":
+        #     duration=int(terminal[:-1])
+        #     volume=0
+        # elif valve[0][0] == "P":
+        if terminal[-1] =="s":
+            duration=int(terminal[:-1])
             volume=0
-        elif message[0][0] == "T":
-            ui.ThermoPlate.settemp(int(pressure))
+        elif terminal[-1]=="u":
+            volume=float(terminal[:-1])
             duration=0
-            volume=0
-        elif message[0][0] == "P":
-            if text[-1] =="s":
-                duration=int(text[:-1])
-                volume=0
-            elif text[-1]=="u":
-                #volume=int(text[:-1])
-                volume=float(text[:-1])
-                duration=0
             
         valve_num = int(valve[-1], 16)
-        ui.termination_mode=text[-1]
-        ui.mode=str(message[1][-1])
+        ui.termination_mode=terminal[-1]
+        ui.mode=mode
         
         #read PID parameters
         if len(message) > 3:
             Kp,Ki,Kd = map(float,message[3].split(';'))
             ui.pid_parameters[command] = (Kp,Ki,Kd)
             ui.last_pid = (Kp,Ki,Kd)
-        return (valve, valve_num, pressure, duration,volume)
+        return (mode,valve, valve_num, parameter, duration,volume)
         
 
 
