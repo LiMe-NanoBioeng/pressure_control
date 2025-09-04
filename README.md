@@ -1,5 +1,7 @@
 # An automated microfluidic controller for a constant flow rate by a PID feedback control.
+
 ## Abstract
+MiSA is an open-source device for [microfluidic sequence automation](https://pubs.rsc.org/en/content/articlelanding/2025/lc/d5lc00551e/unauth)
 Multiplexed fluid control is a demanding task in various life sciences and bioengineering research. We here present an open-source microfluidic sequence automation (MiSA) that offers flexible and multiplexed fluid control for various applications, providing a constant flow rate via pressure-based feedback control with 10-plex capability and transient flow by rapidly opening and closing pressure valves. MiSA is self-contained, including a pressure source, and employs an Arduino Micro to integrate ten solenoid valves, an off-the-shelf pressure regulator, and a flow sensor to balance cost and reliability. To offer stable microflow control, especially at a low flow rate under a low flow resistance, MiSA uses a potentiometer that tunes the range of the pressure control by effectively leveraging the full 8-bit output from the Arduino Micro applied to the pressure regulator. We demonstrate the practical use of MiSA for multiplexed chemical reactions by performing the hybridization-based in situ sequencing. To demonstrate the flexibility of MiSA, we show the extensions of our system for two pressure regulations under open-loop control in the flow rate by demonstrating three independent applications for droplet generation, microfluidic spinning of spider silk fiber, and atomization of protein solution. We envision that this open source will offer resources for researchers to quickly explore microfluidic applications with an affordable investment.
 
 
@@ -30,6 +32,7 @@ The pressurized gas is distributed to a designated sample tube via open/close so
 A selector valve (IDEX Health & Science, MXX778-605) connects the tubing out of ten sample tubes to the single outlet tube.
 The controller monitors the flow rate with a flow sensor (Sensirion, LG16-1000D) serially connected between the outlet tube of the selector valve and the microfluidic system.
 To prevent a gravitational flow when all the solenoid valves are closed, we installed a latching solenoid valve (Takasago Electric Inc, FLV-2-N1F) in the PEEK tube downstream of the microfluidic system.
+The detailed build instructions are [here](https://www.rsc.org/suppdata/d5/lc/d5lc00551e/d5lc00551e1.pdf).
 
 ### Software and device control via Arduino micro
 The controller works on GUI-based Python code that communicates with devices through an Arduino micro via a serial connection using pySerial.
