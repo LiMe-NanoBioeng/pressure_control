@@ -9,7 +9,7 @@ from os.path import expanduser
 import serial
 import time
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QActionGroup
+from PyQt5.QtWidgets import QActionGroup, QApplication
 from droplet_gui import Ui_Droplet_formation
 from matplotlibwidget import MatplotlibWidget
 from MXsII import MXsIIt as MXsII
@@ -54,8 +54,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # valve channels
         #
         # arduino channel number should be defiend in ArduionDAQ.py
-        ui.vNumA=10 # first AO channel feedback channel ##this number order is MISA for HyBISS version
-        ui.vNumB=9 # second AO channel
+        ui.vNumA=9 # first AO channel feedback channel ##this number order is MISA for HyBISS version
+        ui.vNumB=10 # second AO channel
         
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0) # initialize feedback parameters
         NI.ArduinoAO(ui.vNumA, False, 0) # initialize the pressure regulator
@@ -111,7 +111,6 @@ class MainWindow(QtWidgets.QMainWindow):
         action_group3.addAction(ui.actionOff)
         self.MDA_file_path = None
         self.Pos_file_path = None
-        
         ui.ThermoPlate = ThermoPlate()
 
     def open_single_valve(self, index):
@@ -583,29 +582,13 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
         NI.ArduinoAO(ui.vNumB, True, ui.voltage[ui.valveindex2])
     
-    # def ThermoPlate(self):
-    #     ThermoPlate.readtemp()
-    #     result = ThermoPlate.readtemp()
-    #     print(result)
-    # def get_pictures():
-        # import json
-        # json_open = open('C://Users//lab//Documents//AcqSettings.txt','r')
-        # json_load = json.load(json_open)
-        # acq_pycromanager.load_acq_setting()
-        # json_load =  acq_pycromanager.load_acq_setting()
-        # acq_pycromanager.acquire_image(json_load)
-        
-        # from pycromanager import MagellanAcquisition
-
-        # # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
-        # acq = MagellanAcquisition(magellan_acq_index=0)
-        # acq.await_completion()
 
     def abort_program(self):
-
         ui.timer.stop()
+        self.open_single_valve(-1)
         NI.Arduinobye()
         self.close()
+        QApplication.quit()
         
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
