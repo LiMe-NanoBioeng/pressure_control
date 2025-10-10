@@ -19,13 +19,13 @@ class acq_pycromanager():
             self.Pos_file_path = pos_file
     
         def load_acq_setting(self):
-             # json_open = open('C://Users//lab//Desktop//AcqSettings_4.txt','r')
+             #json_open = open('C://Users//lab//Desktop//AcqSettings_4.txt','r')
              json_open = open(self.MDA_file_path,'r')
              json_load = json.load(json_open)
              return(json_load)
         
         def load_positions_from_pos(self):
-            # filepath = 'C://Users//lab//Documents//test..pos'
+            #filepath = 'C://Users//lab//Documents//test..pos'
             filepath = self.Pos_file_path
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -56,10 +56,13 @@ class acq_pycromanager():
             channels_info = json_load.get("channels", [])
             channel_group = json_load.get("channelGroup", None)
             channels = [ch["config"] for ch in channels_info if ch.get("useChannel", False)]
+            channel_exposures_ms = [ch["exposure"] for ch in channels_info if ch.get("useChannel", False)]
             xy_positions = np.array(coords)
             root = json_load.get("root",".")
             prefix = json_load.get("prefix")
             # save_mode = json_load.get("saveMode")
+            print(channels)
+            print(channel_exposures_ms)
             
             with Acquisition(directory=root, name=prefix) as acq:
                 events = multi_d_acquisition_events(
@@ -67,6 +70,7 @@ class acq_pycromanager():
                     time_interval_s = time_interval_s,
                     channel_group = channel_group,
                     channels = channels,
+                    channel_exposures_ms = channel_exposures_ms,
                     xy_positions = xy_positions,
                     z_start = z_start, 
                     z_end = z_end,
