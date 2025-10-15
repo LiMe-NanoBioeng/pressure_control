@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 import sys
@@ -10,11 +9,12 @@ from os.path import expanduser
 import serial
 import time
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QActionGroup
+from PyQt5.QtWidgets import QActionGroup, QApplication
 from droplet_gui import Ui_Droplet_formation
 from matplotlibwidget import MatplotlibWidget
 from MXsII import MXsIIt as MXsII
 from ThermoPlate import ThermoPlate
+from pycromanager_pipe import acq_pycromanager
 import datetime
 from config import *
 conf=config()
@@ -65,8 +65,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # valve channels
         #
         # arduino channel number should be defiend in ArduionDAQ.py
-        ui.vNumA=10 # first AO channel feedback channel ##this number order is MISA for HyBISS version
-        ui.vNumB=9 # second AO channel
+        ui.vNumA=9 # first AO channel feedback channel ##this number order is MISA for HyBISS version
+        ui.vNumB=10 # second AO channel
         
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0) # initialize feedback parameters
         NI.ArduinoAO(ui.vNumA, False, 0) # initialize the pressure regulator
@@ -120,6 +120,9 @@ class MainWindow(QtWidgets.QMainWindow):
         action_group3 = QActionGroup(self)
         action_group3.addAction(ui.actionOn)
         
+        action_group3.addAction(ui.actionOff)
+        self.MDA_file_path = None
+        self.Pos_file_path = None
         ui.ThermoPlate = ThermoPlate()
 
     def open_single_valve(self, index):
@@ -224,8 +227,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     try:
                         core = Core()
                     #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
-                        acq = MagellanAcquisition(magellan_acq_index=0)
-                        acq.await_completion()
+                        # acq = MagellanAcquisition(magellan_acq_index=0)
+                        # acq.await_completion()
+                        mda_file = self.MDA_file_path
+                        pos_file = self.Pos_file_path
+                        print(mda_file,pos_file)
+                        acq = acq_pycromanager(mda_file,pos_file)
+                        acq.acquire_image()
                         print('sucess_acquirment')
                     except:
                         print('false')
@@ -304,26 +312,11 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()
-        # # message = text.split(',')
-        # if text == "Acq":
-        #     from pycromanager import MagellanAcquisition
-        #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
-        #     acq = MagellanAcquisition(magellan_acq_index=0)
-        #     acq.await_completion()
-        # else :
         message = text.split(',')
         valve = message[0]  # valve number
         parameter = float(message[1][:-1])# pressure value
         mode=message[1][-1]
         terminal = message[2].rstrip()
-
-        # if valve[0][0]=="A":
-        #     duration=int(terminal[:-1])
-        #     volume=0
-        # elif valve[0][0] == "T":
-        #     duration=int(terminal[:-1])
-        #     volume=0
-        # elif valve[0][0] == "P":
         if terminal[-1] =="s":
             duration=int(terminal[:-1])
             volume=0
@@ -466,7 +459,21 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.tableWidget.setItem(
                 rowPosition, 0, QtWidgets.QTableWidgetItem(x))
             rowPosition += 1
-
+ 
+    def openMDAFile(self):
+        fTyp = [("MultiDimensionalAcquisitionFile", "*.txt")]
+        iDir = os.path.abspath(os.path.dirname(__file__))
+        self.MDA_file_path = tkinter.filedialog.askopenfilename(
+            filetypes=fTyp, initialdir=iDir)
+        print("Selected MDA file:", self.MDA_file_path)
+ 
+    def openPosFile(self):
+        fTyp = [("PositionFile","*.pos")]
+        iDir = os.path.abspath(os.path.dirname(__file__))
+        self.Pos_file_path = tkinter.filedialog.askopenfilename(
+            filetypes=fTyp, initialdir=iDir)
+        print("Selected Pos file:", self.Pos_file_path)
+  
     def tuning_resistanse_rate(self): # click tuning event
         #ui.timer.timeout.connect(self.check_tuning)
         if not ui.tuning_is_running:
@@ -592,29 +599,13 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
         NI.ArduinoAO(ui.vNumB, True, ui.voltage[ui.valveindex2])
     
-    # def ThermoPlate(self):
-    #     ThermoPlate.readtemp()
-    #     result = ThermoPlate.readtemp()
-    #     print(result)
-    # def get_pictures():
-        # import json
-        # json_open = open('C://Users//lab//Documents//AcqSettings.txt','r')
-        # json_load = json.load(json_open)
-        # acq_pycromanager.load_acq_setting()
-        # json_load =  acq_pycromanager.load_acq_setting()
-        # acq_pycromanager.acquire_image(json_load)
-        
-        # from pycromanager import MagellanAcquisition
-
-        # # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
-        # acq = MagellanAcquisition(magellan_acq_index=0)
-        # acq.await_completion()
 
     def abort_program(self):
-
         ui.timer.stop()
+        self.open_single_valve(-1)
         NI.Arduinobye()
         self.close()
+        QApplication.quit()
         
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

@@ -73,8 +73,7 @@ class AI():
     def ArduinoAI():
         # import time as tempo   
         c = []
-
-        ser.write(b'AI7,8\n')
+        ser.write(b'AI6,7\n')
         time.sleep(0.01)
         # Arduino will return the read value of analog input
         # format: AN1, AN2, ...

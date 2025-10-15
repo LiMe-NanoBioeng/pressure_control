@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'droplet_gui.ui'
@@ -264,8 +265,13 @@ class Ui_Droplet_formation(object):
         self.actionOff.setCheckable(True)
         self.actionOff.setChecked(True)
         self.actionOff.setObjectName("actionOff")
+        self.actionload_MDA_file_2 = QtWidgets.QAction(Droplet_formation)
+        self.actionload_MDA_file_2.setObjectName("actionload_MDA_file_2")
+        self.actionload_position_file = QtWidgets.QAction(Droplet_formation)
+        self.actionload_position_file.setObjectName("actionload_position_file")
         self.menuFile.addAction(self.actionload_sequence_file)
-        self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionload_MDA_file_2)
+        self.menuFile.addAction(self.actionload_position_file)
         self.menupressure_number.addAction(self.actionsingle_2)
         self.menupressure_number.addAction(self.actiondouble_2)
         self.menuRegulators.addAction(self.actionITV0010_2)
@@ -293,6 +299,8 @@ class Ui_Droplet_formation(object):
         self.tuningbutton.clicked.connect(Droplet_formation.tuning_resistanse_rate) # type: ignore
         self.horizontalSlider_2.valueChanged['int'].connect(Droplet_formation.svalue2_changed) # type: ignore
         self.abort.clicked.connect(Droplet_formation.abort_program) # type: ignore
+        self.actionload_MDA_file_2.triggered.connect(Droplet_formation.openMDAFile) # type: ignore
+        self.actionload_position_file.triggered.connect(Droplet_formation.openPosFile) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Droplet_formation)
 
     def retranslateUi(self, Droplet_formation):
@@ -336,3 +344,5 @@ class Ui_Droplet_formation(object):
         self.actionITV0090.setText(_translate("Droplet_formation", "ITV0090"))
         self.actionOn.setText(_translate("Droplet_formation", "On"))
         self.actionOff.setText(_translate("Droplet_formation", "Off"))
+        self.actionload_MDA_file_2.setText(_translate("Droplet_formation", "load MDA file"))
+        self.actionload_position_file.setText(_translate("Droplet_formation", "load position file"))

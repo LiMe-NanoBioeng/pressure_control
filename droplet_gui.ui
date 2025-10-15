@@ -614,7 +614,8 @@
      <string>File</string>
     </property>
     <addaction name="actionload_sequence_file"/>
-    <addaction name="separator"/>
+    <addaction name="actionload_MDA_file_2"/>
+    <addaction name="actionload_position_file"/>
    </widget>
    <widget class="QMenu" name="menuMenu">
     <property name="title">
@@ -730,6 +731,16 @@
     <string>Off</string>
    </property>
   </action>
+  <action name="actionload_MDA_file_2">
+   <property name="text">
+    <string>load MDA file</string>
+   </property>
+  </action>
+  <action name="actionload_position_file">
+   <property name="text">
+    <string>load position file</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
@@ -757,7 +768,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>101</x>
-     <y>524</y>
+     <y>633</y>
     </hint>
     <hint type="destinationlabel">
      <x>75</x>
@@ -773,7 +784,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>189</x>
-     <y>489</y>
+     <y>583</y>
     </hint>
     <hint type="destinationlabel">
      <x>137</x>
@@ -789,7 +800,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>294</x>
-     <y>534</y>
+     <y>643</y>
     </hint>
     <hint type="destinationlabel">
      <x>310</x>
@@ -820,8 +831,8 @@
    <slot>RunSequence()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>752</x>
-     <y>575</y>
+     <x>772</x>
+     <y>655</y>
     </hint>
     <hint type="destinationlabel">
      <x>571</x>
@@ -836,8 +847,8 @@
    <slot>DigitalPulse()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>642</x>
-     <y>528</y>
+     <x>644</x>
+     <y>655</y>
     </hint>
     <hint type="destinationlabel">
      <x>819</x>
@@ -853,7 +864,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>231</x>
-     <y>723</y>
+     <y>833</y>
     </hint>
     <hint type="destinationlabel">
      <x>354</x>
@@ -869,7 +880,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>154</x>
-     <y>713</y>
+     <y>823</y>
     </hint>
     <hint type="destinationlabel">
      <x>70</x>
@@ -884,8 +895,8 @@
    <slot>tuning_resistanse_rate()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>642</x>
-     <y>535</y>
+     <x>644</x>
+     <y>665</y>
     </hint>
     <hint type="destinationlabel">
      <x>1123</x>
@@ -901,7 +912,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>191</x>
-     <y>674</y>
+     <y>783</y>
     </hint>
     <hint type="destinationlabel">
      <x>113</x>
@@ -925,6 +936,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionload_MDA_file_2</sender>
+   <signal>triggered()</signal>
+   <receiver>Droplet_formation</receiver>
+   <slot>openMDAFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>624</x>
+     <y>457</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionload_position_file</sender>
+   <signal>triggered()</signal>
+   <receiver>Droplet_formation</receiver>
+   <slot>openPosFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>624</x>
+     <y>457</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <signal>signal1()</signal>
@@ -944,5 +987,7 @@
   <slot>SinglePressure()</slot>
   <slot>DoublePressure()</slot>
   <slot>function_change()</slot>
+  <slot>openMDAFile()</slot>
+  <slot>openPosFile()</slot>
  </slots>
 </ui>
