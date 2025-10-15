@@ -16,6 +16,9 @@ from matplotlibwidget import MatplotlibWidget
 from MXsII import MXsIIt as MXsII
 from ThermoPlate import ThermoPlate
 import datetime
+from config import *
+conf=config()
+
 now=datetime.datetime.now()
 timestamp=now.strftime("%Y%m%d%H%M%S")
 resultfilename="result"+timestamp
@@ -27,7 +30,8 @@ class MainWindow(QtWidgets.QMainWindow):
         global ui
         super(MainWindow, self).__init__(parent=parent)
         ui = Ui_Droplet_formation()
-        ui.MXsII=True  # selector valve True/False  ##change for HybISS version
+        ui.MXsII=conf.SELECT_VALVE  # selector valve True/False  ##change for HybISS version
+        ui.UseThermoPlate=conf.THERMO_PLATE
         ui.t = [] # time 
         ui.dt = [] # time difference
         ui.c = [] # voltage of pressure
@@ -40,8 +44,15 @@ class MainWindow(QtWidgets.QMainWindow):
             ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']) # valve channel number
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
                                           xlim=None, ylim=None, xscale='linear', yscale='linear',
-                                          width=12, height=5, dpi=95)        
-    
+                                          width=12, height=5, dpi=95)
+        
+        if(conf.FLOW_SENSOR):
+            unit=NI.ArduinoAFU()
+            if(unit!=""):
+                ui.unit_display.setText(NI.ArduinoAFU())
+        else:
+            ui.unit_display.setText("(Set as no sensor)")
+        
         ui.timer= QtCore.QTimer(self)
         ui.timer.start(30) # update the display every this ms
         ui.timer.timeout.connect(self.update_figure)
@@ -108,7 +119,6 @@ class MainWindow(QtWidgets.QMainWindow):
         action_group2.addAction(ui.actiondouble_2)
         action_group3 = QActionGroup(self)
         action_group3.addAction(ui.actionOn)
-        action_group3.addAction(ui.actionOff)
         
         ui.ThermoPlate = ThermoPlate()
 
@@ -172,7 +182,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.voltage[valve_num-1] = pressure  # register pressure value
                 
         
-                #close valve
+                #close valveFile ~/github/pressure_control/main.py:387, in MainWindow.update_figure(self)
+
                 self.open_single_valve(-1)
                 if ui.MXsII==True: 
                     MXsII.FTWrite(str(valve) + '\r')  # switch the valve
@@ -232,7 +243,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         NI.Arduinobye()
                         self.close()
                 elif mode=="c": #temperature set
-                    ui.ThermoPlate.settemp(int(pressure))
+                    if(ui.UseThermoPlate):
+                        ui.ThermoPlate.settemp(int(pressure))
                 
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
@@ -373,7 +385,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if status =='R' or True:
             time, c, r= NI.ArduinoAI()
             f = NI.ArduinoI2C()
-            temp = float(ui.ThermoPlate.readtemp())
+            if(ui.UseThermoPlate==False):
+                temp=-1
+            else:
+                temp = float(ThermoPlate.readtemp())
             #print(temp)
             # print(c)#for test
             if r:
