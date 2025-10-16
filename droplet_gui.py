@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'droplet_gui.ui'
@@ -346,3 +345,4 @@ class Ui_Droplet_formation(object):
         self.actionOff.setText(_translate("Droplet_formation", "Off"))
         self.actionload_MDA_file_2.setText(_translate("Droplet_formation", "load MDA file"))
         self.actionload_position_file.setText(_translate("Droplet_formation", "load position file"))
+
