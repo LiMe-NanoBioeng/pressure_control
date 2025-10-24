@@ -9,14 +9,14 @@ Created on Tue Oct 14 17:41:01 2025
 class config:
     def __init__(self):
         #Arduino
-        self.ARDUINO_PORT="/dev/ttyACM0"
+        self.ARDUINO_PORT="/dev/ttyACM1"
         
         # Thermo plate
         self.THERMO_PLATE=False
         self.THERMO_PLATE_PORT="COM10"
         
         #Flow sensor
-        self.FLOW_SENSOR=True
+        self.FLOW_SENSOR=False
         
         #Selector valve
         self.SELECT_VALVE=False

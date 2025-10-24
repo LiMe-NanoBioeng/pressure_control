@@ -48,10 +48,12 @@ class MainWindow(QtWidgets.QMainWindow):
         
         if(conf.FLOW_SENSOR):
             unit=NI.ArduinoAFU()
+            print(unit)
             if(unit!=""):
                 ui.unit_display.setText(NI.ArduinoAFU())
         else:
             ui.unit_display.setText("(Set as no sensor)")
+            print("NO sensor")
         
         ui.timer= QtCore.QTimer(self)
         ui.timer.start(30) # update the display every this ms
@@ -190,7 +192,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.open_single_valve(-1)
                 if ui.MXsII==True: 
                     MXsII.FTWrite(str(valve) + '\r')  # switch the valve
-                    # message = 'S' + '\r'
+                    # message = 'S' + '\r'[1] + h[ui.reg]
                     # rmessage = MXsII.FTWriteRead(message)
                     # print('Current valve is ' + rmessage)
                     # print('Setting valve is ' + str(valve_num))
@@ -233,7 +235,6 @@ class MainWindow(QtWidgets.QMainWindow):
                         pos_file = self.Pos_file_path
                         print(mda_file,pos_file)
                         acq = acq_pycromanager(mda_file,pos_file)
-                        acq.acquire_image()
                         print('sucess_acquirment')
                     except:
                         print('false')
@@ -609,7 +610,10 @@ class MainWindow(QtWidgets.QMainWindow):
         
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+    print("app insert")
     w = MainWindow()
+    print("w insert")
     w.show()
+    print("show")
     sys.exit(app.exec_())
 

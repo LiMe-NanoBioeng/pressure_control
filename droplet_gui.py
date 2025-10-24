@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'droplet_gui.ui'
@@ -258,6 +258,9 @@ class Ui_Droplet_formation(object):
         self.actionITV0090 = QtWidgets.QAction(Droplet_formation)
         self.actionITV0090.setCheckable(True)
         self.actionITV0090.setObjectName("actionITV0090")
+        self.actionEVL1050 = QtWidgets.QAction(Droplet_formation)
+        self.actionEVL1050.setChecked(True)
+        self.actionEVL1050.setObjectName("actionEVL1050")
         self.actionOn = QtWidgets.QAction(Droplet_formation)
         self.actionOn.setCheckable(True)
         self.actionOn.setObjectName("actionOn")
@@ -277,6 +280,7 @@ class Ui_Droplet_formation(object):
         self.menuRegulators.addAction(self.actionITV0010_2)
         self.menuRegulators.addAction(self.actionITV0030_2)
         self.menuRegulators.addAction(self.actionITV0090)
+        self.menuRegulators.addAction(self.actionEVL1050)
         self.menuSelector_valve.addAction(self.actionOn)
         self.menuSelector_valve.addAction(self.actionOff)
         self.menuMenu.addAction(self.menupressure_number.menuAction())
@@ -342,6 +346,7 @@ class Ui_Droplet_formation(object):
         self.actionITV0010_2.setText(_translate("Droplet_formation", "ITV0010"))
         self.actionITV0030_2.setText(_translate("Droplet_formation", "ITV0030"))
         self.actionITV0090.setText(_translate("Droplet_formation", "ITV0090"))
+        self.actionEVL1050.setText(_translate("Droplet_formation", "EVL1050"))
         self.actionOn.setText(_translate("Droplet_formation", "On"))
         self.actionOff.setText(_translate("Droplet_formation", "Off"))
         self.actionload_MDA_file_2.setText(_translate("Droplet_formation", "load MDA file"))
