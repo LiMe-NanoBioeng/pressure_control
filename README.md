@@ -1,5 +1,5 @@
 # MiSA as an automated microfluidic controller
-
+![MiSA system](https://static.wixstatic.com/media/ac6344_fcc36213162a4f77aa4f625d5739c330~mv2.png)
 ## MiSA
 MiSA is an open-source device for [microfluidic sequence automation](https://pubs.rsc.org/en/content/articlelanding/2025/lc/d5lc00551e/unauth). 
 MiSA offers flexible and multiplexed fluid control for various applications, providing a constant flow rate via pressure-based feedback control with 10-plex capability and transient flow by rapidly opening and closing pressure valves. The detailed build instructions are [here](https://www.rsc.org/suppdata/d5/lc/d5lc00551e/d5lc00551e1.pdf).
