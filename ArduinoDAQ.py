@@ -8,6 +8,9 @@ Update: 2020-11-05, kaneko
 """
 
 import time, datetime, os, serial
+from config import *
+conf=config()
+
 """
 provide definition of Arduino pins
 Analog IN 6,7,8,11
@@ -15,7 +18,7 @@ Analog OUT
 Digital Out
 
 """
-ser = serial.Serial('COM7', 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
+ser = serial.Serial(conf.ARDUINO_PORT, 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -57,6 +60,15 @@ class AI():
         ser_bytes=ser_bytes.decode('utf-8').rstrip()
         # print(ser_bytes)
         return(float(ser_bytes))
+    
+        
+    # Arduino Aquire Flowrate Unit
+    def ArduinoAFU():
+        ser.write(b'IU\n')
+        time.sleep(0.01)
+        ser_bytes=ser.readline()
+        ser_bytes=ser_bytes.decode('utf-8').rstrip()
+        return(str(ser_bytes))
 
     def ArduinoAI():
         # import time as tempo   

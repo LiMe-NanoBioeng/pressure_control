@@ -1,10 +1,12 @@
 from pymodbus.client import ModbusSerialClient
+from config import *
+conf=config()
 
 class ThermoPlate(ModbusSerialClient):
     def __init__(self, parent=None):
         # Modbus RTUクライアント設定
         self.client = ModbusSerialClient(
-            port="COM10",
+            port=conf.THERMO_PLATE_PORT,
             baudrate=9600,
             bytesize=8,
             parity='E',    # Even parity
