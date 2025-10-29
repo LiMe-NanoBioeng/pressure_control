@@ -32,7 +32,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui = Ui_Droplet_formation()
         ui.MXsII=conf.SELECT_VALVE  # selector valve True/False  ##change for HybISS version
         ui.UseThermoPlate=conf.THERMO_PLATE
-        ui.t = [] # time 
+        ui.t = [] # time
         ui.dt = [] # time difference
         ui.c = [] # voltage of pressure
         ui.f = [] # flow rate
@@ -45,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
                                           xlim=None, ylim=None, xscale='linear', yscale='linear',
                                           width=12, height=5, dpi=95)
-        
+
         if(conf.FLOW_SENSOR):
             unit=NI.ArduinoAFU()
             print(unit)
@@ -54,7 +54,8 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             ui.unit_display.setText("(Set as no sensor)")
             print("NO sensor")
-        
+
+
         ui.timer= QtCore.QTimer(self)
         ui.timer.start(30) # update the display every this ms
         ui.timer.timeout.connect(self.update_figure)
@@ -69,7 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # arduino channel number should be defiend in ArduionDAQ.py
         ui.vNumA=9 # first AO channel feedback channel ##this number order is MISA for HyBISS version
         ui.vNumB=10 # second AO channel
-        
+
         NI.ArduinoFB(False,ui.vNumA,0,0,0,0) # initialize feedback parameters
         NI.ArduinoAO(ui.vNumA, False, 0) # initialize the pressure regulator
         ui.Filename = ' ' # file name to save
@@ -79,18 +80,19 @@ class MainWindow(QtWidgets.QMainWindow):
         # parameters for sequence
         #
         ui.residualtime = 0
-        ui.start = time.time() 
+        ui.start = time.time()
         ui.termination_mode="" # volume or time
         ui.mode="" #feedback or not
         ui.qstart=0 # cummulative quantity
-        ui.volume=0 # 
+        ui.volume=0 #
         ui.duration = 0 # duration
         ui.RunSequenceFlag = False
         ui.number_of_commands = 0 # number of commands
         ui.command = 1 # current command
         ui.pid_parameters = {} # Ki Kp Kd
         ui.last_pid = (0.1,0.001,0.1) #initial values
-        
+
+
         ui.tuning_is_running=False
         #JM added
         ui.valveButton_2.hide()
@@ -104,28 +106,36 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.valveindex1=0
         ui.valveindex2=0
         ui.reg=0
+        self.function_change(conf.REG_TYPE)
         ui.Numpre=0
         ui.actionITV0010_2.triggered.connect(lambda: self.function_change(0))
         ui.actionITV0030_2.triggered.connect(lambda: self.function_change(1))
-        ui.actionITV0090.triggered.connect(lambda: self.function_change(2)) 
-        ui.actionsingle_2.triggered.connect(lambda: self.pressure_number(0)) 
-        ui.actiondouble_2.triggered.connect(lambda: self.pressure_number(1)) 
+        ui.actionITV0090.triggered.connect(lambda: self.function_change(2))
+        ui.actionEVL1050.triggered.connect(lambda: self.function_change(3))
+        ui.actionsingle_2.triggered.connect(lambda: self.pressure_number(0))
+        ui.actiondouble_2.triggered.connect(lambda: self.pressure_number(1))
         ui.actionOn.triggered.connect(lambda: self.check_selectorvalve(0))
         ui.actionOff.triggered.connect(lambda:self.check_selectorvalve(1))
         action_group1 = QActionGroup(self)
         action_group1.addAction(ui.actionITV0010_2)
         action_group1.addAction(ui.actionITV0030_2)
         action_group1.addAction(ui.actionITV0090)
+        action_group1.addAction(ui.actionEVL1050)
         action_group2 = QActionGroup(self)
         action_group2.addAction(ui.actionsingle_2)
         action_group2.addAction(ui.actiondouble_2)
         action_group3 = QActionGroup(self)
         action_group3.addAction(ui.actionOn)
-        
+
         action_group3.addAction(ui.actionOff)
         self.MDA_file_path = None
         self.Pos_file_path = None
         ui.ThermoPlate = ThermoPlate()
+        ui.magnitude=0.1
+        ui.magnitude_initialize=False
+        ui.initsum=0.0
+        ui.initcount=0
+        NI.ArduinoAO(ui.vNumA, True, 128)
 
     def open_single_valve(self, index):
         for i in range(len(ui.valve_state)):
@@ -148,13 +158,13 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             ui.MXsII = False
             print('quit using selector valve')
-         
+
     def SequenceControlTime(self):
         Kp,Ki,Kd = ui.last_pid
         elapsed_time = time.time()-ui.start
         residualvol=ui.volume-(ui.q[-1]-ui.qstart)
         ui.residualtime = ui.duration-elapsed_time
-        
+
         # swtich modes between volume and time terminations
         if ui.termination_mode=="s": # time based
             residual=ui.residualtime
@@ -165,11 +175,11 @@ class MainWindow(QtWidgets.QMainWindow):
         else: #initial
             residual=-1
         ui.lcdTimer.display(residual)
-        
+
         if ui.number_of_commands-ui.command > 0:
             # commands during the sequence
             # ui.lcdTimer.display(ui.residualtime)
-            
+
             if residual > 0:
                 value=NI.ArduinoFBStatus(ui.vNumA)
                 ui.lcdnumber_1.display(value)
@@ -185,12 +195,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.volume=volume
                 # ui.current_duration=duration
                 ui.voltage[valve_num-1] = pressure  # register pressure value
-                
-        
+
+
                 #close valveFile ~/github/pressure_control/main.py:387, in MainWindow.update_figure(self)
 
                 self.open_single_valve(-1)
-                if ui.MXsII==True: 
+                if ui.MXsII==True:
                     MXsII.FTWrite(str(valve) + '\r')  # switch the valve
                     # message = 'S' + '\r'[1] + h[ui.reg]
                     # rmessage = MXsII.FTWriteRead(message)
@@ -198,14 +208,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     # print('Setting valve is ' + str(valve_num))
                 # send commands when switch the sequence
                 #time.sleep(1)
-                
+
                 if ui.command in ui.pid_parameters:
                     ui.last_pid = ui.pid_parameters[ui.command]
                 Kp,Ki,Kd = ui.last_pid
-                
+
                 NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
                 NI.ArduinoAO(ui.vNumA, False, 0)
-                
+
                 time.sleep(1)
                 # send pressure value
                 # NI.ArduinoAO(ui.vNumA,True,pressure)
@@ -213,7 +223,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if mode=="p":#open loop
                     # self.open_single_valve(valve_num)
                     # NI.ArduinoAO(ui.vNumA, True, int(pressure/100*255))
-                    NI.ArduinoAO(ui.vNumA, True, int(pressure))
+                    pressure=float(pressure)
+                    NI.ArduinoAO(ui.vNumA, True, min(int(pressure*165.0/ui.magnitude),254))
                     self.open_single_valve(valve_num)
                 elif mode=="u": # closed loop
                     if pressure >0:
@@ -221,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         NI.ArduinoFB(True,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
                         # operating=1
                     else:
-                        NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd) 
+                        NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
                         NI.ArduinoAO(ui.vNumA, False, 0)
                         # operating =0
                 elif mode=="a": #acquire image
@@ -254,7 +265,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 elif mode=="c": #temperature set
                     if(ui.UseThermoPlate):
                         ui.ThermoPlate.settemp(int(pressure))
-                
+
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
                 # proceedsd ui.command
@@ -278,7 +289,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.save = not ui.save  # stop saving and displaying
                 ui.lcdSeqNumber.display(ui.number_of_commands)
                 time.sleep(1)
-   
+
     def DigitalPulse(self):
         ui.mode='Pulse'
         a = ui.valveindex1
@@ -286,7 +297,7 @@ class MainWindow(QtWidgets.QMainWindow):
         width = ui.plainTextEdit.toPlainText()
         c = float(width)
         NI.ArduinoDigitalPulse(a,b,1,c,10) # 100 is the threshold
-        
+
     def pressure_number(self,index):#add JM
         ui.Numpre = index
         if ui.Numpre == 0:
@@ -299,7 +310,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.label_10.hide()
             ui.lcdnumber_2.hide()
             ui.line.hide()
-            
+
         elif ui.Numpre == 1:
             print('double pressure')
             ui.valveButton_2.show()
@@ -310,7 +321,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.label_10.show()
             ui.lcdnumber_2.show()
             ui.line.show()
-        
+
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()
         message = text.split(',')
@@ -323,18 +334,25 @@ class MainWindow(QtWidgets.QMainWindow):
             volume=0
         elif terminal[-1]=="u":
             volume=float(terminal[:-1])
-            duration=0            
+            duration=0
         valve_num = int(valve[-1], 16)
         ui.termination_mode=terminal[-1]
         ui.mode=mode
-        
+
         #read PID parameters
         if len(message) > 3:
             Kp,Ki,Kd = map(float,message[3].split(';'))
             ui.pid_parameters[command] = (Kp,Ki,Kd)
             ui.last_pid = (Kp,Ki,Kd)
         return (mode,valve, valve_num, parameter, duration,volume)
-        
+
+    def initialize_magnitude(self):
+        NI.ArduinoAO(ui.vNumA, True, 254)
+        ui.magnitude_initialize=True
+    
+
+    def initialize_end(self):
+        return 1;
 
 
     def draw_graph(self): #update JM
@@ -342,14 +360,14 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget.axes1.clear()
         ui.graphwidget.axes2.clear()
         ui.graphwidget.axes3.clear()
-        
+
         ui.graphwidget.axes1 = ui.graphwidget.figure.add_subplot(221, xlabel = 'Time [s]', ylabel = 'Pressure [kPa]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = np.transpose(ui.CA1[:ui.Numpre+1])
         # ui.graphwidget.y = np.transpose(ui.CA1)
         ui.graphwidget.axes1.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.draw()
-                
+
         ui.graphwidget.axes2 = ui.graphwidget.figure.add_subplot(222, xlabel = 'Time [s]', ylabel = 'Flow rate [μL/min]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.f
@@ -359,26 +377,30 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget.axes3 = ui.graphwidget.figure.add_subplot(223, xlabel = 'Time [s]', ylabel = 'Pumped volume [μL]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.q
-        ui.graphwidget.axes3.plot(ui.graphwidget.x, ui.graphwidget.y)    
+        ui.graphwidget.axes3.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.figure.tight_layout()
         ui.graphwidget.draw()
- 
+
         ui.graphwidget.axes4 = ui.graphwidget.figure.add_subplot(224, xlabel = 'Time [s]', ylabel = 'Temperature [C]')
         ui.graphwidget.x = ui.dt
         ui.graphwidget.y = ui.temperature
-        ui.graphwidget.axes4.plot(ui.graphwidget.x, ui.graphwidget.y)    
+        ui.graphwidget.axes4.plot(ui.graphwidget.x, ui.graphwidget.y)
         ui.graphwidget.figure.tight_layout()
-        ui.graphwidget.draw()   
+        ui.graphwidget.draw()
     def function_change(self,index):
         ui.reg = index
-            
+
     def update_figure(self):
+        print("magnitude: ",ui.magnitude)
         status = NI.ArduinoStatusCheck()
         if ui.tuning_is_running:
             self.tuningCore()
-        if status =='R' or True:
+        if status =='R' or True:# This is always true!!!!
             time, c, r= NI.ArduinoAI()
-            f = NI.ArduinoI2C()
+            if(conf.FLOW_SENSOR):
+                f = NI.ArduinoI2C()
+            else:
+                f=-1
             if(ui.UseThermoPlate==False):
                 temp=-1
             else:
@@ -386,12 +408,25 @@ class MainWindow(QtWidgets.QMainWindow):
             #print(temp)
             # print(c)#for test
             if r:
-                g = [0.1208, 1.097, -0.1208]
-                h = [-23.75, -223.75, 23.78]                    
+                g = [0.1208, 1.097, -0.1208, 0.0610]
+                h = [-23.75, -223.75, 23.78, -12.5]
                 c[0] = g[ui.reg] * c[0] + h[ui.reg]
                 c[1] = g[ui.reg] * c[1] + h[ui.reg]
                 ui.valveLcd_1.display(c[0])
                 ui.valveLcd_2.display(c[1]) #add JM
+                if(c[0]>0 and ui.magnitude_initialize and ui.initcount<10):
+                    print("now tuning")
+                    print("initsum: ", ui.initsum)
+                    ui.initsum+=c[0]
+                    ui.initcount+=1
+                if(ui.initcount==10):
+                    print("end tuning")
+                    ui.initcount=0
+                    ui.magnitude=ui.initsum/10.0
+                    ui.initsum=0.0
+                    ui.magnitude_initialize=False
+                    NI.ArduinoAO(ui.vNumA,True,0)
+                    print("reset magnitude: ", ui.magnitude)
                 if ui.save == True:
                     # add Hiroyuki
                     if ui.count != 0:
@@ -404,11 +439,11 @@ class MainWindow(QtWidgets.QMainWindow):
                         else:  # compute integrated flow quantity at t=1
                             q = f*(ui.dt[-1])/60
                         ui.q = np.append(ui.q, q)
-    
+
                         c = np.append(np.append(
                             np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q)),float(temp))
                         self.draw_graph()
-    
+
                         file = open(ui.Filename, 'a')
                     else:
                         ui.t = time  # initial time
@@ -420,16 +455,16 @@ class MainWindow(QtWidgets.QMainWindow):
                         file = open(ui.Filename, 'w')
                         c = np.append(np.append(
                             np.append(np.append(round(ui.dt, 6), c), float(f)), float(ui.q)),float(temp))
-    
+
                     ui.count = ui.count + 1
-    
+
                     for i in c:
                         jp = (str(i))
                         file.write(jp)
                         file.write(',')  # コンマ
                     file.write('\n')  # 改行コード
                     file.close()
-    
+
                 else:
                     ui.count = 0  # add Hiroyuki
                 ui.flowrate.display(f)
@@ -437,7 +472,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 #
                 if ui.number_of_commands != 0 and len(ui.f) > 4:
                     self.SequenceControlTime()
-    
+
 
     def RunSequence(self):
         ui.command = 0
@@ -451,7 +486,7 @@ class MainWindow(QtWidgets.QMainWindow):
         f = open(file_name, 'r')
 
         # ui.tableWidget.setRowCount(0)
-        
+
         ui.tableWidget.setColumnCount(1)
         rowPosition = 0
         ui.tableWidget.setRowCount(0)
@@ -460,37 +495,40 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.tableWidget.setItem(
                 rowPosition, 0, QtWidgets.QTableWidgetItem(x))
             rowPosition += 1
- 
+
     def openMDAFile(self):
         fTyp = [("MultiDimensionalAcquisitionFile", "*.txt")]
         iDir = os.path.abspath(os.path.dirname(__file__))
         self.MDA_file_path = tkinter.filedialog.askopenfilename(
             filetypes=fTyp, initialdir=iDir)
         print("Selected MDA file:", self.MDA_file_path)
- 
+
     def openPosFile(self):
         fTyp = [("PositionFile","*.pos")]
         iDir = os.path.abspath(os.path.dirname(__file__))
         self.Pos_file_path = tkinter.filedialog.askopenfilename(
             filetypes=fTyp, initialdir=iDir)
         print("Selected Pos file:", self.Pos_file_path)
-  
+
     def tuning_resistanse_rate(self): # click tuning event
         #ui.timer.timeout.connect(self.check_tuning)
-        if not ui.tuning_is_running:
-            NI.ArduinoDO(0, True)
-            print("number 1 opened")
-            if ui.MXsII==True: MXsII.FTWrite(str(1) + '\r')
-            NI.ArduinoAO(ui.vNumA, True, 100)
-            ui.tuning_is_running=True
-            NI.ArduinoDO(10, True)
-        else:
-            ui.tuning_is_running = False
-            NI.ArduinoAO(ui.vNumA, False, 100)
-            NI.ArduinoDO(0, False)
-            print("tuning ended")
-            NI.ArduinoDO(10, False)
-            
+        ui.magnitude_initialize=True
+        NI.ArduinoAO(ui.vNumA, True, 254)
+        print("tuning on")
+        #if not ui.tuning_is_running:
+        #    NI.ArduinoDO(0, True)
+        #    print("number 1 opened")
+        #    if ui.MXsII==True: MXsII.FTWrite(str(1) + '\r')
+        #    NI.ArduinoAO(ui.vNumA, True, 100)
+        #    ui.tuning_is_running=True
+        #    NI.ArduinoDO(10, True)
+        #else:
+        #    ui.tuning_is_running = False
+        #    NI.ArduinoAO(ui.vNumA, False, 100)
+        #    NI.ArduinoDO(0, False)
+        #    print("tuning ended")
+        #    NI.ArduinoDO(10, False)
+
     def tuningCore(self):
         potentio = NI.ArduinoTuning() #time c,r　are not used in this stack
         displaypotentio="{:.3}".format(potentio)
@@ -501,21 +539,21 @@ class MainWindow(QtWidgets.QMainWindow):
         print(minflowrate)
         ui.maxflowrate.display(str(round(maxflowrate,1)))
         ui.minflowrate.display(str(round(minflowrate,1)))
-                
-    
+
+
     def valve_number_changed(self, index):
-        #ui.selected_valve_index_index = index 
+        #ui.selected_valve_index_index = index
         ui.valveindex1=index
         valvenum = str(hex(index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
         ui.lcdnumber_1.display(ui.voltage[index])
         ui.horizontalSlider.setValue(ui.voltage[index])
         if hasattr(ui, 'valve_1'):
-            if ui.valve_state[index]==True: 
+            if ui.valve_state[index]==True:
                 ui.valveButton_1.setText('ON')
-            else: 
+            else:
                 ui.valveButton_1.setText('OFF')
-            
+
         if ui.MXsII==True:
             MXsII.FTWrite(message)
             # message = 'S' + '\r'
@@ -532,11 +570,11 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.lcdnumber_2.display(ui.voltage[index])
         ui.horizontalSlider_2.setValue(ui.voltage[index])
         if hasattr(ui, 'valve_1'):
-            if ui.valve_state[index]==True: 
+            if ui.valve_state[index]==True:
                 ui.valveButton_2.setText('ON')
-            else: 
+            else:
                 ui.valveButton_2.setText('OFF')
-            
+
         if ui.MXsII==True:
             MXsII.FTWrite(message)
             # message = 'S' + '\r'
@@ -557,9 +595,9 @@ class MainWindow(QtWidgets.QMainWindow):
         #                  ui.valve_state[ui.valveindex1])
         NI.ArduinoDO(ui.valveindex1,
                           ui.valve_state[ui.valveindex1])
-        if ui.valve_state[ui.valveindex1]==True: 
+        if ui.valve_state[ui.valveindex1]==True:
             ui.valveButton_1.setText('ON')
-        else: 
+        else:
             ui.valveButton_1.setText('OFF')
         if any(ui.valve_state):  # open the check valve
             #s = NI.ArduinoDO(10, True)
@@ -577,9 +615,9 @@ class MainWindow(QtWidgets.QMainWindow):
         #                      ui.valve_state[ui.valveindex2])
         NI.ArduinoDO(ui.valveindex2,
                              ui.valve_state[ui.valveindex2])
-        if ui.valve_state[ui.valveindex2]==True: 
+        if ui.valve_state[ui.valveindex2]==True:
             ui.valveButton_2.setText('ON')
-        else: 
+        else:
             ui.valveButton_2.setText('OFF')
         if any(ui.valve_state):  # open the check valve
             #s = NI.ArduinoDO(10, True)
@@ -587,19 +625,19 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             #s = NI.ArduinoDO(10, False)
             NI.ArduinoDO(10, False)
-                
+
     def svalue_changed(self):
 
         ui.voltage[ui.valveindex1] = ui.horizontalSlider.value()
         ui.lcdnumber_1.display(ui.horizontalSlider.value())
         NI.ArduinoAO(ui.vNumA, True, ui.voltage[ui.valveindex1])
-        
+
     def svalue2_changed(self):
 
         ui.voltage[ui.valveindex2] = ui.horizontalSlider_2.value()
         ui.lcdnumber_2.display(ui.horizontalSlider_2.value())
         NI.ArduinoAO(ui.vNumB, True, ui.voltage[ui.valveindex2])
-    
+
 
     def abort_program(self):
         ui.timer.stop()
@@ -607,7 +645,7 @@ class MainWindow(QtWidgets.QMainWindow):
         NI.Arduinobye()
         self.close()
         QApplication.quit()
-        
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     print("app insert")
@@ -616,4 +654,3 @@ if __name__ == "__main__":
     w.show()
     print("show")
     sys.exit(app.exec_())
-
