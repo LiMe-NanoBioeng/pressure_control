@@ -99,6 +99,8 @@ class AI():
         else:
             result=True    
         for i in range(len(c)): # range(X):Xはチャンネル数
+            if(c[i][0]=="R"):
+                c[i]=c[i][1:len(c[i])-1]
             c[i] = float(c[i]) # listをfloat形式に変換
         return(t,c,result)
         #return(t,c,result)
@@ -113,6 +115,8 @@ class AI():
         time.sleep(0.1)
         ser_bytes = ser.readline().decode('utf-8')
         r2=ser_bytes
+        print("r1",r1)
+        print("r2",r2)
         potentio=float(r1)/(float(r2)+0.0001)
         print(r1,r2)
         print(potentio)
