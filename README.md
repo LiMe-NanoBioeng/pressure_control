@@ -7,7 +7,7 @@ MiSA offers flexible and multiplexed fluid control for various applications, pro
 MiSA works on GUI-based Python code that communicates with devices through an Arduino micro via a serial connection using pySerial.
 We provide the program for the Arduino micro as [another repository](https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
 
-# Update:
+### Update:
 
 -The parts list is missing connectors (S070-14A, SMC) for the solenoid valves (S070B-5BC, SMC).
 
