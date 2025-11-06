@@ -7,9 +7,12 @@ MiSA offers flexible and multiplexed fluid control for various applications, pro
 MiSA works on GUI-based Python code that communicates with devices through an Arduino micro via a serial connection using pySerial.
 We provide the program for the Arduino micro as [another repository](https://github.com/LiMe-NanoBioeng/Arduino-to-DAQ.git).
 
-Update
+Update:
+
 -The parts list is missing connectors (S070-14A, SMC) for the solenoid valves (S070B-5BC, SMC).
+
 -The latching valve (FLV2-N1F, Takasago Electric) becomes unstable when continuously operated. We recommend NLV-2-N1G (Takasago Electric) instead of FLV2-N1F.
+
 -We use PEEK Luer-lock-adapters [PS6601](https://www.isis-ltd.co.jp/product/tube-connector-valve/adapter-connector/A107) to connect phi3 tubes to 1/16" tubes.
 
 ## HybISS-MiSA
