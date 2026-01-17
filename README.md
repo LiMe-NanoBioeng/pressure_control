@@ -23,7 +23,7 @@ We provide the program for the Arduino micro as [another repository](https://git
 -　Added ports for D0, reset, D11, and 3V.  
 
 -[ver 0.2.1](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_4acba23fb57944239136985bc084c761.pdf).  
--　Added IC2 communication.  
+-　Added I2C communication.  
 
 -[ver 0.1.0](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_303ffac2c8ba416eb04ca054ac08d01f.pdf).
 
