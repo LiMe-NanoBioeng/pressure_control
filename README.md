@@ -13,6 +13,20 @@ We provide the program for the Arduino micro as [another repository](https://git
 -　The latching valve (FLV2-N1F, Takasago Electric) becomes unstable when continuously operated. We recommend NLV-2-N1G (Takasago Electric) instead of FLV2-N1F.  
 -　We use PEEK Luer-lock-adapters [PS6601](https://www.isis-ltd.co.jp/product/tube-connector-valve/adapter-connector/A107) to connect phi3 tubes to 1/16" tubes.  
 
+### Circuit Design
+-[ver 1.0.0](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_7c2367e04c394b84b0bb4f0bfbd53f81.pdf)
+Added GND terminal for 5V switching
+Updated the silk screen
+
+-[ver 0.2.2](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_b9b48091d1b346df86037f14fb917185.pdf)
+Added TTL and 5V switching for latching solenoid valve
+Added ports for D0, reset, D11, and 3V
+
+-[ver 0.2.1](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_4acba23fb57944239136985bc084c761.pdf)
+Added IC2 communication
+
+-[ver 0.1.0](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_303ffac2c8ba416eb04ca054ac08d01f.pdf)
+
 ## HybISS-MiSA
 To automate HybISS protocol with MiSA, we integrate the MiSA with a selector valve (IDEX Health & Science, MXX778-605), a ThermoPlate, and a microscope via pycromanager.
 
