@@ -15,12 +15,12 @@ We provide the program for the Arduino micro as [another repository](https://git
 
 ### Circuit Design
 -[ver 1.0.0](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_7c2367e04c394b84b0bb4f0bfbd53f81.pdf)
-Added GND terminal for 5V switching
-Updated the silk screen
+-　Added GND terminal for 5V switching
+-　Updated the silk screen
 
 -[ver 0.2.2](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_b9b48091d1b346df86037f14fb917185.pdf)
-Added TTL and 5V switching for latching solenoid valve
-Added ports for D0, reset, D11, and 3V
+-　Added TTL and 5V switching for latching solenoid valve
+-　Added ports for D0, reset, D11, and 3V
 
 -[ver 0.2.1](https://ac63445c-dd2d-48c4-b03c-9c81ed2f14bc.usrfiles.com/ugd/ac6344_4acba23fb57944239136985bc084c761.pdf)
 Added IC2 communication
