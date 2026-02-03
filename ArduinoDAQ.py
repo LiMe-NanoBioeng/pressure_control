@@ -18,7 +18,7 @@ Analog OUT
 Digital Out
 
 """
-ser = serial.Serial(conf.ARDUINO_PORT, 38400, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
+ser = serial.Serial(conf.ARDUINO_PORT, 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient... 
 
 class AI():  
     def DefFile(FolderName1): # Making Folder for saving outputs
