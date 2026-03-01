@@ -29,6 +29,7 @@ We provide the program for the Arduino micro as [another repository](https://git
 
 ## HybISS-MiSA
 To automate HybISS protocol with MiSA, we integrate the MiSA with a selector valve (IDEX Health & Science, MXX778-605), a ThermoPlate, and a microscope via pycromanager.
+install [pycromanager](https://pycro-manager.readthedocs.io/en/latest/index.html) for micro-manager, [pymobus](https://pypi.org/project/pymodbus/) for Thermoplate, and [pytest](https://pypi.org/project/pytest/).
 
 
 
