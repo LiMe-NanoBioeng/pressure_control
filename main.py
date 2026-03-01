@@ -6,9 +6,9 @@ from ArduinoDAQ import AI as NI
 import tkinter.filedialog
 import os
 from os.path import expanduser
-import serial
+#import serial
 import time
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore#, QtGui
 from PyQt5.QtWidgets import QActionGroup, QApplication
 from droplet_gui import Ui_Droplet_formation
 from matplotlibwidget import MatplotlibWidget
@@ -16,7 +16,7 @@ from MXsII import MXsIIt as MXsII
 from ThermoPlate import ThermoPlate
 from pycromanager_pipe import acq_pycromanager
 import datetime
-from config import *
+from config import config
 conf=config()
 
 now=datetime.datetime.now()
@@ -404,7 +404,9 @@ class MainWindow(QtWidgets.QMainWindow):
             if(ui.UseThermoPlate==False):
                 temp=-1
             else:
-                temp = float(ThermoPlate.readtemp())
+                
+                temp = float(ui.ThermoPlate.readtemp())
+                
             #print(temp)
             # print(c)#for test
             if r:

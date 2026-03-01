@@ -9,18 +9,18 @@ Created on Tue Oct 14 17:41:01 2025
 class config:
     def __init__(self):
         # Arduino
-        self.ARDUINO_PORT="COM4"
+        self.ARDUINO_PORT="COM10"
         
         # Thermo plate
-        self.THERMO_PLATE=False
-        self.THERMO_PLATE_PORT="COM4"
+        self.THERMO_PLATE=True
+        self.THERMO_PLATE_PORT="COM8"
         
         # Flow sensor
         self.FLOW_SENSOR=True
         
         # Selector valve
-        self.SELECT_VALVE=False
-        self.SELECT_VALVE_PORT="COM11"
+        self.SELECT_VALVE=True
+        self.SELECT_VALVE_PORT="COM9"
         
         # Pressure regulator type (you can also change it in GUI)
         # 0=ITV0010
