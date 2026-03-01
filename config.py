@@ -16,7 +16,7 @@ class config:
         self.THERMO_PLATE_PORT="COM4"
         
         # Flow sensor
-        self.FLOW_SENSOR=False
+        self.FLOW_SENSOR=True
         
         # Selector valve
         self.SELECT_VALVE=False

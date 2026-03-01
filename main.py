@@ -52,8 +52,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if(unit!=""):
                 ui.unit_display.setText(NI.ArduinoAFU())
         else:
-            ui.unit_display.setText("(Set as no sensor)")
-            print("NO sensor")
+            ui.unit_display.setText("(no flow sensor)")
+            print("NO flow sensor")
 
 
         ui.timer= QtCore.QTimer(self)
@@ -135,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.magnitude_initialize=False
         ui.initsum=0.0
         ui.initcount=0
-        NI.ArduinoAO(ui.vNumA, True, 128)
+        
 
     def open_single_valve(self, index):
         for i in range(len(ui.valve_state)):
@@ -391,11 +391,11 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.reg = index
 
     def update_figure(self):
-        print("magnitude: ",ui.magnitude)
+        #print("magnitude: ",ui.magnitude)
         status = NI.ArduinoStatusCheck()
         if ui.tuning_is_running:
             self.tuningCore()
-        if status =='R' or True:# This is always true!!!!
+        if status =='R':
             time, c, r= NI.ArduinoAI()
             if(conf.FLOW_SENSOR):
                 f = NI.ArduinoI2C()
@@ -648,9 +648,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    print("app insert")
+    #print("app insert")
     w = MainWindow()
-    print("w insert")
+    #print("w insert")
     w.show()
-    print("show")
+    #print("show")
     sys.exit(app.exec_())
