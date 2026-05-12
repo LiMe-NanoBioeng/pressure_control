@@ -62,7 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.save = False  # Record data or not
         # valve initialization
         ui.valve_state = [False, False, False, False,
-                      False, False, False, False, False, False]
+                      False, False, False, False, False, False, False, False]
         self.open_single_valve(-1) # shut all the valves
         #ui.vNumA=11
         # valve channels
@@ -145,11 +145,20 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.valve_state[i] = True
             NI.ArduinoDO(i, ui.valve_state[i])
         if any(ui.valve_state):  # open the check valve
-            NI.ArduinoDO(10, True)
+            #NI.ArduinoDO(10, True)
+            NI.ArduinoDO(12, False)
+            NI.ArduinoDO(11, True)
+            time.sleep(0.1)
+            NI.ArduinoDO(11, False)
             print('LSV is open')
         else:
             #s=NI.ArduinoDO(10, False)
-            NI.ArduinoDO(10, False)
+            #NI.ArduinoDO(10, False)
+            NI.ArduinoDO(12, True)
+            NI.ArduinoDO(11, False)
+            time.sleep(0.1)
+            NI.ArduinoDO(12, False)
+            print('LSV is closed')
 
     def check_selectorvalve(self,index): #JM added
         if index == 0:
@@ -246,6 +255,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         pos_file = self.Pos_file_path
                         print(mda_file,pos_file)
                         acq = acq_pycromanager(mda_file,pos_file)
+                        acq = acq.aquire_image()
                         print('sucess_acquirment')
                     except:
                         print('false')
@@ -603,11 +613,20 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.valveButton_1.setText('OFF')
         if any(ui.valve_state):  # open the check valve
             #s = NI.ArduinoDO(10, True)
-            NI.ArduinoDO(10, True)
+            #NI.ArduinoDO(10, True)
+            NI.ArduinoDO(12, False)
+            NI.ArduinoDO(11, True)
+            time.sleep(0.1)
+            NI.ArduinoDO(11, False)
             print('LSV is open')
         else:
             #s = NI.ArduinoDO(10, False)
-            NI.ArduinoDO(10, False)
+            #NI.ArduinoDO(10, False)
+            NI.ArduinoDO(12, True)
+            NI.ArduinoDO(11, False)
+            time.sleep(0.1)
+            NI.ArduinoDO(12, False)
+            print('LSV is closed')
 
     # add JM ValveButton_2  # can be combined with ValveOC
     def ValveOC2(self):
@@ -622,11 +641,21 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             ui.valveButton_2.setText('OFF')
         if any(ui.valve_state):  # open the check valve
-            #s = NI.ArduinoDO(10, True)
-            NI.ArduinoDO(10, True)
+           #s = NI.ArduinoDO(10, True)
+           #NI.ArduinoDO(10, True)
+           NI.ArduinoDO(12, False)
+           NI.ArduinoDO(11, True)
+           time.sleep(0.1)
+           NI.ArduinoDO(11, False)
+           print('LSV is open')
         else:
-            #s = NI.ArduinoDO(10, False)
-            NI.ArduinoDO(10, False)
+           #s = NI.ArduinoDO(10, False)
+           #NI.ArduinoDO(10, False)
+           NI.ArduinoDO(12, True)
+           NI.ArduinoDO(11, False)
+           time.sleep(0.1)
+           NI.ArduinoDO(12, False)
+           print('LSV is closed')
 
     def svalue_changed(self):
 
