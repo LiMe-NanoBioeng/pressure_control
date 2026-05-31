@@ -1,5 +1,5 @@
 from pymodbus.client import ModbusSerialClient
-from config import *
+from config import config
 conf=config()
 
 class ThermoPlate(ModbusSerialClient):
