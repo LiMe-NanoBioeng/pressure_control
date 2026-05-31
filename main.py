@@ -245,7 +245,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         NI.ArduinoAO(ui.vNumA, False, 0)
                         # operating =0
                 elif mode=="a": #acquire image
-                    from pycromanager import MagellanAcquisition,Core
+                    from pycromanager import Core
                     try:
                         core = Core()
                     #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
@@ -255,7 +255,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         pos_file = self.Pos_file_path
                         print(mda_file,pos_file)
                         acq = acq_pycromanager(mda_file,pos_file)
-                        acq = acq.aquire_image()
+                        acq = acq.acquire_image()
                         print('sucess_acquirment')
                     except:
                         print('false')
