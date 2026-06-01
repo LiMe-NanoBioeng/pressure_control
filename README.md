@@ -32,6 +32,18 @@ To automate HybISS protocol with MiSA, we integrate the MiSA with a selector val
 install [pycromanager](https://pycro-manager.readthedocs.io/en/latest/index.html) for micro-manager, [pymobus](https://pypi.org/project/pymodbus/) for Thermoplate, and [pytest](https://pypi.org/project/pytest/).
 
 
+### Sequece file format
+"P01,200u,400u,0.16;0.022;0.1" are respectively [Valve position],[parameter1&mode],[parameter2&unit],[P,I,D parameters].
+
+[parameter1&mode] The parameter1 is an integer number for the condition. The mode can be p, u, a, or c, which stands for Pa, uL/min, acquisition, or Celsius, respectively.
+50p means 50Pa. 50u meands 50uL/min. 0a means acquire images (specify MDA and position files in advance),500c means 50.0 celsius. 
+[parameter2&unit]: The parameter2 is an integer number for a stop condition. The unit can be u or s, which means uL or seconds.
+[P,I,D parameters]: The P,I,D parameters are paramters for PID control.
+
+example: 
+P01,0u,20s: This means at valve position 01 with a flow rate of 0 uL/min for 20s.
+P03,400c,0s: This means setting temerature of the thermoplate at 40.0c.
+
 
 
 
