@@ -8,7 +8,7 @@ Update: 2020-11-05, kaneko
 """
 
 import time, datetime, os, serial
-from config import *
+from config import config
 conf=config()
 
 """
