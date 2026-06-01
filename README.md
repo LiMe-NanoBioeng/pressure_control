@@ -35,7 +35,7 @@ install [pycromanager](https://pycro-manager.readthedocs.io/en/latest/index.html
 ### Sequece file format
 "P01,200u,400u,0.16;0.022;0.1" are respectively [Valve position],[parameter1&mode],[parameter2&unit],[P,I,D parameters].
 
-[parameter1&mode] The parameter1 is an integer number for the condition. The mode can be p, u, a, or c, which stands for Pa, uL/min, acquisition, or Celsius, respectively.
+[parameter1&mode] The parameter1 is an integer number for the condition. The mode can be p, u, a, or c, which respectively stand for Pa, uL/min, acquisition, or Celsius, respectively.
 50p means 50Pa. 50u meands 50uL/min. 0a means acquire images (specify MDA and position files in advance),500c means 50.0 celsius. 
 [parameter2&unit]: The parameter2 is an integer number for a stop condition. The unit can be u or s, which means uL or seconds.
 [P,I,D parameters]: The P,I,D parameters are paramters for PID control.
