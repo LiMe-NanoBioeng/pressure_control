@@ -37,7 +37,7 @@ install [pycromanager](https://pycro-manager.readthedocs.io/en/latest/index.html
 
 -　[parameter1&mode] The parameter1 is an integer number for the condition. The mode can be p, u, a, or c, which respectively stand for Pa, uL/min, acquisition, or Celsius, respectively.  
 50p means 50Pa. 50u meands 50uL/min. 0a means acquire images (specify MDA and position files in advance),500c means 50.0 celsius.   
--　[parameter2&unit]: The parameter2 is an integer number for a stop condition. The unit can be u or s, which means uL or seconds.  
+-　[parameter2&unit]: The parameter2 is an integer number for a stop condition. The unit can be u or s, which mean uL or seconds.  
 -　[P,I,D parameters]: The P,I,D parameters are paramters for PID control.  
 
 example: 
