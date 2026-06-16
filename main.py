@@ -210,7 +210,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 self.open_single_valve(-1)
                 if ui.MXsII==True:
-                    MXsII.FTWrite(str(valve) + '\r')  # switch the valve
+                    #MXsII.FTWrite(str(valve) + '\r')  # switch the valve
+                    valve_hex = f"P{valve_num:02X}"  #convert 10 to 16 #JM added
+                    MXsII.FTWrite(str(valve_hex) + '\r')  #switch the valve #JM added
+                    
                     # message = 'S' + '\r'[1] + h[ui.reg]
                     # rmessage = MXsII.FTWriteRead(message)
                     # print('Current valve is ' + rmessage)
@@ -345,7 +348,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif terminal[-1]=="u":
             volume=float(terminal[:-1])
             duration=0
-        valve_num = int(valve[-1], 16)
+        #valve_num = int(valve[-1], 16)
+        valve_num = int(valve[1:])  ##JM modified
         ui.termination_mode=terminal[-1]
         ui.mode=mode
 
