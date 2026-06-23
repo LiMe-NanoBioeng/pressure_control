@@ -37,7 +37,7 @@ class acq_pycromanager():
                 for dev in devices:
                     name = dev["Device"]["scalar"]
                     values = dev["Position_um"]["array"]
-                    if name == "TIXYDrive":
+                    if name == "XYStage":
                         x, y = values
                 coords.append((x, y))
             return coords    
