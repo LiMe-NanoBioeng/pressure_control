@@ -25,6 +25,27 @@ resultfilename="result"+timestamp
 homedir=expanduser("~")
 
 # operating=0;
+class SerialWorker(QtCore.QThread):
+    data_ready = QtCore.pyqtSignal(float, object, bool, float)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._running = True
+
+    def run(self):
+        while self._running:
+            status = NI.ArduinoStatusCheck()
+            if status == 'R':
+                t, c, r = NI.ArduinoAI()
+                f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
+                self.data_ready.emit(t, c, r, f)
+            self.msleep(5)
+
+    def stop(self):
+        self._running = False
+        self.wait()
+
+
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         global ui
@@ -56,9 +77,16 @@ class MainWindow(QtWidgets.QMainWindow):
             print("NO flow sensor")
 
 
-        ui.timer= QtCore.QTimer(self)
-        ui.timer.start(30) # update the display every this ms
-        ui.timer.timeout.connect(self.update_figure)
+        self.worker = SerialWorker(self)
+        self.worker.data_ready.connect(self.update_figure)
+        self.worker.start()
+
+        ui.last_temp = -1.0
+        self.thermo_timer = QtCore.QTimer(self)
+        self.thermo_timer.setInterval(2000)
+        self.thermo_timer.timeout.connect(self.update_temperature)
+        if ui.UseThermoPlate:
+            self.thermo_timer.start()
         ui.save = False  # Record data or not
         # valve initialization
         ui.valve_state = [False, False, False, False,
@@ -404,90 +432,82 @@ class MainWindow(QtWidgets.QMainWindow):
     def function_change(self,index):
         ui.reg = index
 
-    def update_figure(self):
-        #print("magnitude: ",ui.magnitude)
-        status = NI.ArduinoStatusCheck()
+    def update_temperature(self):
+        if ui.UseThermoPlate:
+            try:
+                ui.last_temp = float(ui.ThermoPlate.readtemp())
+            except Exception:
+                pass
+
+    def update_figure(self, arduino_time, c, r, f):
         if ui.tuning_is_running:
             self.tuningCore()
-        if status =='R':
-            time, c, r= NI.ArduinoAI()
-            if(conf.FLOW_SENSOR):
-                f = NI.ArduinoI2C()
-            else:
-                f=-1
-            if(ui.UseThermoPlate==False):
-                temp=-1
-            else:
-                
-                temp = float(ui.ThermoPlate.readtemp())
-                
-            #print(temp)
-            # print(c)#for test
-            if r:
-                g = [0.1208, 1.097, -0.1208, 0.0610]
-                h = [-23.75, -223.75, 23.78, -12.5]
-                c[0] = g[ui.reg] * c[0] + h[ui.reg]
-                c[1] = g[ui.reg] * c[1] + h[ui.reg]
-                ui.valveLcd_1.display(c[0])
-                ui.valveLcd_2.display(c[1]) #add JM
-                if(c[0]>0 and ui.magnitude_initialize and ui.initcount<10):
-                    print("now tuning")
-                    print("initsum: ", ui.initsum)
-                    ui.initsum+=c[0]
-                    ui.initcount+=1
-                if(ui.initcount==10):
-                    print("end tuning")
-                    ui.initcount=0
-                    ui.magnitude=ui.initsum/10.0
-                    ui.initsum=0.0
-                    ui.magnitude_initialize=False
-                    NI.ArduinoAO(ui.vNumA,True,0)
-                    print("reset magnitude: ", ui.magnitude)
-                if ui.save == True:
-                    # add Hiroyuki
-                    if ui.count != 0:
-                        ui.dt = np.append(ui.dt, time-ui.t)
-                        ui.CA1 = np.c_[ui.CA1,c]
-                        ui.f = np.append(ui.f, f)
-                        ui.temperature=np.append(ui.temperature,temp)
-                        if ui.count != 1:  # compute integrated flow quantity at t > 1
-                            q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
-                        else:  # compute integrated flow quantity at t=1
-                            q = f*(ui.dt[-1])/60
-                        ui.q = np.append(ui.q, q)
+        temp = ui.last_temp
+        if r:
+            g = [0.1208, 1.097, -0.1208, 0.0610]
+            h = [-23.75, -223.75, 23.78, -12.5]
+            c[0] = g[ui.reg] * c[0] + h[ui.reg]
+            c[1] = g[ui.reg] * c[1] + h[ui.reg]
+            ui.valveLcd_1.display(c[0])
+            ui.valveLcd_2.display(c[1]) #add JM
+            if(c[0]>0 and ui.magnitude_initialize and ui.initcount<10):
+                print("now tuning")
+                print("initsum: ", ui.initsum)
+                ui.initsum+=c[0]
+                ui.initcount+=1
+            if(ui.initcount==10):
+                print("end tuning")
+                ui.initcount=0
+                ui.magnitude=ui.initsum/10.0
+                ui.initsum=0.0
+                ui.magnitude_initialize=False
+                NI.ArduinoAO(ui.vNumA,True,0)
+                print("reset magnitude: ", ui.magnitude)
+            if ui.save == True:
+                # add Hiroyuki
+                if ui.count != 0:
+                    ui.dt = np.append(ui.dt, arduino_time-ui.t)
+                    ui.CA1 = np.c_[ui.CA1,c]
+                    ui.f = np.append(ui.f, f)
+                    ui.temperature=np.append(ui.temperature,temp)
+                    if ui.count != 1:  # compute integrated flow quantity at t > 1
+                        q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
+                    else:  # compute integrated flow quantity at t=1
+                        q = f*(ui.dt[-1])/60
+                    ui.q = np.append(ui.q, q)
 
-                        c = np.append(np.append(
-                            np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q)),float(temp))
-                        self.draw_graph()
+                    c_row = np.append(np.append(
+                        np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q)),float(temp))
+                    self.draw_graph()
 
-                        file = open(ui.Filename, 'a')
-                    else:
-                        ui.t = time  # initial time
-                        ui.dt = time-ui.t
-                        ui.CA1 = c
-                        ui.f = f
-                        ui.q = 0
-                        ui.temperature=temp
-                        file = open(ui.Filename, 'w')
-                        c = np.append(np.append(
-                            np.append(np.append(round(ui.dt, 6), c), float(f)), float(ui.q)),float(temp))
-
-                    ui.count = ui.count + 1
-
-                    for i in c:
-                        jp = (str(i))
-                        file.write(jp)
-                        file.write(',')  # コンマ
-                    file.write('\n')  # 改行コード
-                    file.close()
-
+                    file = open(ui.Filename, 'a')
                 else:
-                    ui.count = 0  # add Hiroyuki
-                ui.flowrate.display(f)
-                # counter Display
-                #
-                if ui.number_of_commands != 0 and len(ui.f) > 4:
-                    self.SequenceControlTime()
+                    ui.t = arduino_time  # initial time
+                    ui.dt = arduino_time-ui.t
+                    ui.CA1 = c
+                    ui.f = f
+                    ui.q = 0
+                    ui.temperature=temp
+                    file = open(ui.Filename, 'w')
+                    c_row = np.append(np.append(
+                        np.append(np.append(round(ui.dt, 6), c), float(f)), float(ui.q)),float(temp))
+
+                ui.count = ui.count + 1
+
+                for i in c_row:
+                    jp = (str(i))
+                    file.write(jp)
+                    file.write(',')  # コンマ
+                file.write('\n')  # 改行コード
+                file.close()
+
+            else:
+                ui.count = 0  # add Hiroyuki
+            ui.flowrate.display(f)
+            # counter Display
+            #
+            if ui.number_of_commands != 0 and len(ui.f) > 4:
+                self.SequenceControlTime()
 
 
     def RunSequence(self):
@@ -675,7 +695,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def abort_program(self):
-        ui.timer.stop()
+        self.worker.stop()
+        self.thermo_timer.stop()
         self.open_single_valve(-1)
         NI.Arduinobye()
         self.close()
