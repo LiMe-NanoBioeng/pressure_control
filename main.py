@@ -148,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #NI.ArduinoDO(10, True)
             NI.ArduinoDO(12, False)
             NI.ArduinoDO(11, True)
-            time.sleep(0.1)
+            time.sleep(1)
             NI.ArduinoDO(11, False)
             print('LSV is open')
         else:
@@ -156,7 +156,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #NI.ArduinoDO(10, False)
             NI.ArduinoDO(12, True)
             NI.ArduinoDO(11, False)
-            time.sleep(0.1)
+            time.sleep(1)
             NI.ArduinoDO(12, False)
             print('LSV is closed')
 
