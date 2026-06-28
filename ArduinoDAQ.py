@@ -7,7 +7,7 @@ Created on Sat Mar  2 22:20:46 2019
 Update: 2020-11-05, kaneko
 """
 
-import time, datetime, os, serial, threading
+import time, datetime, os, serial, threading, contextlib, atexit
 from config import config
 conf=config()
 
@@ -18,8 +18,21 @@ Analog OUT
 Digital Out
 
 """
-ser = serial.Serial(conf.ARDUINO_PORT, 9600, timeout=1)#NEVER CHANGE FROM 9600. Be patient...
+ser = serial.Serial()
+ser.port    = conf.ARDUINO_PORT
+ser.baudrate = 9600
+ser.timeout  = 1  # NEVER CHANGE FROM 9600. Be patient...
+
 _lock = threading.Lock()
+
+@contextlib.contextmanager
+def _serial_lock():
+    with _lock:
+        if not ser.is_open:
+            ser.open()
+        yield
+
+atexit.register(lambda: ser.close() if ser.is_open else None)
 
 class AI():
     def DefFile(FolderName1): # Making Folder for saving outputs
@@ -29,16 +42,16 @@ class AI():
 
         FileName=str(datetime.datetime.
                      today().strftime("%Y%m%d_%H%M%S"))+'_exp'
-        FileName1=FolderName1+"/"+FileName+str(1+len([x for x in os.listdir(FolderName1) if x.endswith(".csv")])).zfill(4)
+        FileName1=FolderName1+"/"+FileName+str(1+len([x for x in os.listdir(FolderName1) if x.endswith(".txt")])).zfill(4)+".txt"
         return(FileName1)
     def ArduinoStatusCheck():
-        with _lock:
+        with _serial_lock():
             ser.write(b'S')
             time.sleep(0.01)
             ser_bytes = ser.readline().decode("utf-8")
         return ser_bytes
     def ArduinoFBStatus(vNumA):
-        with _lock:
+        with _serial_lock():
             ser.write(b'R')
             time.sleep(0.1)
             ser_bytes = ser.readline().decode("utf-8")
@@ -46,15 +59,15 @@ class AI():
     def ArduinoFB(value,vNumA,setpoint,Kp,Ki,Kd):
         if value==True:
             text='FB' + str(vNumA) + ',' + str(setpoint) + ',' + str(Kp) + ',' + str(Ki) + ',' + str(Kd) +'\n'
-            with _lock:
+            with _serial_lock():
                 ser.write(text.encode('utf-8'))
                 time.sleep(0.1)
         else:
-            with _lock:
+            with _serial_lock():
                 ser.write(b'B')
                 time.sleep(0.1)
     def ArduinoI2C():
-        with _lock:
+        with _serial_lock():
             ser.write(b'II\n')
             time.sleep(0.01)
             ser_bytes = ser.readline()
@@ -64,7 +77,7 @@ class AI():
 
     # Arduino Aquire Flowrate Unit
     def ArduinoAFU():
-        with _lock:
+        with _serial_lock():
             ser.write(b'IU\n')
             time.sleep(0.01)
             ser_bytes=ser.readline()
@@ -73,7 +86,7 @@ class AI():
 
     def ArduinoAI():
         c = []
-        with _lock:
+        with _serial_lock():
             ser.write(b'AI6,7\n')
             time.sleep(0.01)
             ser_bytes = ser.readline()
@@ -95,11 +108,11 @@ class AI():
 
     def ArduinoTuning():
         #potentiometer calcuration
-        with _lock:
+        with _serial_lock():
             ser.write(b'AI8\n')
             time.sleep(0.1)
             r1 = ser.readline().decode('utf-8')
-        with _lock:
+        with _serial_lock():
             ser.write(b'AI11\n')
             time.sleep(0.1)
             r2 = ser.readline().decode('utf-8')
@@ -117,31 +130,32 @@ class AI():
             Dout = 'DO' + str(channel) + 'H\n'
         else:
             Dout = 'DO' + str(channel) + 'L\n'
-        with _lock:
+        with _serial_lock():
             ser.write(Dout.encode('utf-8'))
             ser_bytes = ser.readline().decode('utf-8')
         return(ser_bytes.strip())
 
     def ArduinoDP(ch,pulsewidth,duty,number,threshold):
         text = 'DP'+str(ch)+':'+str(int(pulsewidth))+':'+str(duty)+':'+str(number)+'\n'
-        with _lock:
+        with _serial_lock():
             ser.write(text.encode('utf-8'))
     def ArduinoDigitalPulse(ch1,ch2,delay,width,threshold):
         # text = 'PP'+str(ch1)+':'+str(ch2)+','+str(int(delay))+','+str(width)+'\n'
         text = 'PP'+str(ch1)+','+str(ch2)+','+str(int(delay))+','+str(width)+','+'8'+','+str(int(threshold))+'\n' #use for two valves in pulse
-        with _lock:
+        with _serial_lock():
             ser.write(text.encode('utf-8'))
     def ArduinoAO(channel,flag,values):
         if flag == True:
             AO6out = 'AO'+str(channel)+'v'+ str(values) + '\n'
         else:
             AO6out = 'AO'+str(channel)+'v'+'0\n'
-        with _lock:
+        with _serial_lock():
             ser.write(b'B')
             time.sleep(0.1)
             ser.write(AO6out.encode('utf-8'))
 
     #K2 added
     def Arduinobye():
-        ser.close()
+        if ser.is_open:
+            ser.close()
 

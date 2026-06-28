@@ -33,10 +33,13 @@ class ThermoPlate(ModbusSerialClient):
     
     def readtemp(self):
         try:
-            result =self.client.read_holding_registers(address=self.CR_ADDR,count=1,device_id=1)
+            self.client.connect()
+            result = self.client.read_holding_registers(address=self.CR_ADDR, count=1, device_id=1)
+            self.client.close()
             return float(result.registers[0])/10.0
         except:
             print("error")
+            self.client.close()
             return -1
 
 # TP=ThermoPlate()
