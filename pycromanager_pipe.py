@@ -6,13 +6,8 @@ Created on Sun Aug 24 10:32:41 2025
 """
 import os
 import numpy as np
-import pytest
-import time
 import json
-from pycromanager import Acquisition, Core, multi_d_acquisition_events
-from pycromanager.acquisition.acquisition_superclass import AcqAlreadyCompleteException
-import matplotlib.pyplot as plt
-from pycromanager import  test
+from pycromanager import Acquisition, multi_d_acquisition_events
 class acq_pycromanager():
         def __init__(self,mda_file=None,pos_file=None):
             self.MDA_file_path = mda_file
@@ -45,36 +40,46 @@ class acq_pycromanager():
         def acquire_image(self):
             json_load = self.load_acq_setting()
             coords = self.load_positions_from_pos()
-            
-            num_time_points = json_load.get("numFrames")
-            time_interval_s = json_load.get("intervalMs")
-            z_start = json_load.get("sliceZBottomUm", 0)
-            z_end = json_load.get("sliceZTopUm", 0)
-            if z_start > z_end:
-             z_start, z_end = z_end, z_start
-            z_step  = json_load.get("sliceZStepUm", 1)
+
+            use_frames = json_load.get("useFrames", False)
+            num_time_points = json_load.get("numFrames", 1) if use_frames else 1
+            time_interval_s = (json_load.get("intervalMs", 0) / 1000.0) if use_frames else 0
+
+            use_slices = json_load.get("useSlices", False)
+            if use_slices:
+                z_start = json_load.get("sliceZBottomUm", 0)
+                z_end = json_load.get("sliceZTopUm", 0)
+                if z_start > z_end:
+                    z_start, z_end = z_end, z_start
+                z_step = json_load.get("sliceZStepUm", 1)
+            else:
+                z_start = z_end = z_step = None
+
             channels_info = json_load.get("channels", [])
             channel_group = json_load.get("channelGroup", None)
             channels = [ch["config"] for ch in channels_info if ch.get("useChannel", False)]
             channel_exposures_ms = [ch["exposure"] for ch in channels_info if ch.get("useChannel", False)]
+            if not channels:
+                channels = None
+                channel_exposures_ms = None
+
             xy_positions = np.array(coords)
-            root = json_load.get("root",".")
+            root = json_load.get("root", ".")
             prefix = json_load.get("prefix")
-            # save_mode = json_load.get("saveMode")
             print(channels)
             print(channel_exposures_ms)
-            
-            with Acquisition(directory=root, name=prefix) as acq:
+
+            with Acquisition(directory=root, name=prefix, show_display=True) as acq:
                 events = multi_d_acquisition_events(
-                    num_time_points = num_time_points,
-                    time_interval_s = time_interval_s,
-                    channel_group = channel_group,
-                    channels = channels,
-                    channel_exposures_ms = channel_exposures_ms,
-                    xy_positions = xy_positions,
-                    z_start = z_start, 
-                    z_end = z_end,
-                    z_step = z_step,
+                    num_time_points=num_time_points,
+                    time_interval_s=time_interval_s,
+                    channel_group=channel_group,
+                    channels=channels,
+                    channel_exposures_ms=channel_exposures_ms,
+                    xy_positions=xy_positions,
+                    z_start=z_start,
+                    z_end=z_end,
+                    z_step=z_step,
                     order='tpcz')
                 acq.acquire(events)
                    

@@ -3,7 +3,6 @@
 import sys
 import numpy as np
 from ArduinoDAQ import AI as NI
-import tkinter.filedialog
 import os
 from os.path import expanduser
 #import serial
@@ -71,6 +70,24 @@ class SerialWorker(QtCore.QThread):
     def stop(self):
         self._running = False
         self.wait()
+
+
+class AcquisitionWorker(QtCore.QThread):
+    finished = QtCore.pyqtSignal()
+    failed = QtCore.pyqtSignal(str)
+
+    def __init__(self, mda_file, pos_file, parent=None):
+        super().__init__(parent)
+        self._mda_file = mda_file
+        self._pos_file = pos_file
+
+    def run(self):
+        try:
+            acq = acq_pycromanager(self._mda_file, self._pos_file)
+            acq.acquire_image()
+            self.finished.emit()
+        except Exception as e:
+            self.failed.emit(str(e))
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -195,7 +212,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.magnitude_initialize=False
         ui.initsum=0.0
         ui.initcount=0
-        
+        self._acq_running = False
+
 
     def open_single_valve(self, index):
         for i in range(len(ui.valve_state)):
@@ -253,6 +271,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if residual > 0:
                 value=NI.ArduinoFBStatus(ui.vNumA)
                 ui.lcdnumber_1.display(value)
+            elif self._acq_running:
+                pass  # hold until acquisition finishes
             else:
             #if residual <0:
                 # proceeds when the ui.residual time is less than 0 (wh\en negative)
@@ -309,43 +329,27 @@ class MainWindow(QtWidgets.QMainWindow):
                         NI.ArduinoAO(ui.vNumA, False, 0)
                         # operating =0
                 elif mode=="a": #acquire image
-                    from pycromanager import Core
-                    try:
-                        core = Core()
-                    #     # no need to use the normal "with" syntax because these acquisition are cleaned up automatically
-                        # acq = MagellanAcquisition(magellan_acq_index=0)
-                        # acq.await_completion()
-                        mda_file = self.MDA_file_path
-                        pos_file = self.Pos_file_path
-                        self.log_message(f'Acquiring: {mda_file}')
-                        acq = acq_pycromanager(mda_file,pos_file)
-                        acq = acq.acquire_image()
-                        self.log_message('Acquisition complete')
-                    except:
-                        self.log_message('Acquisition failed')
-                        #Mail
-                        # import yagmail
-                        # #personal information
-                        # user = "xxx@gmail.com"
-                        # app_password = "xxx"
-                        # to = "xxx@gmail.com"
-                        # subject = "PLZ help MiSA!"
-                        # body = "microscopy is shutdown"
-                        # yag = yagmail.SMTP(user=user, password=app_password)
-                        # yag.send(to=to, subject=subject, contents=body)
-                        self.close()
+                    mda_file = self.MDA_file_path
+                    pos_file = self.Pos_file_path
+                    self.log_message(f'Acquiring: {mda_file}')
+                    self._acq_running = True
+                    self._acq_worker = AcquisitionWorker(mda_file, pos_file, self)
+                    self._acq_worker.finished.connect(self._on_acq_finished)
+                    self._acq_worker.failed.connect(self._on_acq_failed)
+                    self._acq_worker.start()
                 elif mode=="c": #temperature set
                     if(ui.UseThermoPlate):
                         ui.ThermoPlate.settemp(int(pressure))
 
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
-                # proceedsd ui.command
-                ui.command += 1
-                ui.lcdSeqNumber.display(ui.command)
-                item = ui.tableWidget.item(ui.command, 0)
-                if item is not None:
-                    ui.tableWidget.scrollToItem(item, QtWidgets.QAbstractItemView.PositionAtTop)
+                if mode != "a":
+                    # proceedsd ui.command
+                    ui.command += 1
+                    ui.lcdSeqNumber.display(ui.command)
+                    item = ui.tableWidget.item(ui.command, 0)
+                    if item is not None:
+                        ui.tableWidget.scrollToItem(item, QtWidgets.QAbstractItemView.PositionAtTop)
         else:
             # commands at the end of the sequence (when ui.number_of_commands-ui.command==0)
             if residual > 0:
@@ -431,6 +435,29 @@ class MainWindow(QtWidgets.QMainWindow):
         return 1;
 
 
+    def _on_acq_finished(self):
+        self.log_message('Acquisition complete')
+        self._acq_running = False
+        self._acq_worker.deleteLater()
+        ui.command += 1
+        ui.lcdSeqNumber.display(ui.command)
+        item = ui.tableWidget.item(ui.command, 0)
+        if item is not None:
+            ui.tableWidget.scrollToItem(item, QtWidgets.QAbstractItemView.PositionAtTop)
+
+    def _on_acq_failed(self, msg):
+        self.log_message(f'*** ACQUISITION FAILED: {msg}')
+        self.log_message('Sequence aborted. Waiting for operator action.')
+        self._acq_running = False
+        ui.number_of_commands = 0
+        ui.lcdSeqNumber.display(0)
+        Kp, Ki, Kd = ui.last_pid
+        NI.ArduinoFB(False, ui.vNumA, ui.current_pressure, Kp, Ki, Kd)
+        NI.ArduinoAO(ui.vNumA, False, 0)
+        self.open_single_valve(-1)
+        if ui.save:
+            ui.save = False
+
     def log_message(self, msg):
         print(msg)
 
@@ -451,7 +478,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget.axes3.clear()
 
         ui.graphwidget.axes1 = ui.graphwidget.figure.add_subplot(221, xlabel='Time [s]', ylabel='Pressure [kPa]')
-        ui.graphwidget.axes1.plot(ui.dt, np.transpose(ui.CA1[:ui.Numpre+1]))
+        ca1_arr = np.array(ui.CA1)
+        ui.graphwidget.axes1.plot(ui.dt, ca1_arr[:, :ui.Numpre+1])
         self._add_valve_axis(ui.graphwidget.axes1, ui.dt, ui.valve_nums)
 
         ui.graphwidget.axes2 = ui.graphwidget.figure.add_subplot(222, xlabel='Time [s]', ylabel='Flow rate [μL/min]')
@@ -542,35 +570,34 @@ class MainWindow(QtWidgets.QMainWindow):
             if ui.save == True:
                 # add Hiroyuki
                 if ui.count != 0:
-                    ui.dt = np.append(ui.dt, arduino_time-ui.t)
-                    ui.CA1 = np.c_[ui.CA1,c]
-                    ui.f = np.append(ui.f, f)
-                    ui.temperature=np.append(ui.temperature,temp)
-                    ui.valve_nums = np.append(ui.valve_nums, ui.current_valve_num)
+                    ui.dt.append(arduino_time - ui.t)
+                    ui.CA1.append(list(c))
+                    ui.f.append(float(f))
+                    ui.temperature.append(float(temp))
+                    ui.valve_nums.append(ui.current_valve_num)
                     if ui.count != 1:  # compute integrated flow quantity at t > 1
                         q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
                     else:  # compute integrated flow quantity at t=1
-                        q = f*(ui.dt[-1])/60
-                    ui.q = np.append(ui.q, q)
+                        q = float(f)*(ui.dt[-1])/60
+                    ui.q.append(q)
 
-                    c_row = np.append(np.append(
-                        np.append(np.append(round(ui.dt[-1], 6), c), float(f)), float(q)),
-                        [float(temp), float(ui.current_valve_num)])
-                    self.draw_graph()
+                    c_row = np.array([round(ui.dt[-1], 6)] + list(c) + [float(f), float(q), float(temp), float(ui.current_valve_num)])
+                    if arduino_time - ui.t - ui._last_graph_update >= 1.0:
+                        self.draw_graph()
+                        ui._last_graph_update = arduino_time - ui.t
 
                     file = open(ui.Filename, 'a')
                 else:
                     ui.t = arduino_time  # initial time
-                    ui.dt = arduino_time-ui.t
-                    ui.CA1 = c
-                    ui.f = f
-                    ui.q = 0
-                    ui.temperature=temp
-                    ui.valve_nums = np.array([ui.current_valve_num], dtype=int)
+                    ui.dt = [0.0]
+                    ui.CA1 = [list(c)]
+                    ui.f = [float(f)]
+                    ui.q = [0.0]
+                    ui.temperature = [float(temp)]
+                    ui.valve_nums = [ui.current_valve_num]
+                    ui._last_graph_update = 0.0
                     file = open(ui.Filename, 'w')
-                    c_row = np.append(np.append(
-                        np.append(np.append(round(ui.dt, 6), c), float(f)), float(ui.q)),
-                        [float(temp), float(ui.current_valve_num)])
+                    c_row = np.array([0.0] + list(c) + [float(f), 0.0, float(temp), float(ui.current_valve_num)])
 
                 ui.count = ui.count + 1
 
@@ -595,10 +622,9 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.number_of_commands = ui.tableWidget.rowCount()
 
     def openSeqFile(self):
-        fTyp = [("SequenceFile", "*.txt")]
         iDir = os.path.abspath(os.path.dirname(__file__))
-        file_name = tkinter.filedialog.askopenfilename(
-            filetypes=fTyp, initialdir=iDir)
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Open sequence file", iDir, "Sequence files (*.txt);;All files (*.*)")
         if not file_name:
             return
         self.log_message(f"Sequence file: {file_name}")
@@ -633,17 +659,21 @@ class MainWindow(QtWidgets.QMainWindow):
             self.log_message(f"Failed to open log file: {e}")
 
     def openMDAFile(self):
-        fTyp = [("MultiDimensionalAcquisitionFile", "*.txt")]
         iDir = os.path.abspath(os.path.dirname(__file__))
-        self.MDA_file_path = tkinter.filedialog.askopenfilename(
-            filetypes=fTyp, initialdir=iDir)
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Open MDA file", iDir, "MDA files (*.txt);;All files (*.*)")
+        if not file_name:
+            return
+        self.MDA_file_path = file_name
         self.log_message(f"MDA file: {self.MDA_file_path}")
 
     def openPosFile(self):
-        fTyp = [("PositionFile","*.pos")]
         iDir = os.path.abspath(os.path.dirname(__file__))
-        self.Pos_file_path = tkinter.filedialog.askopenfilename(
-            filetypes=fTyp, initialdir=iDir)
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Open position file", iDir, "Position files (*.pos);;All files (*.*)")
+        if not file_name:
+            return
+        self.Pos_file_path = file_name
         self.log_message(f"Position file: {self.Pos_file_path}")
 
     def tuning_resistanse_rate(self): # click tuning event
@@ -804,7 +834,17 @@ class MainWindow(QtWidgets.QMainWindow):
         event.accept()
 
     def abort_program(self):
-        self.close()
+        self.log_message('Aborted. Valves closed, pressure off. Waiting for operator action.')
+        if self._acq_running:
+            self._acq_running = False
+        ui.number_of_commands = 0
+        ui.lcdSeqNumber.display(0)
+        Kp, Ki, Kd = ui.last_pid
+        NI.ArduinoFB(False, ui.vNumA, ui.current_pressure, Kp, Ki, Kd)
+        NI.ArduinoAO(ui.vNumA, False, 0)
+        self.open_single_valve(-1)
+        if ui.save:
+            ui.save = False
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
