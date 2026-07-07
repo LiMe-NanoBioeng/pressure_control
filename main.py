@@ -840,7 +840,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.number_of_commands = 0
         ui.lcdSeqNumber.display(0)
         Kp, Ki, Kd = ui.last_pid
-        NI.ArduinoFB(False, ui.vNumA, ui.current_pressure, Kp, Ki, Kd)
+        current_pressure = getattr(ui, 'current_pressure', 0)
+        NI.ArduinoFB(False, ui.vNumA, current_pressure, Kp, Ki, Kd)
         NI.ArduinoAO(ui.vNumA, False, 0)
         self.open_single_valve(-1)
         if ui.save:
