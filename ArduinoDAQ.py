@@ -48,7 +48,7 @@ class AI():
         with _serial_lock():
             ser.write(b'S')
             time.sleep(0.01)
-            ser_bytes = ser.readline().decode("utf-8")
+            ser_bytes = ser.read(1).decode("utf-8")  # Arduino sends 'R' with no newline
         return ser_bytes
     def ArduinoFBStatus(vNumA):
         with _serial_lock():
@@ -150,9 +150,13 @@ class AI():
         else:
             AO6out = 'AO'+str(channel)+'v'+'0\n'
         with _serial_lock():
-            ser.write(b'B')
-            time.sleep(0.1)
             ser.write(AO6out.encode('utf-8'))
+
+    def ArduinoReset():
+        with _serial_lock():
+            ser.write(b'B')
+            time.sleep(0.5)
+            ser.reset_input_buffer()
 
     #K2 added
     def Arduinobye():

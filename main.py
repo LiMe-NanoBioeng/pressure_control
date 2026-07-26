@@ -57,15 +57,23 @@ class SerialWorker(QtCore.QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._running = True
+        self._paused = False
 
     def run(self):
         while self._running:
-            status = NI.ArduinoStatusCheck()
-            if status == 'R':
-                t, c, r = NI.ArduinoAI()
-                f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
-                self.data_ready.emit(t, c, r, f)
+            if not self._paused:
+                status = NI.ArduinoStatusCheck()
+                if status == 'R':
+                    t, c, r = NI.ArduinoAI()
+                    f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
+                    self.data_ready.emit(t, c, r, f)
             self.msleep(5)
+
+    def pause(self):
+        self._paused = True
+
+    def resume(self):
+        self._paused = False
 
     def stop(self):
         self._running = False
@@ -114,6 +122,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget = MatplotlibWidget(ui.centralwidget,
                                           xlim=None, ylim=None, xscale='linear', yscale='linear',
                                           width=12, height=5, dpi=95)
+
+        NI.ArduinoReset()
 
         if(conf.FLOW_SENSOR):
             unit=NI.ArduinoAFU()
@@ -289,12 +299,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 #close valveFile ~/github/pressure_control/main.py:387, in MainWindow.update_figure(self)
 
+                self.worker.pause()
+
                 self.open_single_valve(-1)
                 if ui.MXsII==True:
                     #MXsII.FTWrite(str(valve) + '\r')  # switch the valve
                     valve_hex = f"P{valve_num:02X}"  #convert 10 to 16 #JM added
                     MXsII.FTWrite(str(valve_hex) + '\r')  #switch the valve #JM added
-                    
+
                     # message = 'S' + '\r'[1] + h[ui.reg]
                     # rmessage = MXsII.FTWriteRead(message)
                     # print('Current valve is ' + rmessage)
@@ -341,6 +353,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     if(ui.UseThermoPlate):
                         ui.ThermoPlate.settemp(int(pressure))
 
+                self.worker.resume()
+
                 ui.start = time.time()
                 ui.qstart=ui.q[-1]
                 if mode != "a":
@@ -358,6 +372,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             elif ui.number_of_commands != 0:
             #if ui.number_of_commands !=0 and residual <0 :
+                self.worker.pause()
                 NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
                 NI.ArduinoAO(ui.vNumA, False, 0)
                 value=NI.ArduinoFBStatus(ui.vNumA)
@@ -368,6 +383,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.save = not ui.save  # stop saving and displaying
                 ui.lcdSeqNumber.display(ui.number_of_commands)
                 time.sleep(1)
+                self.worker.resume()
 
     def DigitalPulse(self):
         ui.mode='Pulse'
@@ -473,9 +489,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def draw_graph(self): #update JM
         ui.graphwidget.figure.clear()
-        ui.graphwidget.axes1.clear()
-        ui.graphwidget.axes2.clear()
-        ui.graphwidget.axes3.clear()
 
         ui.graphwidget.axes1 = ui.graphwidget.figure.add_subplot(221, xlabel='Time [s]', ylabel='Pressure [kPa]')
         ca1_arr = np.array(ui.CA1)
