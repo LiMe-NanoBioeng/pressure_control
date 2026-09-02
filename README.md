@@ -39,8 +39,13 @@ install [pycromanager](https://pycro-manager.readthedocs.io/en/latest/index.html
 50p means 50Pa. 50u meands 50uL/min. 0a means acquire images (specify MDA and position files in advance),500c means 50.0 celsius.   
 -　[parameter2&unit]: The parameter2 is an integer number for a stop condition. The unit can be u or s, which mean uL or seconds.  
 -　[P,I,D parameters]: The P,I,D parameters are paramters for PID control.  
+-　[stability watchdog] (optional, requires the P,I,D field to be present): "\<a|l\>\<tolerance\>per[,\<duration\>s]". Only applies to 'u' mode steps. 'a' aborts the sequence (closes valves, stops PID, pops up a message) if the flow rate stays outside +/-tolerance% of the setpoint for longer than duration seconds; 'l' just logs a warning instead of aborting. The watchdog arms once flow first enters the tolerance band, so filling an empty line doesn't trigger it (default 120s allowed to first reach the band). Omit entirely to leave the watchdog off (default, and the only behavior for all pre-existing sequence files).
+
+### Sequence-wide pressure limit (optional)
+Put a line like "a30kPa,60s" as the very **first line** of the file, before any step, to abort (or "l30kPa,60s" to just log) if pressure stays above 30 kPa for a continuous 60s at any point in the run — regardless of which step or mode is active. Protects the sample from prolonged high-pressure exposure. Omit this line entirely to leave it disabled.
 
 example: 
+-　P01,30u,50u,0.16;0.022;0.1,a50per,10s: flow rate of 30 uL/min until 50 uL has been pumped; abort if flow strays outside +/-50% of 30 uL/min for more than 10s (after first reaching that band).  
 -　P01,0u,20s: This means at valve position 01 with a flow rate of 0 uL/min for 20s.  
 -　P03,400c,0s: This means setting temerature of the thermoplate at 40.0c.  
 

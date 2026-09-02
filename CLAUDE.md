@@ -36,6 +36,7 @@ All COM ports and hardware flags are set in `config.py`:
 - `THERMO_PLATE_PORT` — ThermoPlate via Modbus RTU (9600 baud)
 - `THERMO_PLATE`, `FLOW_SENSOR`, `SELECT_VALVE` — booleans to enable/disable peripherals
 - `REG_TYPE` — pressure regulator type (0=ITV0010, 1=ITV0030, 2=ITV0090, 3=EVL1050)
+- `SLACK_WEBHOOK_URL` / `SLACK_BOT_TOKEN` / `SLACK_CHANNEL` — read from `slack.txt` (`KEY=value` per line, next to `config.py`; `_load_slack_config`), which is gitignored and kept out of this public repo. Missing file/keys default to `''` (disabled). `log_message()` calls `_notify_slack()` for every line, so Slack mirrors the on-screen log and the text log file 1:1 -- valve toggles, step start/complete, aborts, everything -- threaded into one message-per-run when a bot token + channel are set (`_start_slack_thread`, called at the top of `RunSequence()`), else falls back to plain (unthreaded) webhook posts.
 
 ## Architecture
 
@@ -55,13 +56,16 @@ All COM ports and hardware flags are set in `config.py`:
 Sequence files (in `seqfiles/`) are plain text, one command per line:
 
 ```
-<valve>,<value><mode>,<stop><unit>[,<Kp>;<Ki>;<Kd>]
+<valve>,<value><mode>,<stop><unit>[,<Kp>;<Ki>;<Kd>[,<a|l><tolerance>per[,<duration>s]]]
 ```
 
 - `<valve>`: `P01`–`P0A` (hex, P=pressure-driven) or `A04` (acquire at this valve position)
 - `<mode>`: `u` = µL/min flow rate, `p` = raw Pa pressure (open-loop), `a` = acquire images, `c` = Celsius (×10 for ThermoPlate)
 - `<unit>`: `s` = seconds (time-based stop), `u` = µL (volume-based stop)
 - PID parameters are optional per-step overrides; defaults are (0.1, 0.001, 0.1)
+- Stability watchdog (optional, `u` mode only, requires the PID field to be present): `<a|l><tolerance>per[,<duration>s]`, e.g. `a50per,10s`. `a` aborts the sequence (via `abort_program()` + a blocking `QMessageBox`) if flow strays outside ±`tolerance`% of setpoint for more than `duration` seconds (default 10s); `l` only logs a warning (`_flag_instability`, dedup'd so it won't spam). The watchdog only arms once flow first enters the tolerance band — so a dry line filling up doesn't trip it — within `STABILITY_ARM_TIMEOUT_S` (120s) of opening the valve, else it flags as if unstable (blocked/empty line). Omitting the field disables the watchdog for that step (default; all pre-existing sequence files are unaffected). See `seqfiles/priming_30uLmin.txt` for an example.
+
+An optional **first line** in the file, before any step, sets a sequence-wide pressure ceiling (parsed in `openSeqFile`, checked every tick in `_check_pressure_limit` regardless of which step/mode is active): `<a|l><kPa value>kPa,<duration>s`, e.g. `a30kPa,60s` aborts if channel-1 pressure (`valveLcd_1`, the channel the sequence engine drives) stays above 30 kPa for a continuous 60s — protects the sample from prolonged high-pressure exposure. Distinguished from a normal step because valve tokens always start with uppercase `P`/`A`. Omit to leave disabled (default).
 
 ### Sequence State Machine
 
@@ -70,6 +74,10 @@ Sequence files (in `seqfiles/`) are plain text, one command per line:
 ### Data Recording
 
 When recording is active (`ui.save = True`), each timer tick appends a CSV row: `[elapsed_time, pressure_ch1, pressure_ch2, flow_rate, cumulative_volume]`. Files are saved to `~/YYYYMMDD/YYYYMMDD_HHMMSSNNNN.csv` via `ArduinoDAQ.AI.DefFile()`.
+
+### Event Log File
+
+`log_message()` prints to the on-screen log (via `_StdoutRedirect`), mirrors every line to a text file (`_write_log_file`), and posts every line to Slack (`_notify_slack`). A fresh log file is created each time `RunSequence()` starts (`_new_log_filepath`): `<same folder as the current exp CSV, i.e. os.path.dirname(ui.Filename)>\YYYYMMDDHHMMMiSA.log.txt`. If recording hasn't been started yet (`ui.Filename` still the `' '` placeholder) or that folder can't be written to, it falls back to `ui.Foldername` and logs a warning. `ui.log_filepath` stays pointed at that run's file until the next `RunSequence()` call.
 
 ### Pressure Conversion
 

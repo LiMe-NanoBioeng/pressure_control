@@ -46,10 +46,12 @@ class AI():
         return(FileName1)
     def ArduinoStatusCheck():
         with _serial_lock():
+            ser.reset_input_buffer()  # flush stale bytes so we read only the fresh reply
             ser.write(b'S')
             time.sleep(0.01)
-            ser_bytes = ser.read(1).decode("utf-8")  # Arduino sends 'R' with no newline
-        return ser_bytes
+            waiting = max(ser.in_waiting, 1)
+            ser_bytes = ser.read(waiting).decode("utf-8", errors='ignore')
+        return 'R' if 'R' in ser_bytes else ''
     def ArduinoFBStatus(vNumA):
         with _serial_lock():
             ser.write(b'R')
@@ -85,26 +87,34 @@ class AI():
         return(str(ser_bytes))
 
     def ArduinoAI():
-        c = []
         with _serial_lock():
+            ser.reset_input_buffer()
             ser.write(b'AI6,7\n')
             time.sleep(0.01)
             ser_bytes = ser.readline()
-        ser_bytes = ser_bytes.decode('utf-8').strip()
-        decoded_bytes = ser_bytes
         t = time.time()
-        c=decoded_bytes.split(",")
+        try:
+            text = ser_bytes.decode('utf-8', errors='ignore').strip()
+            text = text.replace('R', '')  # strip stray status bytes
+            fields = [f for f in text.split(',') if f]  # drop empty fields
+            if not fields:
+                return (t, [0, 0], False)
+            c = [float(f) for f in fields]
+            return (t, c, True)
+        except Exception:
+            return (t, [0, 0], False)
 
-        if c[0] == '':  # if faied in obtaining data
-            c[0] = 0
-            result= False
-        else:
-            result=True
-        for i in range(len(c)): # range(X):Xはチャンネル数
-            if(c[i][0]=="R"):
-                c[i]=c[i][1:len(c[i])-1]
-            c[i] = float(c[i]) # listをfloat形式に変換
-        return(t,c,result)
+    def ArduinoAI8():
+        with _serial_lock():
+            ser.reset_input_buffer()
+            ser.write(b'AI8\n')
+            time.sleep(0.01)
+            ser_bytes = ser.readline()
+        try:
+            text = ser_bytes.decode('utf-8', errors='ignore').strip().replace('R', '')
+            return float(text)
+        except Exception:
+            return -1.0
 
     def ArduinoTuning():
         #potentiometer calcuration

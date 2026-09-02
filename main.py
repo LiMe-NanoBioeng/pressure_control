@@ -71,6 +71,8 @@ class _StdoutRedirect:
 
 class SerialWorker(QtCore.QThread):
     data_ready = QtCore.pyqtSignal(float, object, bool, float)
+    error      = QtCore.pyqtSignal(str)
+    ai8_ready  = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -80,12 +82,17 @@ class SerialWorker(QtCore.QThread):
     def run(self):
         while self._running:
             if not self._paused:
-                status = NI.ArduinoStatusCheck()
-                if status == 'R':
-                    t, c, r = NI.ArduinoAI()
-                    f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
-                    self.data_ready.emit(t, c, r, f)
-            self.msleep(5)
+                try:
+                    status = NI.ArduinoStatusCheck()
+                    if status == 'R':
+                        t, c, r = NI.ArduinoAI()
+                        f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
+                        self.data_ready.emit(t, c, r, f)
+                        ai8 = NI.ArduinoAI8()
+                        self.ai8_ready.emit(ai8)
+                except Exception as e:
+                    self.error.emit(str(e))
+            self.msleep(20 if conf.FLOW_SENSOR else 30)
 
     def pause(self):
         self._paused = True
@@ -133,6 +140,11 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.pressure_limit_duration_s = None
         ui.pressure_limit_since = None     # timestamp pressure first went above threshold, or None
         ui.pressure_limit_notified = False # guards against log spam in 'l' mode
+        ui.ai8_limit_mode = None           # 'a'=abort, 'l'=log-only; None = disabled
+        ui.ai8_limit_value = None          # raw AI8 threshold
+        ui.ai8_limit_duration_s = None
+        ui.ai8_limit_since = None          # timestamp AI8 first exceeded threshold, or None
+        ui.ai8_limit_notified = False
         ui.log_filepath = None # text mirror of the on-screen log, set per RunSequence() call
         ui.seq_file_name = ''  # basename of the loaded sequence file, set by openSeqFile()
         ui.seq_file_path = ''  # full path of the loaded sequence file, set by openSeqFile()
@@ -175,6 +187,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.worker = SerialWorker(self)
         self.worker.data_ready.connect(self.update_figure)
+        self.worker.ai8_ready.connect(self._on_ai8)
         self.worker.start()
 
         ui.last_temp = -1.0
@@ -558,6 +571,29 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             ui.pressure_limit_since = None
             ui.pressure_limit_notified = False
+
+    def _check_ai8_limit(self, value):
+        if ui.number_of_commands == 0 or ui.ai8_limit_mode not in ('a', 'l'):
+            return
+        now = time.time()
+        if value > ui.ai8_limit_value:
+            if ui.ai8_limit_since is None:
+                ui.ai8_limit_since = now
+            elif now - ui.ai8_limit_since > ui.ai8_limit_duration_s:
+                reason = (
+                    f"AI8 has stayed above {ui.ai8_limit_value:g} for over "
+                    f"{ui.ai8_limit_duration_s:.0f}s (current reading {value:g})."
+                )
+                if ui.ai8_limit_mode == 'a':
+                    self.log_message(f"*** AI8 LIMIT (ABORT): {reason}")
+                    self.abort_program()
+                    QtWidgets.QMessageBox.critical(self, "Sequence aborted", reason)
+                elif not ui.ai8_limit_notified:
+                    self.log_message(f"*** AI8 LIMIT (log only): {reason}")
+                    ui.ai8_limit_notified = True
+        else:
+            ui.ai8_limit_since = None
+            ui.ai8_limit_notified = False
 
     def _update_flowrate_color(self, flow):
         """Turns the flowrate LCD red when the reading is outside the tolerance
@@ -1034,6 +1070,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def function_change(self,index):
         ui.reg = index
 
+    def _on_ai8(self, value):
+        self.setWindowTitle(f'MiSA   |   AI8 = {value:g}')
+        self._check_ai8_limit(value)
+
     def update_temperature(self):
         if ui.UseThermoPlate:
             try:
@@ -1137,6 +1177,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.stability_notified = False
         ui.pressure_limit_since = None
         ui.pressure_limit_notified = False
+        ui.ai8_limit_since = None
+        ui.ai8_limit_notified = False
         self._block_system_idle()
         self._start_slack_thread()
         path, error = self._new_log_filepath()
@@ -1170,6 +1212,9 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.pressure_limit_mode = None
         ui.pressure_limit_kpa = None
         ui.pressure_limit_duration_s = None
+        ui.ai8_limit_mode = None
+        ui.ai8_limit_value = None
+        ui.ai8_limit_duration_s = None
         ui.slack_mention_user_id = ''
         while lines:
             candidate = lines[0].strip()
@@ -1186,6 +1231,23 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.log_message(
                             f"Pressure limit ({'abort' if letter == 'a' else 'log only'}): "
                             f">{ui.pressure_limit_kpa:.1f} kPa for {ui.pressure_limit_duration_s:.0f}s"
+                        )
+                        continue
+                except ValueError:
+                    pass  # not a valid header; fall through
+            if candidate[:1] in ('a', 'l') and 'AI8' in candidate:
+                letter, rest = candidate[0], candidate[1:]
+                try:
+                    value_part, dur_part = rest.split(',', 1)
+                    dur_part = dur_part.strip()
+                    if value_part.endswith('AI8') and dur_part.endswith('s'):
+                        ui.ai8_limit_mode = letter
+                        ui.ai8_limit_value = float(value_part[:-3])
+                        ui.ai8_limit_duration_s = float(dur_part[:-1])
+                        lines = lines[1:]
+                        self.log_message(
+                            f"AI8 limit ({'abort' if letter == 'a' else 'log only'}): "
+                            f">{ui.ai8_limit_value:g} for {ui.ai8_limit_duration_s:.0f}s"
                         )
                         continue
                 except ValueError:
