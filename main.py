@@ -16,8 +16,26 @@ from MXsII import MXsIIt as MXsII
 from ThermoPlate import ThermoPlate
 from pycromanager_pipe import acq_pycromanager
 import datetime
+import json
+import urllib.request
+import urllib.parse
+import threading
+import ctypes
+from collections import deque
 from config import config
 conf=config()
+
+# Prevent Windows from sleeping or auto-restarting for updates while running
+_ES_CONTINUOUS       = 0x80000000
+_ES_SYSTEM_REQUIRED  = 0x00000001
+_ES_DISPLAY_REQUIRED = 0x00000002
+
+# Flow-stability watchdog (opt-in per sequence step via an optional 5th field,
+# see read_seq_commands / README "Sequence file format")
+STABILITY_SUSTAIN_S = 10.0        # length of the trailing window judged for instability
+STABILITY_ARM_TIMEOUT_S = 120.0   # seconds allowed to first reach the tolerance band (e.g. filling a dry line)
+STABILITY_OCCUPANCY = 0.7         # fraction of the trailing window that must be out-of-band to flag;
+                                   # tolerates brief spikes/troughs the PID corrects on its own
 
 now=datetime.datetime.now()
 timestamp=now.strftime("%Y%m%d%H%M%S")
@@ -103,12 +121,32 @@ class MainWindow(QtWidgets.QMainWindow):
         global ui
         super(MainWindow, self).__init__(parent=parent)
         ui = Ui_Droplet_formation()
+        # must be set before any self.log_message() call (e.g. open_single_valve() below)
+        ui.stability_mode = None      # 'a'=abort, 'l'=log-only; None = watchdog disabled for current step
+        ui.stability_tolerance = None # fraction (e.g. 0.5=+/-50%)
+        ui.stability_sustain_s = STABILITY_SUSTAIN_S # seconds out-of-band before flagging, per-step override
+        ui.stability_armed = False    # becomes True once flow first enters the tolerance band
+        ui.stability_history = deque() # (timestamp, in_band) samples over the trailing window, once armed
+        ui.stability_notified = False # guards against log spam in 'l' mode / while unarmed
+        ui.pressure_limit_mode = None      # 'a'=abort, 'l'=log-only; None = disabled (no header line)
+        ui.pressure_limit_kpa = None       # threshold, parsed from the sequence file's first line
+        ui.pressure_limit_duration_s = None
+        ui.pressure_limit_since = None     # timestamp pressure first went above threshold, or None
+        ui.pressure_limit_notified = False # guards against log spam in 'l' mode
+        ui.log_filepath = None # text mirror of the on-screen log, set per RunSequence() call
+        ui.seq_file_name = ''  # basename of the loaded sequence file, set by openSeqFile()
+        ui.seq_file_path = ''  # full path of the loaded sequence file, set by openSeqFile()
+        ui.slack_mention_user_id = '' # optional Slack user ID header line, set by openSeqFile()
+        ui.send_step_image = False # per-step opt-in for a Slack screenshot, set by read_seq_commands()
+        ui.slack_thread_ts = None # parent message ts for this run's Slack thread, set by RunSequence()
+        ui.number_of_commands = 0 # number of commands; re-set to 0 again below in its original spot
         ui.MXsII=conf.SELECT_VALVE  # selector valve True/False  ##change for HybISS version
         ui.UseThermoPlate=conf.THERMO_PLATE
         ui.t = [] # time
         ui.dt = [] # time difference
         ui.c = [] # voltage of pressure
         ui.f = [] # flow rate
+        ui.target_flow = [] # flow rate setpoint (0 when not in closed-loop 'u' mode)
         ui.valve_nums = np.array([], dtype=int) # valve number per sample
         ui.voltage = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] # voltage to pressre regulator
         ui.setupUi(self)
@@ -127,9 +165,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if(conf.FLOW_SENSOR):
             unit=NI.ArduinoAFU()
-            if(unit!=""):
-                ui.unit_display.setText(NI.ArduinoAFU())
+            ui.base_flow_unit = unit if unit != "" else "uL/min"
+            ui.unit_display.setText(ui.base_flow_unit)
         else:
+            ui.base_flow_unit = "uL/min"
             ui.unit_display.setText("(no flow sensor)")
             self.log_message("No flow sensor")
 
@@ -218,6 +257,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MDA_file_path = None
         self.Pos_file_path = None
         ui.ThermoPlate = ThermoPlate()
+        if ui.UseThermoPlate:
+            try:
+                ui.ThermoPlate.settemp(250)  # 250 = 25.0°C
+            except Exception:
+                pass
         ui.magnitude=0.1
         ui.magnitude_initialize=False
         ui.initsum=0.0
@@ -281,11 +325,25 @@ class MainWindow(QtWidgets.QMainWindow):
             if residual > 0:
                 value=NI.ArduinoFBStatus(ui.vNumA)
                 ui.lcdnumber_1.display(value)
+                self._check_flow_stability()
             elif self._acq_running:
                 pass  # hold until acquisition finishes
             else:
             #if residual <0:
                 # proceeds when the ui.residual time is less than 0 (wh\en negative)
+                if ui.command > 0:  # a previous step in this run actually finished
+                    finished_text = ui.tableWidget.item(ui.command - 1, 0).text().strip()
+                    self.log_message(f"Step {ui.command}/{ui.number_of_commands} complete: {finished_text}")
+                    if ui.send_step_image:
+                        self._upload_slack_image(
+                            self._grab_window_png(), f"step_{ui.command}.png", ui.slack_thread_ts,
+                            f"Step {ui.command}/{ui.number_of_commands} complete")
+                starting_text = ui.tableWidget.item(ui.command, 0).text().strip()
+                remaining_s = self._estimate_remaining_time_s(ui.command)
+                self.log_message(
+                    f"[START] Step {ui.command + 1}/{ui.number_of_commands} starting: {starting_text} "
+                    f"| est. remaining: {self._format_duration(remaining_s)}"
+                )
                 mode, valve, valve_num, pressure, duration,volume = self.read_seq_commands(
                     ui.command)
                 ui.current_valve=valve
@@ -294,7 +352,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.duration = duration
                 ui.volume=volume
                 # ui.current_duration=duration
-                ui.voltage[valve_num-1] = pressure  # register pressure value
+                ui.voltage[valve_num-1] = int(pressure)  # register pressure value; ui.voltage feeds QSlider.setValue(), which requires int
 
 
                 #close valveFile ~/github/pressure_control/main.py:387, in MainWindow.update_figure(self)
@@ -335,6 +393,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     if pressure >0:
                         self.open_single_valve(valve_num)
                         NI.ArduinoFB(True,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
+                        ui.stability_armed = False
+                        ui.stability_history.clear()
+                        ui.stability_notified = False
                         # operating=1
                     else:
                         NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
@@ -369,9 +430,20 @@ class MainWindow(QtWidgets.QMainWindow):
             if residual > 0:
                 value=NI.ArduinoFBStatus(ui.vNumA)
                 ui.lcdnumber_1.display(value)
+                self._check_flow_stability()
 
             elif ui.number_of_commands != 0:
             #if ui.number_of_commands !=0 and residual <0 :
+                finished_text = ui.tableWidget.item(ui.command - 1, 0).text().strip()
+                self.log_message(f"Step {ui.command}/{ui.number_of_commands} complete: {finished_text}")
+                if ui.send_step_image:
+                    self._upload_slack_image(
+                        self._grab_window_png(), f"step_{ui.command}.png", ui.slack_thread_ts,
+                        f"Step {ui.command}/{ui.number_of_commands} complete")
+                self.log_message(f"All {ui.number_of_commands} sequence steps have completed.")
+                self._unblock_system_idle()
+                self._upload_slack_image(
+                    self._grab_window_png(), "complete.png", ui.slack_thread_ts, "Sequence complete")
                 self.worker.pause()
                 NI.ArduinoFB(False,ui.vNumA,ui.current_pressure,Kp,Ki,Kd)
                 NI.ArduinoAO(ui.vNumA, False, 0)
@@ -384,6 +456,145 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.lcdSeqNumber.display(ui.number_of_commands)
                 time.sleep(1)
                 self.worker.resume()
+
+    def _check_flow_stability(self):
+        """Opt-in watchdog for closed-loop ('u' mode) steps: see the stability
+        spec parsed in read_seq_commands (<a|l><tolerance>per[,<duration>s]).
+        Arms once flow first enters the tolerance band (allowing time to fill
+        a dry line). Once armed, flags if flow has spent at least
+        STABILITY_OCCUPANCY of the trailing stability_sustain_s window outside
+        the band -- a rolling occupancy check, not a single unbroken streak, so
+        chattering/oscillating flow that only briefly grazes the band can't
+        evade detection, while an isolated spike/trough the PID corrects on
+        its own (contributing only a sliver of "bad" time) won't false-trigger.
+        """
+        if ui.command <= 0:  # no step in this run has started yet
+            return
+        if ui.mode != "u" or ui.current_pressure <= 0:
+            return
+        if ui.stability_mode not in ('a', 'l'):
+            return
+        if not ui.f:
+            return
+        setpoint = ui.current_pressure
+        flow = ui.f[-1]
+        now = time.time()
+        lower = setpoint * (1 - ui.stability_tolerance)
+        upper = setpoint * (1 + ui.stability_tolerance)
+        in_band = lower <= flow <= upper
+
+        if not ui.stability_armed:
+            if in_band:
+                ui.stability_armed = True
+                ui.stability_history.clear()
+                ui.stability_history.append((now, in_band))
+                ui.stability_notified = False
+            elif now - ui.start > STABILITY_ARM_TIMEOUT_S:
+                cmd_text = ui.tableWidget.item(ui.command - 1, 0).text().strip()
+                self._flag_instability(
+                    f"{cmd_text}: no flow detected at P{ui.current_valve_num:02X} within "
+                    f"{STABILITY_ARM_TIMEOUT_S:.0f}s of opening the valve "
+                    f"(set flow rate {setpoint:.1f} uL/min, actual flow rate {flow:.1f} uL/min). "
+                    "Line may be blocked or empty."
+                )
+            return
+
+        history = ui.stability_history
+        history.append((now, in_band))
+        window_start = now - ui.stability_sustain_s
+        while len(history) > 1 and history[1][0] <= window_start:
+            history.popleft()
+        if history[0][0] > window_start:
+            return  # not enough history yet to judge a full window
+
+        bad_time = sum(
+            t1 - t0 for (t0, was_in_band), (t1, _) in zip(history, list(history)[1:])
+            if not was_in_band
+        )
+        if bad_time >= STABILITY_OCCUPANCY * ui.stability_sustain_s:
+            cmd_text = ui.tableWidget.item(ui.command - 1, 0).text().strip()
+            self._flag_instability(
+                f"{cmd_text}: flow at P{ui.current_valve_num:02X} outside +/-{ui.stability_tolerance*100:.0f}% "
+                f"band for {bad_time:.1f} of the last {ui.stability_sustain_s:.0f}s "
+                f"(set flow rate {setpoint:.1f} uL/min, actual flow rate {flow:.1f} uL/min)."
+            )
+        else:
+            ui.stability_notified = False
+
+    def _flag_instability(self, reason):
+        if ui.stability_mode == 'a':
+            self.log_message(f"*** FLOW INSTABILITY (ABORT): {reason}")
+            self.abort_program()
+            QtWidgets.QMessageBox.critical(self, "Sequence aborted", reason)
+        elif not ui.stability_notified:
+            self.log_message(f"*** FLOW INSTABILITY (log only): {reason}")
+            ui.stability_notified = True
+
+    def _check_pressure_limit(self, pressure_kpa):
+        """Sequence-wide safety ceiling, parsed from an optional header line
+        in the sequence file (see openSeqFile): aborts (or logs) if pressure
+        stays above the threshold for a continuous stretch longer than the
+        configured duration, regardless of which step/mode is active --
+        protects the sample from prolonged high-pressure exposure."""
+        if ui.number_of_commands == 0 or ui.pressure_limit_mode not in ('a', 'l'):
+            return
+        now = time.time()
+        if pressure_kpa > ui.pressure_limit_kpa:
+            if ui.pressure_limit_since is None:
+                ui.pressure_limit_since = now
+            elif now - ui.pressure_limit_since > ui.pressure_limit_duration_s:
+                reason = (
+                    f"Pressure at P{ui.current_valve_num:02X} has stayed above "
+                    f"{ui.pressure_limit_kpa:.1f} kPa for over {ui.pressure_limit_duration_s:.0f}s "
+                    f"(current reading {pressure_kpa:.1f} kPa)."
+                )
+                if ui.pressure_limit_mode == 'a':
+                    self.log_message(f"*** PRESSURE LIMIT (ABORT): {reason}")
+                    self.abort_program()
+                    QtWidgets.QMessageBox.critical(self, "Sequence aborted", reason)
+                elif not ui.pressure_limit_notified:
+                    self.log_message(f"*** PRESSURE LIMIT (log only): {reason}")
+                    ui.pressure_limit_notified = True
+        else:
+            ui.pressure_limit_since = None
+            ui.pressure_limit_notified = False
+
+    def _update_flowrate_color(self, flow):
+        """Turns the flowrate LCD red when the reading is outside the tolerance
+        band configured for the current step (same band _check_flow_stability
+        uses); reverts to the default color otherwise, including when no
+        tolerance is configured for this step (watchdog field omitted)."""
+        setpoint = getattr(ui, 'current_pressure', 0)
+        if (ui.mode == "u" and ui.stability_tolerance is not None
+                and setpoint > 0):
+            lower = setpoint * (1 - ui.stability_tolerance)
+            upper = setpoint * (1 + ui.stability_tolerance)
+            if not (lower <= float(flow) <= upper):
+                ui.flowrate.setStyleSheet("color: red;")
+                return
+        ui.flowrate.setStyleSheet("")
+
+    def _update_sequence_labels(self):
+        """During a running sequence, swaps static unit/caption labels for
+        live status: the flow/pressure unit labels grow a '| X' suffix with
+        the setpoint for the mode currently driving the feedback loop, and
+        the '1st valve' caption becomes the valve actually being controlled.
+        Reverts to the static defaults once no sequence is running."""
+        if ui.number_of_commands != 0:
+            ui.label_11.setText(f"P{ui.current_valve_num:02X}")
+            if ui.mode == "p" and ui.current_pressure > 0:
+                ui.label.setText(f"kPa | {ui.current_pressure:.1f} kPa")
+            else:
+                ui.label.setText("kPa")
+            if ui.mode == "u" and ui.current_pressure > 0:
+                ui.unit_display.setText(
+                    f"{ui.base_flow_unit} | {ui.current_pressure:.1f} {ui.base_flow_unit}")
+            else:
+                ui.unit_display.setText(ui.base_flow_unit)
+        else:
+            ui.label_11.setText("   1st valve")
+            ui.label.setText("kPa")
+            ui.unit_display.setText(ui.base_flow_unit)
 
     def DigitalPulse(self):
         ui.mode='Pulse'
@@ -417,9 +628,59 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.lcdnumber_2.show()
             ui.line.show()
 
+    def _estimate_step_duration_s(self, text):
+        """Best-effort estimate of one sequence step's duration in seconds,
+        from its raw text, without touching any run state. A time-based stop
+        is used directly; a volume-based stop is estimated as volume/flow
+        rate (only meaningful for 'u' mode, where parameter1 is a flow rate).
+        Returns 0.0 when it can't be estimated (e.g. an acquire step)."""
+        message = text.strip().split(',')
+        if len(message) < 3:
+            return 0.0
+        try:
+            parameter = float(message[1][:-1])
+            mode = message[1][-1]
+            terminal = message[2].strip()
+            if terminal[-1] == 's':
+                return float(terminal[:-1])
+            elif terminal[-1] == 'u':
+                volume = float(terminal[:-1])
+                if mode == "u" and parameter > 0:
+                    return volume / parameter * 60.0
+        except (ValueError, IndexError):
+            pass
+        return 0.0
+
+    def _estimate_remaining_time_s(self, from_row):
+        """Sums _estimate_step_duration_s over every remaining row, from
+        from_row (inclusive) through the end of the loaded sequence."""
+        total = 0.0
+        for row in range(from_row, ui.number_of_commands):
+            item = ui.tableWidget.item(row, 0)
+            if item is not None:
+                total += self._estimate_step_duration_s(item.text())
+        return total
+
+    def _format_duration(self, seconds):
+        if seconds < 60:
+            return f"{seconds:.0f}s"
+        minutes = seconds / 60.0
+        if minutes < 60:
+            return f"{minutes:.1f}min"
+        return f"{minutes / 60.0:.2f}h"
+
     def read_seq_commands(self, command):
         text = ui.tableWidget.item(command, 0).text()
         message = text.split(',')
+
+        # optional trailing image flag: literal 'img' as the last field,
+        # after any other optional fields (PID, stability watchdog). Opts
+        # this step's completion into a Slack screenshot; default off.
+        ui.send_step_image = False
+        if message and message[-1].strip().lower() == 'img':
+            ui.send_step_image = True
+            message = message[:-1]
+
         valve = message[0]  # valve number
         parameter = float(message[1][:-1])# pressure value
         mode=message[1][-1]
@@ -440,6 +701,25 @@ class MainWindow(QtWidgets.QMainWindow):
             Kp,Ki,Kd = map(float,message[3].split(';'))
             ui.pid_parameters[command] = (Kp,Ki,Kd)
             ui.last_pid = (Kp,Ki,Kd)
+
+        # optional flow-stability watchdog: <a|l><tolerance>per[,<duration>s]
+        # 'a' aborts the sequence, 'l' only logs a warning; omit to leave disabled
+        ui.stability_mode = None
+        ui.stability_tolerance = None
+        ui.stability_sustain_s = STABILITY_SUSTAIN_S
+        if len(message) > 4 and message[4].strip() != '':
+            spec = message[4].strip()
+            letter, rest = spec[0], spec[1:]
+            if letter in ('a', 'l') and rest.endswith('per'):
+                ui.stability_mode = letter
+                ui.stability_tolerance = float(rest[:-3]) / 100.0
+                if len(message) > 5 and message[5].strip() != '':
+                    dur_str = message[5].strip()
+                    if dur_str.endswith('s'):
+                        dur_str = dur_str[:-1]
+                    ui.stability_sustain_s = float(dur_str)
+            else:
+                self.log_message(f"Ignoring malformed stability spec '{spec}' on line {command+1}")
         return (mode,valve, valve_num, parameter, duration,volume)
 
     def initialize_magnitude(self):
@@ -476,6 +756,207 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def log_message(self, msg):
         print(msg)
+        self._write_log_file(msg)
+        self._notify_slack(msg)
+
+    def _write_log_file(self, msg):
+        if not ui.log_filepath:
+            return
+        ts = datetime.datetime.now().strftime('%Y,%m/%d, %H:%M')
+        try:
+            with open(ui.log_filepath, 'a', encoding='utf-8') as f:
+                f.write(f'{ts}; {msg}\n')
+        except OSError:
+            pass  # avoid crashing the sequence over a logging failure
+
+    def _new_log_filepath(self):
+        """Create this run's text log, in the same folder as the current exp
+        data file (ui.Filename, set by recordIO()/DefFile()) so the two live
+        side by side. Falls back to ui.Foldername if recording hasn't been
+        started (ui.Filename still the ' ' placeholder) or that folder can't
+        be written to. Returns (path, error), error is None on success."""
+        filename = datetime.datetime.now().strftime('%Y%m%d%H%M') + 'MiSA.log.txt'
+        exp_dir = os.path.dirname(ui.Filename.strip()) if ui.Filename.strip() else ''
+        target_dir = exp_dir if exp_dir else ui.Foldername
+        path = os.path.join(target_dir, filename)
+        try:
+            os.makedirs(target_dir, exist_ok=True)
+            with open(path, 'a', encoding='utf-8'):
+                pass
+            return path, None
+        except OSError as e:
+            fallback = os.path.join(ui.Foldername, filename)
+            return fallback, str(e)
+
+    def _slack_error(self, msg):
+        """Reports a Slack-related failure without touching any Qt widget --
+        these methods run on background threads (see _run_async below), and
+        Qt widgets may only be touched from the main/GUI thread. Writes to
+        the real stderr (bypassing sys.stdout's GUI-log redirect) and the
+        text log file (plain file I/O, thread-safe enough for an appended
+        line); never routes through log_message/_notify_slack, which would
+        recurse back into Slack over a Slack failure."""
+        sys.__stderr__.write(msg + "\n")
+        self._write_log_file(msg)
+
+    def _run_async(self, target, *args):
+        """Fires a background daemon thread for a Slack network call so it
+        can never block the GUI thread (the sequence timer, valve timing,
+        etc). Fire-and-forget: callers don't need the result."""
+        threading.Thread(target=target, args=args, daemon=True).start()
+
+    def _slack_post(self, text, thread_ts=None):
+        """POSTs one message via chat.postMessage (config.py SLACK_BOT_TOKEN
+        / SLACK_CHANNEL). Returns the message's ts on success (usable as a
+        thread_ts for replies), or None on failure. Never raises. Runs
+        synchronously in whatever thread calls it -- callers that don't need
+        the ts back should go through _run_async instead of calling this
+        directly, to keep the GUI thread unblocked."""
+        try:
+            payload = {"channel": conf.SLACK_CHANNEL, "text": text}
+            if thread_ts:
+                payload["thread_ts"] = thread_ts
+            data = json.dumps(payload).encode('utf-8')
+            req = urllib.request.Request(
+                "https://slack.com/api/chat.postMessage", data=data,
+                headers={"Content-Type": "application/json; charset=utf-8",
+                         "Authorization": f"Bearer {conf.SLACK_BOT_TOKEN}"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+            if result.get("ok"):
+                return result.get("ts")
+            self._slack_error(f"Slack post failed: {result.get('error')}")
+        except Exception as e:
+            self._slack_error(f"Slack post failed: {e}")
+        return None
+
+    def _start_slack_thread(self):
+        """Posts this run's thread header ('YYYYMMDDHHMM <seqfile> at
+        <instrument>', optionally prefixed with an @-mention if the sequence
+        file's leading headers included a Slack user ID), and remembers its
+        ts in ui.slack_thread_ts so every subsequent _notify_slack() call
+        replies into the same thread. This one call is made synchronously
+        (blocking, ~1 call, only once per RunSequence()) because everything
+        downstream needs the resulting thread_ts; the sequence file's full
+        content, posted as a second message, doesn't gate anything else so
+        it's dispatched asynchronously like every other Slack call. No-op
+        (thread_ts stays None -> _notify_slack falls back to the plain
+        webhook, unthreaded) if no bot token/channel is configured."""
+        ui.slack_thread_ts = None
+        if not (conf.SLACK_BOT_TOKEN and conf.SLACK_CHANNEL):
+            return
+        header = (f"{datetime.datetime.now().strftime('%Y%m%d%H%M')} "
+                  f"{ui.seq_file_name} at {conf.INSTRUMENT_NAME}")
+        if ui.slack_mention_user_id:
+            header = f"<@{ui.slack_mention_user_id}> {header}"
+        ui.slack_thread_ts = self._slack_post(header)
+        if not ui.slack_thread_ts:
+            return
+        self._run_async(self._post_seq_file_content, ui.seq_file_path, ui.slack_thread_ts)
+
+    def _post_seq_file_content(self, seq_file_path, thread_ts):
+        try:
+            with open(seq_file_path, 'r') as f:
+                content = f.read()
+        except OSError as e:
+            content = f"(could not read sequence file: {e})"
+        if len(content) > 3900:
+            content = content[:3900] + "\n... (truncated)"
+        self._slack_post(f"```{content}```", thread_ts=thread_ts)
+
+    def _grab_window_png(self):
+        """Renders the whole main window (not just the plot) to PNG bytes,
+        via QWidget.grab() -> QPixmap -> PNG-encoded QBuffer. Must run on the
+        GUI thread (Qt widgets aren't thread-safe) -- callers grab synchronously
+        and hand the resulting bytes off to _upload_slack_image, which does
+        the actual network I/O asynchronously."""
+        pixmap = self.grab()
+        byte_array = QtCore.QByteArray()
+        buffer = QtCore.QBuffer(byte_array)
+        buffer.open(QtCore.QIODevice.WriteOnly)
+        pixmap.save(buffer, "PNG")
+        buffer.close()
+        return bytes(byte_array)
+
+    def _upload_slack_image(self, png_bytes, filename, thread_ts, title):
+        """Uploads a PNG to Slack and shares it into thread_ts, via the
+        3-step external-upload flow (files:write scope required on the bot
+        token). No-ops if unconfigured or no thread is active. Dispatched
+        onto a background thread (_run_async) -- 3 sequential HTTP round
+        trips would otherwise visibly freeze the GUI on every step."""
+        if not (conf.SLACK_BOT_TOKEN and conf.SLACK_CHANNEL) or not thread_ts:
+            return
+        self._run_async(self._upload_slack_image_sync, png_bytes, filename, thread_ts, title)
+
+    def _upload_slack_image_sync(self, png_bytes, filename, thread_ts, title):
+        try:
+            params = urllib.parse.urlencode(
+                {"filename": filename, "length": len(png_bytes)}).encode('utf-8')
+            req = urllib.request.Request(
+                "https://slack.com/api/files.getUploadURLExternal", data=params,
+                headers={"Content-Type": "application/x-www-form-urlencoded",
+                         "Authorization": f"Bearer {conf.SLACK_BOT_TOKEN}"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+            if not result.get("ok"):
+                self._slack_error(f"Slack image upload (get URL) failed: {result.get('error')}")
+                return
+            upload_url, file_id = result["upload_url"], result["file_id"]
+
+            boundary = "----MiSABoundary"
+            body = (
+                f"--{boundary}\r\n"
+                f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+                f"Content-Type: image/png\r\n\r\n"
+            ).encode('utf-8') + png_bytes + f"\r\n--{boundary}--\r\n".encode('utf-8')
+            req2 = urllib.request.Request(
+                upload_url, data=body,
+                headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+            urllib.request.urlopen(req2, timeout=15)
+
+            payload = {"files": [{"id": file_id, "title": title}],
+                       "channel_id": conf.SLACK_CHANNEL, "thread_ts": thread_ts}
+            data3 = json.dumps(payload).encode('utf-8')
+            req3 = urllib.request.Request(
+                "https://slack.com/api/files.completeUploadExternal", data=data3,
+                headers={"Content-Type": "application/json; charset=utf-8",
+                         "Authorization": f"Bearer {conf.SLACK_BOT_TOKEN}"})
+            with urllib.request.urlopen(req3, timeout=10) as resp3:
+                result3 = json.loads(resp3.read().decode('utf-8'))
+            if not result3.get("ok"):
+                self._slack_error(f"Slack image upload (complete) failed: {result3.get('error')}")
+        except Exception as e:
+            self._slack_error(f"Slack image upload failed: {e}")
+
+    def _notify_slack(self, text):
+        """Best-effort Slack notification, called from log_message() to
+        mirror every log line. Prefers the threaded bot-token path (replies
+        into ui.slack_thread_ts, started by _start_slack_thread() at the
+        top of RunSequence()); falls back to the plain incoming-webhook
+        (config.py SLACK_WEBHOOK_URL, unthreaded) if no bot token/channel is
+        configured. No-ops silently if neither is configured, or if no
+        sequence is currently running -- manual/ad-hoc actions (jogging a
+        valve, tuning) outside a sequence run stay off Slack. Dispatched
+        onto a background thread (_run_async) since log_message() is called
+        constantly from the GUI thread and must never block on network I/O."""
+        if ui.number_of_commands == 0:
+            return
+        if conf.SLACK_BOT_TOKEN and conf.SLACK_CHANNEL:
+            self._run_async(self._slack_post, text, ui.slack_thread_ts)
+            return
+        if not conf.SLACK_WEBHOOK_URL:
+            return
+        self._run_async(self._notify_slack_webhook, text)
+
+    def _notify_slack_webhook(self, text):
+        try:
+            data = json.dumps({"text": text}).encode('utf-8')
+            req = urllib.request.Request(
+                conf.SLACK_WEBHOOK_URL, data=data,
+                headers={"Content-Type": "application/json"})
+            urllib.request.urlopen(req, timeout=5)
+        except Exception as e:
+            self._slack_error(f"Slack notification failed: {e}")
 
     def _add_valve_axis(self, ax, t, valve_nums):
         t = np.asarray(t, dtype=float).ravel()
@@ -496,8 +977,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._add_valve_axis(ui.graphwidget.axes1, ui.dt, ui.valve_nums)
 
         ui.graphwidget.axes2 = ui.graphwidget.figure.add_subplot(222, xlabel='Time [s]', ylabel='Flow rate [μL/min]')
-        ui.graphwidget.axes2.plot(ui.dt, ui.f)
-        self._add_valve_axis(ui.graphwidget.axes2, ui.dt, ui.valve_nums)
+        ui.graphwidget.axes2.plot(ui.dt, ui.f, label='actual')
+        ui.graphwidget.axes2.plot(ui.dt, ui.target_flow, '--', label='target')
+        ui.graphwidget.axes2.legend(fontsize=8)
 
         ui.graphwidget.axes3 = ui.graphwidget.figure.add_subplot(223, xlabel='Time [s]', ylabel='Pumped volume [μL]')
         ui.graphwidget.axes3.plot(ui.dt, ui.q)
@@ -570,6 +1052,7 @@ class MainWindow(QtWidgets.QMainWindow):
             c[1] = g[ui.reg] * c[1] + h[ui.reg]
             ui.valveLcd_1.display(c[0])
             ui.valveLcd_2.display(c[1]) #add JM
+            self._check_pressure_limit(c[0])
             if(c[0]>0 and ui.magnitude_initialize and ui.initcount<10):
                 ui.initsum+=c[0]
                 ui.initcount+=1
@@ -588,6 +1071,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     ui.f.append(float(f))
                     ui.temperature.append(float(temp))
                     ui.valve_nums.append(ui.current_valve_num)
+                    target = ui.current_pressure if (ui.mode == "u" and ui.current_pressure > 0) else 0.0
+                    ui.target_flow.append(target)
                     if ui.count != 1:  # compute integrated flow quantity at t > 1
                         q = ui.q[-1]+np.median([ui.f[-3], ui.f[-2], ui.f[-1]])*(ui.dt[-1]-ui.dt[-2])/60
                     else:  # compute integrated flow quantity at t=1
@@ -608,6 +1093,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     ui.q = [0.0]
                     ui.temperature = [float(temp)]
                     ui.valve_nums = [ui.current_valve_num]
+                    target = ui.current_pressure if (ui.mode == "u" and ui.current_pressure > 0) else 0.0
+                    ui.target_flow = [target]
                     ui._last_graph_update = 0.0
                     file = open(ui.Filename, 'w')
                     c_row = np.array([0.0] + list(c) + [float(f), 0.0, float(temp), float(ui.current_valve_num)])
@@ -624,6 +1111,8 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 ui.count = 0  # add Hiroyuki
             ui.flowrate.display(f)
+            self._update_flowrate_color(f)
+            self._update_sequence_labels()
             # counter Display
             #
             if ui.number_of_commands != 0 and len(ui.f) > 4:
@@ -633,6 +1122,28 @@ class MainWindow(QtWidgets.QMainWindow):
     def RunSequence(self):
         ui.command = 0
         ui.number_of_commands = ui.tableWidget.rowCount()
+        # clear state left over from any previous run so the first tick of this
+        # run doesn't compute a stale residual or reference a nonexistent step
+        ui.mode = ""
+        ui.termination_mode = ""
+        ui.duration = 0
+        ui.volume = 0
+        ui.qstart = 0
+        ui.residualtime = 0
+        ui.stability_mode = None
+        ui.stability_tolerance = None
+        ui.stability_armed = False
+        ui.stability_history.clear()
+        ui.stability_notified = False
+        ui.pressure_limit_since = None
+        ui.pressure_limit_notified = False
+        self._block_system_idle()
+        self._start_slack_thread()
+        path, error = self._new_log_filepath()
+        ui.log_filepath = path
+        if error:
+            self.log_message(f"Could not write log next to the exp file ({error}); logging to {path} instead")
+        self.log_message(f"Sequence started. Logging to {path}")
 
     def openSeqFile(self):
         iDir = os.path.abspath(os.path.dirname(__file__))
@@ -640,20 +1151,67 @@ class MainWindow(QtWidgets.QMainWindow):
             self, "Open sequence file", iDir, "Sequence files (*.txt);;All files (*.*)")
         if not file_name:
             return
+        ui.seq_file_name = os.path.basename(file_name)
+        ui.seq_file_path = file_name
         self.log_message(f"Sequence file: {file_name}")
         f = open(file_name, 'r')
+        lines = list(f)
+        f.close()
+
+        # optional leading header lines, in any order, each consumed and not
+        # shown as a step. Stops at the first line matching neither pattern.
+        #   <a|l><kPa value>kPa,<duration>s -- sequence-wide pressure ceiling,
+        #     checked regardless of step/mode (distinguishable from a normal
+        #     step because valve tokens always start with uppercase P/A).
+        #   <Slack user ID> (e.g. U06SFM9T6R3) -- mentioned in the thread's
+        #     first message (see _start_slack_thread). Distinguishable from
+        #     a valve token because valve tokens are never all-uppercase
+        #     with no comma.
+        ui.pressure_limit_mode = None
+        ui.pressure_limit_kpa = None
+        ui.pressure_limit_duration_s = None
+        ui.slack_mention_user_id = ''
+        while lines:
+            candidate = lines[0].strip()
+            if candidate[:1] in ('a', 'l') and 'kPa' in candidate:
+                letter, rest = candidate[0], candidate[1:]
+                try:
+                    value_part, dur_part = rest.split(',', 1)
+                    dur_part = dur_part.strip()
+                    if value_part.endswith('kPa') and dur_part.endswith('s'):
+                        ui.pressure_limit_mode = letter
+                        ui.pressure_limit_kpa = float(value_part[:-3])
+                        ui.pressure_limit_duration_s = float(dur_part[:-1])
+                        lines = lines[1:]
+                        self.log_message(
+                            f"Pressure limit ({'abort' if letter == 'a' else 'log only'}): "
+                            f">{ui.pressure_limit_kpa:.1f} kPa for {ui.pressure_limit_duration_s:.0f}s"
+                        )
+                        continue
+                except ValueError:
+                    pass  # not a valid header; fall through
+            if (candidate.startswith('U') and len(candidate) >= 9
+                    and candidate.isalnum() and candidate.isupper()):
+                ui.slack_mention_user_id = candidate
+                lines = lines[1:]
+                self.log_message(f"Slack mention: <@{candidate}>")
+                continue
+            break  # first line that isn't a recognized header -> steps start here
 
         # ui.tableWidget.setRowCount(0)
 
         ui.tableWidget.setColumnCount(1)
-        ui.tableWidget.setColumnWidth(0, ui.tableWidget.columnWidth(0) * 2)
+        ui.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        ui.tableWidget.setWordWrap(True)
         rowPosition = 0
         ui.tableWidget.setRowCount(0)
-        for x in f:
+        for x in lines:
             ui.tableWidget.insertRow(rowPosition)
-            ui.tableWidget.setItem(
-                rowPosition, 0, QtWidgets.QTableWidgetItem(x))
+            item = QtWidgets.QTableWidgetItem(x)
+            item.setToolTip(x)
+            ui.tableWidget.setItem(rowPosition, 0, item)
             rowPosition += 1
+        ui.tableWidget.resizeRowsToContents()
 
     def openLogFile(self):
         file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -724,7 +1282,7 @@ class MainWindow(QtWidgets.QMainWindow):
         valvenum = str(hex(index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
         ui.lcdnumber_1.display(ui.voltage[index])
-        ui.horizontalSlider.setValue(ui.voltage[index])
+        ui.horizontalSlider.setValue(int(ui.voltage[index]))
         if hasattr(ui, 'valve_1'):
             if ui.valve_state[index]==True:
                 ui.valveButton_1.setText('ON')
@@ -743,7 +1301,7 @@ class MainWindow(QtWidgets.QMainWindow):
         valvenum = str(hex(index+1).upper())
         message = 'P0' + valvenum[-1] + '\r'
         ui.lcdnumber_2.display(ui.voltage[index])
-        ui.horizontalSlider_2.setValue(ui.voltage[index])
+        ui.horizontalSlider_2.setValue(int(ui.voltage[index]))
         if hasattr(ui, 'valve_1'):
             if ui.valve_state[index]==True:
                 ui.valveButton_2.setText('ON')
@@ -837,6 +1395,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def closeEvent(self, event):
+        self._unblock_system_idle()
         sys.stdout = sys.__stdout__
         self.worker.stop()
         self.thermo_timer.stop()
@@ -846,8 +1405,29 @@ class MainWindow(QtWidgets.QMainWindow):
         NI.Arduinobye()
         event.accept()
 
+    def _block_system_idle(self):
+        hwnd = int(self.winId())
+        ctypes.windll.kernel32.SetThreadExecutionState(
+            _ES_CONTINUOUS | _ES_SYSTEM_REQUIRED | _ES_DISPLAY_REQUIRED)
+        ctypes.windll.user32.ShutdownBlockReasonCreate(
+            hwnd, ctypes.c_wchar_p("MiSA sequence is running"))
+
+    def _unblock_system_idle(self):
+        hwnd = int(self.winId())
+        ctypes.windll.kernel32.SetThreadExecutionState(_ES_CONTINUOUS)
+        ctypes.windll.user32.ShutdownBlockReasonDestroy(hwnd)
+
     def abort_program(self):
+        self._unblock_system_idle()
         self.log_message('Aborted. Valves closed, pressure off. Waiting for operator action.')
+        if ui.UseThermoPlate:
+            try:
+                ui.ThermoPlate.settemp(250)  # 250 = 25.0°C
+                self.log_message('ThermoPlate set to 25°C.')
+            except Exception as e:
+                self.log_message(f'ThermoPlate cool-down failed: {e}')
+        self._upload_slack_image(
+            self._grab_window_png(), "abort.png", ui.slack_thread_ts, "Sequence aborted")
         if self._acq_running:
             self._acq_running = False
         ui.number_of_commands = 0
