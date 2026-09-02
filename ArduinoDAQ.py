@@ -45,11 +45,17 @@ class AI():
         FileName1=FolderName1+"/"+FileName+str(1+len([x for x in os.listdir(FolderName1) if x.endswith(".txt")])).zfill(4)+".txt"
         return(FileName1)
     def ArduinoStatusCheck():
+        # The 'S' handler on the Arduino replies with a bare 'R' (no newline).
+        # Flush first so stale/echoed bytes from a previous desynced cycle
+        # (e.g. a run of 'R' replies that piled up unread) cannot be mistaken
+        # for this cycle's status byte. Then read whatever is waiting and test
+        # for 'R' rather than trusting a single positional byte.
         with _serial_lock():
+            ser.reset_input_buffer()
             ser.write(b'S')
             time.sleep(0.01)
-            ser_bytes = ser.read(1).decode("utf-8")  # Arduino sends 'R' with no newline
-        return ser_bytes
+            resp = ser.read(ser.in_waiting or 1)
+        return 'R' if b'R' in resp else ''
     def ArduinoFBStatus(vNumA):
         with _serial_lock():
             ser.write(b'R')
@@ -85,26 +91,40 @@ class AI():
         return(str(ser_bytes))
 
     def ArduinoAI():
-        c = []
+        # Flush before requesting so a partial/late line or a run of bare 'R'
+        # status replies left over from the previous cycle cannot be prepended
+        # to this reading (that is what produced lines like "RRRRRRRRRR20").
         with _serial_lock():
+            ser.reset_input_buffer()
             ser.write(b'AI6,7\n')
             time.sleep(0.01)
             ser_bytes = ser.readline()
-        ser_bytes = ser_bytes.decode('utf-8').strip()
-        decoded_bytes = ser_bytes
         t = time.time()
-        c=decoded_bytes.split(",")
+        decoded_bytes = ser_bytes.decode('utf-8', 'ignore').strip()
 
-        if c[0] == '':  # if faied in obtaining data
-            c[0] = 0
-            result= False
-        else:
-            result=True
-        for i in range(len(c)): # range(X):Xはチャンネル数
-            if(c[i][0]=="R"):
-                c[i]=c[i][1:len(c[i])-1]
-            c[i] = float(c[i]) # listをfloat形式に変換
-        return(t,c,result)
+        # Tolerate a desynced frame: strip any leading/trailing 'R' wrapper
+        # bytes from each field, drop empties, and never raise on a bad line.
+        fields = [tok.strip().strip('R') for tok in decoded_bytes.split(',')]
+        try:
+            c = [float(tok) for tok in fields if tok != '']
+        except ValueError:
+            c = []
+        if len(c) < 2:  # incomplete / garbled read
+            return (t, [0.0, 0.0], False)
+        return (t, c, True)
+
+    def ArduinoAI8():
+        # Single-channel read of analog input 8, for console monitoring.
+        with _serial_lock():
+            ser.reset_input_buffer()
+            ser.write(b'AI8\n')
+            time.sleep(0.01)
+            ser_bytes = ser.readline()
+        s = ser_bytes.decode('utf-8', 'ignore').strip().strip('R').strip()
+        try:
+            return float(s.split(',')[0])
+        except ValueError:
+            return -1.0
 
     def ArduinoTuning():
         #potentiometer calcuration

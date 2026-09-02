@@ -53,6 +53,8 @@ class _StdoutRedirect:
 
 class SerialWorker(QtCore.QThread):
     data_ready = QtCore.pyqtSignal(float, object, bool, float)
+    error = QtCore.pyqtSignal(str)
+    ai8_ready = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -62,12 +64,20 @@ class SerialWorker(QtCore.QThread):
     def run(self):
         while self._running:
             if not self._paused:
-                status = NI.ArduinoStatusCheck()
-                if status == 'R':
-                    t, c, r = NI.ArduinoAI()
-                    f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
-                    self.data_ready.emit(t, c, r, f)
-            self.msleep(5)
+                try:
+                    status = NI.ArduinoStatusCheck()
+                    if status == 'R':
+                        t, c, r = NI.ArduinoAI()
+                        f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
+                        self.data_ready.emit(t, c, r, f)
+                        self.ai8_ready.emit(NI.ArduinoAI8())
+                except Exception as e:
+                    # A single malformed serial cycle must never kill the
+                    # polling thread; report it on the main thread and retry.
+                    self.error.emit(str(e))
+            # Without the flow sensor there is no II round-trip to pace the
+            # loop, so poll more slowly to keep from out-running the Arduino.
+            self.msleep(20 if conf.FLOW_SENSOR else 30)
 
     def pause(self):
         self._paused = True
@@ -136,6 +146,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.worker = SerialWorker(self)
         self.worker.data_ready.connect(self.update_figure)
+        self.worker.error.connect(self._on_serial_error)
+        self.worker.ai8_ready.connect(self._on_ai8)
+        self._last_serial_error_log = 0.0
         self.worker.start()
 
         ui.last_temp = -1.0
@@ -558,6 +571,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 ui.last_temp = float(ui.ThermoPlate.readtemp())
             except Exception:
                 pass
+
+    def _on_serial_error(self, msg):
+        # Runs on the GUI thread (queued signal). Throttle so a persistent
+        # fault (e.g. Arduino unplugged) cannot flood the message box.
+        now = time.time()
+        if now - self._last_serial_error_log > 2.0:
+            self._last_serial_error_log = now
+            self.log_message(f'serial cycle skipped: {msg}')
+
+    def _on_ai8(self, value):
+        # Raw analog reading of channel 8, shown in the window title on every
+        # poll cycle (cheap, in-place; no message-box writes).
+        self.setWindowTitle(f'MiSA   |   AI8 = {value:g}')
 
     def update_figure(self, arduino_time, c, r, f):
         if ui.tuning_is_running:
