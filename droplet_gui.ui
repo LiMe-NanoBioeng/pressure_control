@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1250</width>
-    <height>916</height>
+    <height>960</height>
    </rect>
   </property>
   <property name="font">
@@ -155,8 +155,8 @@
    <widget class="QPushButton" name="abort">
     <property name="geometry">
      <rect>
-      <x>1140</x>
-      <y>660</y>
+      <x>690</x>
+      <y>800</y>
       <width>101</width>
       <height>51</height>
      </rect>
@@ -255,14 +255,14 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>550</x>
-      <y>600</y>
+      <x>810</x>
+      <y>610</y>
       <width>421</width>
       <height>241</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -378,10 +378,10 @@
        </font>
       </property>
       <property name="verticalScrollBarPolicy">
-       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+       <enum>Qt::ScrollBarAsNeeded</enum>
       </property>
       <property name="horizontalScrollBarPolicy">
-       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+       <enum>Qt::ScrollBarAsNeeded</enum>
       </property>
       <property name="plainText">
        <string>1</string>
@@ -599,6 +599,28 @@
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
+   <widget class="QPlainTextEdit" name="messageBox">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>873</y>
+      <width>1250</width>
+      <height>64</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="verticalScrollBarPolicy">
+     <enum>Qt::ScrollBarAlwaysOn</enum>
+    </property>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="placeholderText">
+     <string>Messages...</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -616,6 +638,7 @@
     <addaction name="actionload_sequence_file"/>
     <addaction name="actionload_MDA_file_2"/>
     <addaction name="actionload_position_file"/>
+    <addaction name="actionload_log_file"/>
    </widget>
    <widget class="QMenu" name="menuMenu">
     <property name="title">
@@ -623,18 +646,19 @@
     </property>
     <widget class="QMenu" name="menupressure_number">
      <property name="title">
-      <string>Pressure number</string>
+      <string>Number of regulators</string>
      </property>
      <addaction name="actionsingle_2"/>
      <addaction name="actiondouble_2"/>
     </widget>
     <widget class="QMenu" name="menuRegulators">
      <property name="title">
-      <string>Regulators</string>
+      <string>Type of regulators</string>
      </property>
      <addaction name="actionITV0010_2"/>
      <addaction name="actionITV0030_2"/>
      <addaction name="actionITV0090"/>
+     <addaction name="actionEVL1050"/>
     </widget>
     <widget class="QMenu" name="menuSelector_valve">
      <property name="title">
@@ -712,6 +736,14 @@
     <string>ITV0090</string>
    </property>
   </action>
+  <action name="actionEVL1050">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>EVL1050</string>
+   </property>
+  </action>
   <action name="actionOn">
    <property name="checkable">
     <bool>true</bool>
@@ -729,6 +761,11 @@
    </property>
    <property name="text">
     <string>Off</string>
+   </property>
+  </action>
+  <action name="actionload_log_file">
+   <property name="text">
+    <string>load log file</string>
    </property>
   </action>
   <action name="actionload_MDA_file_2">

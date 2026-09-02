@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'droplet_gui.ui'
+# Form implementation generated from reading ui file 'C:\Users\misam\Documents\GitHub\pressure_control\droplet_gui.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Droplet_formation(object):
     def setupUi(self, Droplet_formation):
         Droplet_formation.setObjectName("Droplet_formation")
-        Droplet_formation.resize(1250, 916)
+        Droplet_formation.resize(1250, 960)
         font = QtGui.QFont()
         font.setPointSize(10)
         Droplet_formation.setFont(font)
@@ -65,7 +65,7 @@ class Ui_Droplet_formation(object):
         self.unit_display.setFont(font)
         self.unit_display.setObjectName("unit_display")
         self.abort = QtWidgets.QPushButton(self.centralwidget)
-        self.abort.setGeometry(QtCore.QRect(1140, 660, 101, 51))
+        self.abort.setGeometry(QtCore.QRect(690, 800, 101, 51))
         font = QtGui.QFont()
         font.setPointSize(16)
         self.abort.setFont(font)
@@ -97,7 +97,7 @@ class Ui_Droplet_formation(object):
         self.horizontalSlider_2.setOrientation(QtCore.Qt.Horizontal)
         self.horizontalSlider_2.setObjectName("horizontalSlider_2")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
-        self.tabWidget.setGeometry(QtCore.QRect(550, 600, 421, 241))
+        self.tabWidget.setGeometry(QtCore.QRect(810, 610, 421, 241))
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
@@ -140,9 +140,8 @@ class Ui_Droplet_formation(object):
         font = QtGui.QFont()
         font.setPointSize(16)
         self.plainTextEdit.setFont(font)
-        self.plainTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-
-        self.plainTextEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.plainTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.plainTextEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.plainTextEdit.setObjectName("plainTextEdit")
         self.label_9 = QtWidgets.QLabel(self.tab_2)
         self.label_9.setGeometry(QtCore.QRect(230, 10, 41, 21))
@@ -216,6 +215,12 @@ class Ui_Droplet_formation(object):
         self.line.setFrameShape(QtWidgets.QFrame.HLine)
         self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line.setObjectName("line")
+        self.messageBox = QtWidgets.QPlainTextEdit(self.centralwidget)
+        self.messageBox.setGeometry(QtCore.QRect(0, 873, 1250, 64))
+        self.messageBox.setReadOnly(True)
+        self.messageBox.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.messageBox.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.messageBox.setObjectName("messageBox")
         Droplet_formation.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(Droplet_formation)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1250, 23))
@@ -258,7 +263,7 @@ class Ui_Droplet_formation(object):
         self.actionITV0090.setCheckable(True)
         self.actionITV0090.setObjectName("actionITV0090")
         self.actionEVL1050 = QtWidgets.QAction(Droplet_formation)
-        self.actionEVL1050.setChecked(True)
+        self.actionEVL1050.setCheckable(True)
         self.actionEVL1050.setObjectName("actionEVL1050")
         self.actionOn = QtWidgets.QAction(Droplet_formation)
         self.actionOn.setCheckable(True)
@@ -267,6 +272,8 @@ class Ui_Droplet_formation(object):
         self.actionOff.setCheckable(True)
         self.actionOff.setChecked(True)
         self.actionOff.setObjectName("actionOff")
+        self.actionload_log_file = QtWidgets.QAction(Droplet_formation)
+        self.actionload_log_file.setObjectName("actionload_log_file")
         self.actionload_MDA_file_2 = QtWidgets.QAction(Droplet_formation)
         self.actionload_MDA_file_2.setObjectName("actionload_MDA_file_2")
         self.actionload_position_file = QtWidgets.QAction(Droplet_formation)
@@ -274,6 +281,7 @@ class Ui_Droplet_formation(object):
         self.menuFile.addAction(self.actionload_sequence_file)
         self.menuFile.addAction(self.actionload_MDA_file_2)
         self.menuFile.addAction(self.actionload_position_file)
+        self.menuFile.addAction(self.actionload_log_file)
         self.menupressure_number.addAction(self.actionsingle_2)
         self.menupressure_number.addAction(self.actiondouble_2)
         self.menuRegulators.addAction(self.actionITV0010_2)
@@ -289,7 +297,7 @@ class Ui_Droplet_formation(object):
         self.menubar.addAction(self.menuMenu.menuAction())
 
         self.retranslateUi(Droplet_formation)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         self.recordButton.clicked.connect(Droplet_formation.recordIO) # type: ignore
         self.valveButton_1.clicked.connect(Droplet_formation.ValveOC) # type: ignore
         self.horizontalSlider.valueChanged['int'].connect(Droplet_formation.svalue_changed) # type: ignore
@@ -332,10 +340,11 @@ class Ui_Droplet_formation(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Droplet_formation", "Tuning"))
         self.label_10.setText(_translate("Droplet_formation", "   2nd valve"))
         self.label_11.setText(_translate("Droplet_formation", "   1st valve"))
+        self.messageBox.setPlaceholderText(_translate("Droplet_formation", "Messages..."))
         self.menuFile.setTitle(_translate("Droplet_formation", "File"))
         self.menuMenu.setTitle(_translate("Droplet_formation", "Menu"))
-        self.menupressure_number.setTitle(_translate("Droplet_formation", "Pressure number"))
-        self.menuRegulators.setTitle(_translate("Droplet_formation", "Regulators"))
+        self.menupressure_number.setTitle(_translate("Droplet_formation", "Number of regulators"))
+        self.menuRegulators.setTitle(_translate("Droplet_formation", "Type of regulators"))
         self.menuSelector_valve.setTitle(_translate("Droplet_formation", "Selector valve"))
         self.actionload_sequence_file.setText(_translate("Droplet_formation", "load sequence file"))
         self.actionsingle_2.setText(_translate("Droplet_formation", "single"))
@@ -348,5 +357,6 @@ class Ui_Droplet_formation(object):
         self.actionEVL1050.setText(_translate("Droplet_formation", "EVL1050"))
         self.actionOn.setText(_translate("Droplet_formation", "On"))
         self.actionOff.setText(_translate("Droplet_formation", "Off"))
+        self.actionload_log_file.setText(_translate("Droplet_formation", "load log file"))
         self.actionload_MDA_file_2.setText(_translate("Droplet_formation", "load MDA file"))
         self.actionload_position_file.setText(_translate("Droplet_formation", "load position file"))
