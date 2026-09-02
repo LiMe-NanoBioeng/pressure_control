@@ -678,8 +678,27 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.timer.stop()
         self.open_single_valve(-1)
         NI.Arduinobye()
+<<<<<<< Updated upstream
         self.close()
         QApplication.quit()
+=======
+        event.accept()
+
+    def abort_program(self):
+        self.log_message('Aborted. Valves closed, pressure off. Waiting for operator action.')
+        if self._acq_running:
+            self._acq_running = False
+        ui.number_of_commands = 0
+        ui.lcdSeqNumber.display(0)
+        Kp, Ki, Kd = ui.last_pid
+        current_pressure = getattr(ui,'current_pressure', 0)
+        NI.ArduinoFB(False, ui.vNumA, current_pressure, Kp, Ki, Kd)
+        #NI.ArduinoFB(False, ui.vNumA, ui.current_pressure, Kp, Ki, Kd)
+        NI.ArduinoAO(ui.vNumA, False, 0)
+        self.open_single_valve(-1)
+        if ui.save:
+            ui.save = False
+>>>>>>> Stashed changes
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

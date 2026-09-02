@@ -13,7 +13,11 @@ class config:
         
         # Thermo plate
         self.THERMO_PLATE=False
+<<<<<<< Updated upstream
         self.THERMO_PLATE_PORT="COM8"
+=======
+        self.THERMO_PLATE_PORT="COM6"
+>>>>>>> Stashed changes
         
         # Flow sensor
         self.FLOW_SENSOR=True
