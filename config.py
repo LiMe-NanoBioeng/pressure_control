@@ -34,10 +34,10 @@ def _load_slack_config():
 class config:
     def __init__(self):
         # Arduino
-        self.ARDUINO_PORT="COM3"
+        self.ARDUINO_PORT="COM7"
         
         # Thermo plate
-        self.THERMO_PLATE=True
+        self.THERMO_PLATE=False
         self.THERMO_PLATE_PORT="COM6"
         
         # Flow sensor
@@ -45,7 +45,7 @@ class config:
         
         # Selector valve
         self.SELECT_VALVE=True
-        self.SELECT_VALVE_PORT="COM7"
+        self.SELECT_VALVE_PORT="COM6"
         
         # Pressure regulator type (you can also change it in GUI)
         # 0=ITV0010
@@ -55,7 +55,7 @@ class config:
         self.REG_TYPE=0
 
         # Name shown in the Slack thread header ("YYYYMMDDHHMM <seqfile> at <name>")
-        self.INSTRUMENT_NAME = "Nikon-TiE"
+        self.INSTRUMENT_NAME = "Nikon-TiE2"
 
         # Slack notification settings, read from slack.txt (see
         # _load_slack_config above). Leave unset/blank to disable.
