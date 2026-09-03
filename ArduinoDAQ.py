@@ -86,52 +86,38 @@ class AI():
         ser_bytes=ser_bytes.decode('utf-8').rstrip()
         return(str(ser_bytes))
 
-    def ArduinoAI():
+    def ArduinoAI(*channels):
+        if not channels:
+            channels = conf.AI_CHANNELS
+        cmd = ('AI' + ','.join(str(ch) for ch in channels) + '\n').encode('utf-8')
         with _serial_lock():
             ser.reset_input_buffer()
-            ser.write(b'AI6,7\n')
+            ser.write(cmd)
             time.sleep(0.01)
             ser_bytes = ser.readline()
         t = time.time()
+        n = len(channels)
         try:
             text = ser_bytes.decode('utf-8', errors='ignore').strip()
             text = text.replace('R', '')  # strip stray status bytes
             fields = [f for f in text.split(',') if f]  # drop empty fields
             if not fields:
-                return (t, [0, 0], False)
+                return (t, [0] * n, False)
             c = [float(f) for f in fields]
             return (t, c, True)
         except Exception:
-            return (t, [0, 0], False)
-
-    def ArduinoAI8():
-        with _serial_lock():
-            ser.reset_input_buffer()
-            ser.write(b'AI8\n')
-            time.sleep(0.01)
-            ser_bytes = ser.readline()
-        try:
-            text = ser_bytes.decode('utf-8', errors='ignore').strip().replace('R', '')
-            return float(text)
-        except Exception:
-            return -1.0
+            return (t, [0] * n, False)
 
     def ArduinoTuning():
-        #potentiometer calcuration
-        with _serial_lock():
-            ser.write(b'AI8\n')
-            time.sleep(0.1)
-            r1 = ser.readline().decode('utf-8')
-        with _serial_lock():
-            ser.write(b'AI11\n')
-            time.sleep(0.1)
-            r2 = ser.readline().decode('utf-8')
-        print("r1",r1)
-        print("r2",r2)
-        potentio=float(r1)/(float(r2)+0.0001)
-        print(r1,r2)
+        _, v1, ok1 = AI.ArduinoAI(8)
+        _, v2, ok2 = AI.ArduinoAI(11)
+        r1 = v1[0] if ok1 else 0.0
+        r2 = v2[0] if ok2 else 0.0
+        print("r1", r1)
+        print("r2", r2)
+        potentio = r1 / (r2 + 0.0001)
         print(potentio)
-        return potentio;
+        return potentio
 
 
     # Control Valve

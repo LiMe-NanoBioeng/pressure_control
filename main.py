@@ -85,11 +85,11 @@ class SerialWorker(QtCore.QThread):
                 try:
                     status = NI.ArduinoStatusCheck()
                     if status == 'R':
-                        t, c, r = NI.ArduinoAI()
+                        t, c, r = NI.ArduinoAI(*conf.AI_CHANNELS)
                         f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
                         self.data_ready.emit(t, c, r, f)
-                        ai8 = NI.ArduinoAI8()
-                        self.ai8_ready.emit(ai8)
+                        _, vals, ok = NI.ArduinoAI(conf.WaterSensorCh)
+                        self.ai8_ready.emit(vals[0] if ok else -1.0)
                 except Exception as e:
                     self.error.emit(str(e))
             self.msleep(20 if conf.FLOW_SENSOR else 30)
@@ -778,6 +778,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ui.tableWidget.scrollToItem(item, QtWidgets.QAbstractItemView.PositionAtTop)
 
     def _on_acq_failed(self, msg):
+        self._unblock_system_idle()
         self.log_message(f'*** ACQUISITION FAILED: {msg}')
         self.log_message('Sequence aborted. Waiting for operator action.')
         self._acq_running = False
@@ -1009,7 +1010,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         ui.graphwidget.axes1 = ui.graphwidget.figure.add_subplot(221, xlabel='Time [s]', ylabel='Pressure [kPa]')
         ca1_arr = np.array(ui.CA1)
-        ui.graphwidget.axes1.plot(ui.dt, ca1_arr[:, :ui.Numpre+1])
+        n_ch = min(ui.Numpre + 1, ca1_arr.shape[1])
+        ui.graphwidget.axes1.plot(ui.dt, ca1_arr[:, :n_ch])
         self._add_valve_axis(ui.graphwidget.axes1, ui.dt, ui.valve_nums)
 
         ui.graphwidget.axes2 = ui.graphwidget.figure.add_subplot(222, xlabel='Time [s]', ylabel='Flow rate [μL/min]')
@@ -1088,11 +1090,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if r:
             g = [0.1208, 1.097, -0.1208, 0.0610]
             h = [-23.75, -223.75, 23.78, -12.5]
-            c[0] = g[ui.reg] * c[0] + h[ui.reg]
-            c[1] = g[ui.reg] * c[1] + h[ui.reg]
-            ui.valveLcd_1.display(c[0])
-            ui.valveLcd_2.display(c[1]) #add JM
-            self._check_pressure_limit(c[0])
+            for i in range(len(c)):
+                c[i] = g[ui.reg] * c[i] + h[ui.reg]
+            if len(c) > 0:
+                ui.valveLcd_1.display(c[0])
+                self._check_pressure_limit(c[0])
+            if len(c) > 1:
+                ui.valveLcd_2.display(c[1])
             if(c[0]>0 and ui.magnitude_initialize and ui.initcount<10):
                 ui.initsum+=c[0]
                 ui.initcount+=1
