@@ -34,11 +34,11 @@ def _load_slack_config():
 class config:
     def __init__(self):
         # Arduino
-        self.ARDUINO_PORT="COM7"
+        self.ARDUINO_PORT="COM5"
         
         # Thermo plate
-        self.THERMO_PLATE=False
-        self.THERMO_PLATE_PORT="COM6"
+        self.THERMO_PLATE=True
+        self.THERMO_PLATE_PORT="COM8"
         
         # Flow sensor
         self.FLOW_SENSOR=True
