@@ -49,7 +49,8 @@ class config:
         
         # Analog input channels for pressure readings (sent as AI<ch1>,<ch2>,... to Arduino)
         self.AI_CHANNELS = (6, 7)
-        # Single analog input channel for the water-sensor monitor (window title + abort limit)
+        # Water sensor: set WATER_SENSOR=True to enable monitoring on WaterSensorCh
+        self.WATER_SENSOR = True
         self.WaterSensorCh = 8
 
         # Pressure regulator type (you can also change it in GUI)

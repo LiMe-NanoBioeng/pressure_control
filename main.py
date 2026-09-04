@@ -88,8 +88,9 @@ class SerialWorker(QtCore.QThread):
                         t, c, r = NI.ArduinoAI(*conf.AI_CHANNELS)
                         f = NI.ArduinoI2C() if conf.FLOW_SENSOR else -1.0
                         self.data_ready.emit(t, c, r, f)
-                        _, vals, ok = NI.ArduinoAI(conf.WaterSensorCh)
-                        self.ai8_ready.emit(vals[0] if ok else -1.0)
+                        if conf.WATER_SENSOR:
+                            _, vals, ok = NI.ArduinoAI(conf.WaterSensorCh)
+                            self.ai8_ready.emit(vals[0] if ok else -1.0)
                 except Exception as e:
                     self.error.emit(str(e))
             self.msleep(20 if conf.FLOW_SENSOR else 30)
