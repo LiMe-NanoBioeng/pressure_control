@@ -267,6 +267,9 @@ class MainWindow(QtWidgets.QMainWindow):
         action_group2 = QActionGroup(self)
         action_group2.addAction(ui.actionsingle_2)
         action_group2.addAction(ui.actiondouble_2)
+        if len(conf.AI_CHANNELS) < 2:
+            ui.actiondouble_2.setEnabled(False)
+            ui.actionsingle_2.setChecked(True)
         action_group3 = QActionGroup(self)
         action_group3.addAction(ui.actionOn)
 
@@ -1035,29 +1038,33 @@ class MainWindow(QtWidgets.QMainWindow):
         ui.graphwidget.draw()
 
     def draw_log_graph(self, data):
-        ncols  = data.shape[1]
-        t      = data[:, 0]
-        p1     = data[:, 1]
-        p2     = data[:, 2]
-        f      = data[:, 3]
-        q      = data[:, 4]
-        temp   = data[:, 5] if ncols > 5 else None
-        valve  = data[:, 6] if ncols > 6 else None
+        ncols   = data.shape[1]
+        n_pre   = len(conf.AI_CHANNELS)  # number of pressure columns in this file
+        t       = data[:, 0]
+        pressures = [data[:, 1 + i] for i in range(min(n_pre, ncols - 1))]
+        col     = 1 + n_pre          # first non-pressure column
+        f       = data[:, col]     if ncols > col     else None
+        q       = data[:, col + 1] if ncols > col + 1 else None
+        temp    = data[:, col + 2] if ncols > col + 2 else None
+        valve   = data[:, col + 3] if ncols > col + 3 else None
 
         ui.graphwidget.figure.clear()
 
         ax1 = ui.graphwidget.figure.add_subplot(221, xlabel='Time [s]', ylabel='Pressure [kPa]')
-        ax1.plot(t, p1, label='ch1')
-        ax1.plot(t, p2, label='ch2')
-        ax1.legend(fontsize=8)
+        for i, p in enumerate(pressures):
+            ax1.plot(t, p, label=f'ch{i+1}')
+        if len(pressures) > 1:
+            ax1.legend(fontsize=8)
         self._add_valve_axis(ax1, t, valve if valve is not None else [])
 
         ax2 = ui.graphwidget.figure.add_subplot(222, xlabel='Time [s]', ylabel='Flow rate [µL/min]')
-        ax2.plot(t, f)
+        if f is not None:
+            ax2.plot(t, f)
         self._add_valve_axis(ax2, t, valve if valve is not None else [])
 
         ax3 = ui.graphwidget.figure.add_subplot(223, xlabel='Time [s]', ylabel='Volume [µL]')
-        ax3.plot(t, q)
+        if q is not None:
+            ax3.plot(t, q)
         self._add_valve_axis(ax3, t, valve if valve is not None else [])
 
         ax4 = ui.graphwidget.figure.add_subplot(224, xlabel='Time [s]', ylabel='Temperature [°C]')
@@ -1167,9 +1174,40 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.SequenceControlTime()
 
 
+    def _validate_sequence(self):
+        bad = []
+        for row in range(ui.tableWidget.rowCount()):
+            item = ui.tableWidget.item(row, 0)
+            if item is None:
+                continue
+            text = item.text().strip()
+            if not text:
+                continue
+            parts = [p.strip() for p in text.split(',')]
+            if parts and parts[-1].lower() == 'img':
+                parts = parts[:-1]
+            if len(parts) < 3:
+                bad.append((row + 1, text, "fewer than 3 fields"))
+                continue
+            terminal = parts[2].rstrip()
+            if not terminal or terminal[-1] not in ('s', 'u'):
+                unit = f"'{terminal[-1]}'" if terminal else "(empty)"
+                bad.append((row + 1, text, f"stop condition ends with {unit} — expected 's' or 'u'"))
+        if bad:
+            lines = "\n".join(f"  Line {n}: {reason}\n    → {txt}" for n, txt, reason in bad)
+            QtWidgets.QMessageBox.critical(
+                self, "Sequence validation failed",
+                f"The following steps have an invalid stop condition:\n\n{lines}\n\n"
+                "Sequence will not start.")
+            return False
+        return True
+
     def RunSequence(self):
         ui.command = 0
         ui.number_of_commands = ui.tableWidget.rowCount()
+        if not self._validate_sequence():
+            ui.number_of_commands = 0
+            return
         # clear state left over from any previous run so the first tick of this
         # run doesn't compute a stale residual or reference a nonexistent step
         ui.mode = ""
