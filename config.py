@@ -47,6 +47,15 @@ class config:
         self.SELECT_VALVE=True
         self.SELECT_VALVE_PORT="COM6"
         
+<<<<<<< Updated upstream
+=======
+        # Analog input channels for pressure readings (sent as AI<ch1>,<ch2>,... to Arduino)
+        self.AI_CHANNELS = (6,7)
+        # Water sensor: set WATER_SENSOR=True to enable monitoring on WaterSensorCh
+        self.WATER_SENSOR = True
+        self.WaterSensorCh = 7
+
+>>>>>>> Stashed changes
         # Pressure regulator type (you can also change it in GUI)
         # 0=ITV0010
         # 1=ITV0030
