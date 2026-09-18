@@ -1200,6 +1200,37 @@ class MainWindow(QtWidgets.QMainWindow):
                 f"The following steps have an invalid stop condition:\n\n{lines}\n\n"
                 "Sequence will not start.")
             return False
+
+        # Warn if the last step has a non-zero setpoint (no explicit valve-close step).
+        last_pressure = None
+        for row in range(ui.tableWidget.rowCount() - 1, -1, -1):
+            item = ui.tableWidget.item(row, 0)
+            if item is None:
+                continue
+            text = item.text().strip()
+            if not text:
+                continue
+            parts = [p.strip() for p in text.split(',')]
+            if parts and parts[-1].lower() == 'img':
+                parts = parts[:-1]
+            if len(parts) >= 2:
+                try:
+                    last_pressure = float(parts[1][:-1])
+                except (ValueError, IndexError):
+                    pass
+            break
+        if last_pressure is not None and last_pressure != 0:
+            reply = QtWidgets.QMessageBox.question(
+                self, "No closing step at end of sequence",
+                f"The last step has a non-zero setpoint ({last_pressure:g}).\n\n"
+                "All valves will be closed automatically when the sequence completes, "
+                "but consider adding an explicit closing step (e.g. 'P0X,0u,0s') "
+                "at the end of the file to make the intent clear.\n\n"
+                "Start the sequence anyway?",
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.Yes)
+            if reply == QtWidgets.QMessageBox.No:
+                return False
         return True
 
     def RunSequence(self):
@@ -1314,6 +1345,8 @@ class MainWindow(QtWidgets.QMainWindow):
         rowPosition = 0
         ui.tableWidget.setRowCount(0)
         for x in lines:
+            if not x.strip():
+                continue
             ui.tableWidget.insertRow(rowPosition)
             item = QtWidgets.QTableWidgetItem(x)
             item.setToolTip(x)
