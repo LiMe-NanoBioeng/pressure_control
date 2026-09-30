@@ -9,6 +9,7 @@ We provide the program for the Arduino micro as [another repository](https://git
 
 ### Update:
 
+-　The part E12 (as printed C1 on the PCB board) in the parts list was incorrect. The 10 uF electrolytic capacitor needs a rated voltage higher than 24 V. Use sometihg like 50PX10MEFC5X11.  
 -　The parts list is missing connectors (S070-14A, SMC) for the solenoid valves (S070B-5BC, SMC).  
 -　The latching valve (FLV2-N1F, Takasago Electric) becomes unstable when continuously operated. We recommend NLV-2-N1G (Takasago Electric) instead of FLV2-N1F.  
 -　We use PEEK Luer-lock-adapters [PS6601](https://www.isis-ltd.co.jp/product/tube-connector-valve/adapter-connector/A107) to connect phi3 tubes to 1/16" tubes.  
